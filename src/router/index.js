@@ -26,11 +26,13 @@ const routes = [
     path: '/home',
     name: 'HomePage',
     component: HomePage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/swipe',
     name: 'MovieSwiper',
-    component: MovieSwiper
+    component: MovieSwiper,
+    meta: { requiresAuth: true }
   }
 ];
 
@@ -45,10 +47,13 @@ router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const currentUser = auth.currentUser
 
+  // Handle navigation based on auth state
   if (requiresAuth && !currentUser) {
-    next('/login')
+    next('/login');
+  } else if ((to.path === '/login' || to.path === '/register') && currentUser) {
+    next('/home');
   } else {
-    next()
+    next();
   }
 })
 

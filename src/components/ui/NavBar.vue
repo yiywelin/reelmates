@@ -27,7 +27,7 @@
           <!-- User Info -->
           <div class="user-info" @click="toggleMenu">
             <img 
-              :src="currentUser.photoURL || '/default-avatar.png'" 
+              :src="userAvatar" 
               :alt="currentUser.displayName || currentUser.email"
               class="user-avatar"
               @error="handleImageError"
@@ -58,30 +58,41 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '../../firebaseConfig';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
+import { authService } from '@/services/authService';
+import defaultAvatar from '@/assets/images/default-avatar.png';
 
 const router = useRouter();
 const currentUser = ref(null);
 const isMenuOpen = ref(false);
+const userAvatar = ref(defaultAvatar); 
 
 const navLinks = [
-  { name: 'Home', path: '/' },
+  { name: 'Home', path: '/home' },
   { name: 'Recommendations', path: '/recommendations' },
-  { name: 'Profile', path: '/profile' },
+  { name: 'Movie Roulette', path: '/movie-roulette' },
+  { name: 'Watch Party', path: '/watch-party' },
 ];
 
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     currentUser.value = user;
+
+    // Debug logs
+    console.log('User object:', user);
+    console.log('User photoURL:', user?.photoURL);
+    console.log('Default Avatar:', defaultAvatar);
+
+    userAvatar.value = user?.photoURL || defaultAvatar;
+    // Debug log after assignment
+    console.log('Final avatar value:', userAvatar.value);
   });
 });
 
 const handleSignOut = async () => {
-  try {
-    await signOut(auth);
+  const result = await authService.logout();
+  if (result.success) {
     router.push('/login');
-  } catch (error) {
-    console.error('Error signing out:', error);
   }
 };
 
@@ -90,7 +101,7 @@ const toggleMenu = () => {
 };
 
 const handleImageError = (e) => {
-  e.target.src = '/default-avatar.png';
+  e.target.src = defaultAvatar;
 };
 </script>
 
