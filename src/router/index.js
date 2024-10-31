@@ -3,8 +3,9 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { auth } from '../firebaseConfig'
 import HomePage from '../views/HomePage.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
-import LoginForm from '../components/UserLogin/LoginForm.vue'
-import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue' 
+import LoginForm from '../components/UserLogin/LoginForm.vue';
+import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
+import Profile from '../views/Profile.vue';
 
 // Define routes
 const routes = [
@@ -32,6 +33,12 @@ const routes = [
     path: '/swipe',
     name: 'MovieSwiper',
     component: MovieSwiper,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: Profile,
     meta: { requiresAuth: true }
   }
 ];

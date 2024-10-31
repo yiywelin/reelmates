@@ -55,7 +55,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '../../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -66,6 +66,7 @@ const router = useRouter();
 const currentUser = ref(null);
 const isMenuOpen = ref(false);
 const userAvatar = ref(defaultAvatar); 
+provide('userAvatar', userAvatar);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
