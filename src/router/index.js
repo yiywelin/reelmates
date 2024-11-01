@@ -6,6 +6,7 @@ import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
 import Profile from '../views/Profile.vue';
+import EnhancedFriendsPage from '../components/friends/EnhancedFriendsPage.vue'
 
 // Define routes
 const routes = [
@@ -33,6 +34,12 @@ const routes = [
     path: '/swipe',
     name: 'MovieSwiper',
     component: MovieSwiper,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/friends',
+    name: 'Friends',
+    component: EnhancedFriendsPage,
     meta: { requiresAuth: true }
   },
   {

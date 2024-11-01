@@ -73,6 +73,9 @@ const navLinks = [
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
+  { name: 'Friends', path: '/friends' }, // 
+
+  
 ];
 
 onMounted(() => {
