@@ -64,10 +64,15 @@ const router = useRouter();
 const currentUser = ref(null);
 const isMenuOpen = ref(false);
 
+
+// add new nav links here
 const navLinks = [
   { name: 'Home', path: '/' },
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Profile', path: '/profile' },
+  { name: 'Friends', path: '/friends' }, // 
+
+  
 ];
 
 onMounted(() => {
