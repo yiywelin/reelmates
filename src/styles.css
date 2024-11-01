@@ -1,0 +1,165 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, #1e1e1e, #2a2a2a); /* Dark gradient */
+    overflow: hidden;
+    color: #f0f0f0; /* Light text color */
+}
+
+.chat-app {
+    width: 100%;
+    max-width: 500px;
+    height: 100vh;
+    background: #1c1c1c; /* Dark chat background */
+    display: flex;
+    flex-direction: column;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
+    position: absolute;
+    right: 0;
+    overflow: hidden;
+}
+
+/* Header section */
+.chat-header {
+    background-color: #333333; /* Darker header */
+    color: #ffffff;
+    padding: 15px;
+    text-align: center;
+}
+
+.chat-header h2 {
+    font-size: 18px;
+}
+
+.username-display {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+/* Setup section */
+.setup-section {
+    padding: 15px;
+    background-color: #2a2a2a; /* Dark setup section */
+    border-bottom: 1px solid #444; /* Darker border */
+}
+
+.setup-section label {
+    display: block;
+    font-size: 14px;
+    color: #bbbbbb;
+    margin-bottom: 5px;
+}
+
+.setup-section input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #333333;
+    color: #f0f0f0;
+}
+
+#join-room {
+    width: 100%;
+    padding: 8px;
+    background-color: #4caf50;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Chat window styling */
+.chat-window {
+    flex-grow: 1;
+    background-color: #1a1a1a; /* Dark background for chat window */
+    padding: 15px;
+    overflow-y: auto;
+}
+
+.messages {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Message styling */
+.message {
+    max-width: 75%;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 18px;
+    line-height: 1.4;
+    font-size: 14px;
+    color: #f0f0f0; /* Light text color */
+    position: relative;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background-color: #2d7a46; /* Dark green for sent messages */
+    border-bottom-right-radius: 0;
+    /* 18px for following messages in a sequence */
+}
+
+.message.received {
+    align-self: flex-start;
+    background-color: #333333; /* Dark gray for received messages */
+    border: 1px solid #444; /* Darker border */
+    border-bottom-left-radius: 0;
+    /* 18px for following messages in a sequence */
+}
+
+
+/* Username label styling */
+.username-label {
+    font-size: 12px;
+    color: #888888;
+    margin-bottom: 2px;
+    padding-left: 8px;
+}
+
+.sender-username-label{
+    align-self: flex-end;
+}
+
+/* Message input section */
+.input-section {
+    display: flex;
+    padding: 10px;
+    background-color: #2a2a2a; /* Dark background for input section */
+    border-top: 1px solid #444; /* Darker border */
+}
+
+#message-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #555;
+    border-radius: 6px;
+    background-color: #333333;
+    color: #f0f0f0;
+    margin-right: 10px;
+}
+
+#send-btn {
+    padding: 10px;
+    background-color: #4caf50;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#send-btn:hover {
+    background-color: #45a049; /* Slightly lighter green for hover */
+}
