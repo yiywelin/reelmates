@@ -1,344 +1,248 @@
-```vue
 <template>
-  <div class="main-content">
-    <!-- Add navbar at the top -->
-    <NavBar />
-  <div class="theater-container">
-    <TheatricalBackground />
-    
-    <!-- Hero Section -->
-    <div class="hero-section">
-      <!-- <h1 class="main-title">REELMATES</h1> -->
-      
-      <!-- Neon Sign -->
-      <div class="neon-sign">
-        <span class="neon-text">Now Playing</span>
-      </div>
+  <div class="min-h-screen bg-[#0A0A1F] flex flex-col">
+    <!-- Fixed height nav container -->
+    <div class="h-[70px] flex-shrink-0">
+      <NavBar />
     </div>
+    
+    <!-- Main content that takes remaining height -->
+    <div class="flex-grow relative">
+      <div class="relative flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
+        <TheatricalBackground />
+        
+        <!-- Hero Section -->
+        <div class="text-center mb-16 animate-fadeIn mt-12">
+          <div>
+            <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
+              [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+              Your Recommended Movies
+            </span>
+          </div>
+        </div>
 
-    <!-- Genre Selection -->
-    <div class="floating-genres">
-      <div class="genres-title">SELECT YOUR GENRES</div>
-      <div class="genres-container">
-        <div 
-          v-for="(genre, index) in genres" 
-          :key="genre.id"
-          class="genre-button"
-          :class="{ 'selected': selectedGenres.includes(genre.id) }"
-          :style="{ animationDelay: `${index * 0.1}s` }"
-          @click="toggleGenre(genre.id)"
-        >
-          <div class="neon-border"></div>
-          <span class="genre-icon">{{ genre.icon }}</span>
-          <span class="genre-name">{{ genre.name }}</span>
-          <div class="neon-glow"></div>
+        <!-- Movie Carousel -->
+        <div class="relative w-full max-w-[1600px] mx-auto px-4 md:px-16 lg:px-20">
+          <!-- Navigation Buttons -->
+          <button 
+            class="absolute top-1/2 -translate-y-1/2 w-12 md:w-16 h-12 md:h-16 rounded-full
+              bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
+              duration-300 z-10 left-2 md:left-8 disabled:opacity-0 disabled:cursor-default
+              hover:bg-[rgba(103,95,242,0.2)] hover:scale-110 group"
+            @click="prev"
+            :disabled="currentIndex === 0"
+            :class="{ 'opacity-0 pointer-events-none': currentIndex === 0 }"
+            aria-label="Previous movies"
+          >
+            <div class="flex items-center justify-center w-full h-full transition-transform duration-300 group-hover:scale-90">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+            </div>
+          </button>
+
+          <div 
+            class="overflow-hidden -mx-4 md:-mx-6 lg:-mx-8"
+            @touchstart="handleTouchStart"
+            @touchmove="handleTouchMove"
+            @touchend="handleTouchEnd"
+            ref="carouselRef"
+          >
+            <div 
+              class="flex"
+              :style="{ 
+                transform: `translateX(-${currentIndex * (100 / visibleMovies)}%)`,
+                transition: isAnimating ? 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
+              }"
+            >
+              <div 
+                v-for="movie in movies" 
+                :key="movie.id"
+                :style="{ flex: `0 0 ${100 / visibleMovies}%` }"
+                class="px-4 md:px-6 lg:px-8 relative rounded-2xl cursor-pointer overflow-hidden
+                  transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
+                @click="selectMovie(movie)"
+              >
+                <div class="relative pb-[150%]">
+                  <img 
+                    :src="movie.imageUrl" 
+                    :alt="movie.title"
+                    class="absolute inset-0 w-full h-full object-cover rounded-2xl
+                      transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl"
+                  />
+                  <div class="absolute inset-x-0 bottom-0 p-6 md:p-8 lg:p-10 bg-gradient-to-t 
+                    from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent 
+                    rounded-b-2xl translate-y-full transition-transform duration-300 
+                    group-hover:translate-y-0">
+                    <h3 class="text-lg md:text-xl lg:text-2xl font-semibold text-white m-0 
+                      [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
+                      {{ movie.title }}
+                    </h3>
+                    <div class="mt-3 md:mt-5 opacity-0 translate-y-5 transition-all duration-300 
+                      group-hover:opacity-100 group-hover:translate-y-0">
+                      <span class="inline-block px-4 py-2 md:px-6 md:py-3 bg-[#675FF2] text-white 
+                        rounded-lg text-sm md:text-base font-medium transition-all duration-300 
+                        hover:bg-[#7B74FF] hover:-translate-y-0.5
+                        hover:shadow-[0_4px_12px_rgba(103,95,242,0.3)]">
+                        View Details
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            class="absolute top-1/2 -translate-y-1/2 w-12 md:w-16 h-12 md:h-16 rounded-full
+              bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
+              duration-300 z-10 right-2 md:right-8 disabled:opacity-0 disabled:cursor-default
+              hover:bg-[rgba(103,95,242,0.2)] hover:scale-110 group"
+            @click="next"
+            :disabled="currentIndex >= movies.length - visibleMovies"
+            :class="{ 'opacity-0 pointer-events-none': currentIndex >= movies.length - visibleMovies }"
+            aria-label="Next movies"
+          >
+            <div class="flex items-center justify-center w-full h-full transition-transform duration-300 group-hover:scale-90">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18l6-6-6-6" />
+              </svg>
+            </div>
+          </button>
         </div>
       </div>
     </div>
-
-    <!-- CTA Section -->
-    <div class="cta-section">
-      <button 
-        class="start-button"
-        :class="{ 'active': canSwipe }"
-        :disabled="!canSwipe"
-        @click="startSwiping"
-      >
-        <span class="button-text">SWIPE NOW</span>
-        <div class="button-glow"></div>
-        <div class="light-beam"></div>
-      </button>
-
-      <!-- <button 
-        class="random-button"
-        @click="selectRandom"
-      >
-        <span class="button-text">SURPRISE ME</span>
-        <div class="neon-flicker"></div>
-      </button> -->
-    </div>
-  </div>
   </div>
 </template>
 
+<!-- Script and Style sections remain the same -->
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import TheatricalBackground from '../components/Backgrounds/TheatricalBackground.vue'
+import TheatricalBackground from '../components/Backgrounds/TheatricalBlackBackground.vue'
 import NavBar from '../components/ui/NavBar.vue'
-// import TheaterBackground from '@/components/Backgrounds/TheaterBackground.vue';
-//import CinematicBackground from '@/components/Backgrounds/CinematicBackground.vue';
+import { scifiMovies as movies } from '../data/movies'
 
 const router = useRouter()
+const currentIndex = ref(0)
+const isAnimating = ref(false)
+const touchStart = ref(null)
+const touchEnd = ref(null)
+const carouselRef = ref(null)
+const visibleMovies = ref(3)
 
-const genres = [
-  { id: 'action', name: 'Action', icon: '💥' },
-  { id: 'comedy', name: 'Comedy', icon: '😄' },
-  { id: 'drama', name: 'Drama', icon: '🎭' },
-  { id: 'adventure', name: 'Adventure', icon: '🗺️' },
-  { id: 'scifi', name: 'Science Fiction', icon: '🚀' },
-  { id: 'fantasy', name: 'Fantasy', icon: '🔮' },
-  { id: 'thriller', name: 'Thriller', icon: '😱' },
-  { id: 'romance', name: 'Romance', icon: '💝' },
-  { id: 'crime', name: 'Crime', icon: '🕵️' },
-  { id: 'animation', name: 'Animation', icon: '🎨' }
-]
-
-const selectedGenres = ref([])
-const canSwipe = computed(() => selectedGenres.value.length > 0)
-
-const toggleGenre = (genreId) => {
-  const index = selectedGenres.value.indexOf(genreId)
-  if (index === -1) {
-    selectedGenres.value.push(genreId)
+const updateVisibleMovies = () => {
+  if (!carouselRef.value) return
+  
+  const width = window.innerWidth
+  
+  if (width < 640) {
+    visibleMovies.value = 1 // Mobile
+  } else if (width < 1024) {
+    visibleMovies.value = 2 // Tablet
   } else {
-    selectedGenres.value.splice(index, 1)
+    visibleMovies.value = 3 // Desktop and up
+  }
+  
+  if (currentIndex.value > movies.length - visibleMovies.value) {
+    currentIndex.value = Math.max(0, movies.length - visibleMovies.value)
   }
 }
 
-// const selectRandom = () => {
-//   selectedGenres.value = ['random']
-//   startSwiping()
-// }
+const next = () => {
+  if (currentIndex.value < movies.length - visibleMovies.value) {
+    isAnimating.value = true
+    currentIndex.value++
+  }
+}
 
-const startSwiping = () => {
+const prev = () => {
+  if (currentIndex.value > 0) {
+    isAnimating.value = true
+    currentIndex.value--
+  }
+}
+
+const selectMovie = (movie) => {
   router.push({
-    path: '/swipe',
-    query: { genres: selectedGenres.value.join(',') }
+    path: `/movies/${movie.id}`,
+    query: { title: movie.title }
   })
 }
 
+const handleTouchStart = (e) => {
+  touchStart.value = e.touches[0].clientX
+  touchEnd.value = touchStart.value
+  isAnimating.value = false
+}
+
+const handleTouchMove = (e) => {
+  touchEnd.value = e.touches[0].clientX
+}
+
+const handleTouchEnd = () => {
+  if (!touchStart.value || !touchEnd.value) return
+  
+  const distance = touchStart.value - touchEnd.value
+  const minSwipeDistance = 50
+
+  if (Math.abs(distance) >= minSwipeDistance) {
+    isAnimating.value = true
+    if (distance > 0) {
+      next()
+    } else {
+      prev()
+    }
+  }
+
+  touchStart.value = null
+  touchEnd.value = null
+}
+
+const handleKeydown = (e) => {
+  if (e.key === 'ArrowLeft') {
+    prev()
+  } else if (e.key === 'ArrowRight') {
+    next()
+  }
+}
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+  updateVisibleMovies()
+  window.addEventListener('resize', debounce(updateVisibleMovies, 250))
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('resize', updateVisibleMovies)
+})
 </script>
 
-<style scoped>
-.main-content {
-  min-height: 100vh;
-  background: #0A0A1F;
-}
-
-.theater-container {
-  padding-top: 70px;
-  min-height: calc(100vh - 70px);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
-  color: #D0CCE3;
-  z-index: 1;
-}
-
-.hero-section {
-  text-align: center;
-  margin-bottom: 4rem;
-  animation: fadeIn 1s ease-out;
-}
-
-.main-title {
-  font-size: 5rem;
-  font-weight: 900;
-  letter-spacing: 8px;
-  margin-bottom: 1rem;
-  background: linear-gradient(45deg, #675FF2, #DB3DCF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 10px rgba(103, 95, 242, 0.5));
-}
-
-.tagline {
-  font-size: 1.8rem;
-  color: #D0CCE3;
-  text-shadow: 0 0 10px rgba(208, 204, 227, 0.5);
-}
-
-.neon-sign {
-  margin-top: 5rem;
-}
-
-.neon-text {
-  font-size: 2rem;
-  color: #DB3DCF;
-  text-shadow: 
-    0 0 5px #DB3DCF,
-    0 0 10px #DB3DCF,
-    0 0 20px #DB3DCF;
-  animation: neonFlicker 2s infinite;
-}
-
-.floating-genres {
-  width: 100%;
-  max-width: 1200px;
-  margin-bottom: 4rem;
-  z-index: 2;
-}
-
-.genres-title {
-  text-align: center;
-  font-size: 1.5rem;
-  margin-bottom: 2rem;
-  letter-spacing: 4px;
-  color: #675FF2;
-  text-shadow: 0 0 10px #675FF2;
-}
-
-.genres-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1.5rem;
-  padding: 1rem;
-}
-
-.genre-button {
-  position: relative;
-  padding: 1.5rem;
-  background: rgba(60, 57, 126, 0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  overflow: hidden;
-  animation: float 0.5s ease-out forwards;
-  opacity: 0;
-}
-
-.neon-border {
-  position: absolute;
-  inset: 0;
-  border: 2px solid #675FF2;
-  border-radius: 12px;
-  box-shadow: 0 0 10px #675FF2;
-  opacity: 0.5;
-  transition: all 0.3s ease;
-}
-
-.genre-icon {
-  font-size: 2.5rem;
-  transition: transform 0.3s ease;
-}
-
-.genre-name {
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.genre-button:hover {
-  transform: translateY(-5px);
-}
-
-.genre-button:hover .neon-border {
-  opacity: 1;
-  box-shadow: 0 0 20px #675FF2;
-}
-
-.genre-button.selected {
-  background: rgba(219, 61, 207, 0.2);
-}
-
-.genre-button.selected .neon-border {
-  border-color: #DB3DCF;
-  box-shadow: 0 0 20px #DB3DCF;
-}
-
-.cta-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  align-items: center;
-}
-
-.start-button {
-  position: relative;
-  padding: 1.5rem 4rem;
-  font-size: 1.5rem;
-  font-weight: bold;
-  background: none;
-  border: 2px solid #675FF2;
-  border-radius: 12px;
-  color: #D0CCE3;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.button-glow {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(45deg, #675FF2, #DB3DCF);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.light-beam {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(103, 95, 242, 0.5),
-    transparent
-  );
-  transform: translateX(-100%);
-}
-
-.start-button:hover:not(:disabled) .light-beam {
-  animation: beam 2s infinite;
-}
-
-.start-button.active {
-  border-color: #DB3DCF;
-  box-shadow: 0 0 30px rgba(219, 61, 207, 0.5);
-}
-
-.start-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.random-button {
-  background: none;
-  border: none;
-  color: #D0CCE3;
-  font-size: 1.2rem;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: all 0.3s ease;
-}
-
-.random-button:hover {
-  opacity: 1;
-  text-shadow: 0 0 10px #D0CCE3;
-}
-
+<style>
 @keyframes neonFlicker {
   0%, 100% { opacity: 1; }
   90% { opacity: 1; }
   95% { opacity: 0.8; }
 }
 
-@keyframes float {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes beam {
-  100% { transform: translateX(100%); }
+.animate-neonFlicker {
+  animation: neonFlicker 2s infinite;
 }
 
-@media (max-width: 768px) {
-  .main-title {
-    font-size: 3rem;
-  }
-  
-  .tagline {
-    font-size: 1.4rem;
-  }
-  
-  .genres-container {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
+.animate-fadeIn {
+  animation: fadeIn 1s ease-out;
 }
 </style>
-```
