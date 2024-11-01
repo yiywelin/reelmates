@@ -29,7 +29,7 @@
 
         <!-- Error Message Display (New) -->
         <div v-if="errorMessage" 
-             class="text-red-500 bg-red-100/10 p-3 rounded-lg mb-4 text-sm">
+             class="text-red-500 mb-4 text-sm">
           {{ errorMessage }}
         </div>
 
