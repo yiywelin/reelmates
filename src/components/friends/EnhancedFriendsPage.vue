@@ -66,6 +66,8 @@
           v-for="item in paginatedItems"
           :key="item.id"
           class="relative"
+          @mouseenter="showDetails(item)"
+          @mouseleave="hideDetails"
         >
           <button
             @click="toggleSelection(item)"
@@ -88,6 +90,50 @@
             </div>
             <div v-if="activeTab === 'groups'" class="text-xs relative z-10 text-gray-300">{{ item.members.length }} members</div>
           </button>
+          <transition
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="opacity-0 translate-y-1"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-150"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 translate-y-1"
+          >
+            <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
+              <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-50"></div>
+              <div class="relative z-10">
+                <h3 class="text-lg font-semibold mb-2 text-white">{{ item.name }}</h3>
+                <div v-if="activeTab === 'friends'" class="space-y-3">
+                  <p class="text-sm text-gray-300 flex items-center">
+                    <span class="mr-2">{{ getSnackEmoji(item.snackPreference) }}</span>
+                    <span>{{ item.snackPreference }}</span>
+                  </p>
+                  <div>
+                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Matched Genres:</h4>
+                    <div class="flex flex-wrap gap-1">
+                      <span v-for="genre in item.genres" :key="genre" class="text-xs bg-blue-500/30 text-blue-200 px-2 py-1 rounded-full">{{ genre }}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Matched Movies:</h4>
+                    <ul class="text-xs text-gray-300">
+                      <li v-for="movie in item.matchedMovies" :key="movie" class="mb-1 flex items-center">
+                        <span class="mr-2">🎬</span>{{ movie }}
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <div v-if="activeTab === 'groups'">
+                  <h4 class="text-sm font-semibold mb-1 text-gray-400">Members:</h4>
+                  <ul class="text-xs text-gray-300">
+                    <li v-for="member in item.members.slice(0, 3)" :key="member.id" class="mb-1 flex items-center">
+                      <span class="mr-2">👤</span>{{ member.name }}
+                    </li>
+                    <li v-if="item.members.length > 3" class="text-gray-400 italic">and {{ item.members.length - 3 }} more...</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </transition>
         </div>
       </div>
 
@@ -109,6 +155,8 @@
         </button>
       </div>
 
+
+
       <div v-if="selectedItems.length > 0" class="fixed bottom-8 left-1/2 transform -translate-x-1/2">
         <button 
           @click="openPlanMovieNightDialog"
@@ -118,22 +166,28 @@
           Plan Movie Night ({{ selectedItems.length }} selected)
         </button>
       </div>
+      <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
     </div>
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/ui/NavBar.vue';
-
 import defaultAvatar from '@/assets/images/default-avatar.png';
+import MovieNightPlanningModal from './createWatchPartyModal.vue';
 
+
+const hoveredItem = ref(null);
 const activeTab = ref('friends');
 const selectedItems = ref([]);
 const selectedGenres = ref([]);
 const searchQuery = ref('');
 const currentPage = ref(1);
 const showGenreFilter = ref(false);
+const showDetailsTimeout = ref(null);
+const hideDetailsTimeout = ref(null);
 
 const ITEMS_PER_PAGE = 15;
 
@@ -247,12 +301,26 @@ const openPlanMovieNightDialog = () => {
   // Implement plan movie night dialog logic
   console.log('Open plan movie night dialog');
 };
+
+const showDetails = (item) => {
+  clearTimeout(hideDetailsTimeout.value);
+  showDetailsTimeout.value = setTimeout(() => {
+    hoveredItem.value = item;
+  }, 100);
+};
+
+const hideDetails = () => {
+  clearTimeout(showDetailsTimeout.value);
+  hideDetailsTimeout.value = setTimeout(() => {
+    hoveredItem.value = null;
+  }, 300);
+};
 </script>
 
 <style scoped>
 @keyframes gradient-shift {
   0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  50% {   background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
 .animate-gradient-shift {
