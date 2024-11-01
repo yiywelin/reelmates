@@ -4,7 +4,8 @@ import { auth } from '../firebaseConfig'
 import HomePage from '../views/HomePage.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue'
-import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue' 
+import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue'
+import Recommendations from '../views/Recommendations.vue' 
 
 // Define routes
 const routes = [
@@ -33,6 +34,11 @@ const routes = [
     name: 'MovieSwiper',
     component: MovieSwiper,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/recommendations',
+    name: 'Recommended',
+    component: Recommendations
   }
 ];
 
@@ -58,3 +64,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router;
+
