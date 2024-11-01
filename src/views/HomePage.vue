@@ -12,7 +12,7 @@
       
       <!-- Neon Sign -->
       <div class="neon-sign">
-        <span class="neon-text">Now Playing</span>
+        <span class="neon-text">Find Your Perfect Movie Match</span>
       </div>
     </div>
 

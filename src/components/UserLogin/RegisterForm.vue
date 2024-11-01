@@ -92,12 +92,7 @@
 <script>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { 
-  GoogleAuthProvider, 
-  signInWithPopup, 
-  createUserWithEmailAndPassword
-} from "firebase/auth";
-import { auth } from "../../firebaseConfig";
+import { authService } from '../../services/authService';
 
 export default {
   name: "RegisterForm",
@@ -107,13 +102,6 @@ export default {
     const password = ref("");
     const errorMessage = ref("");
     const isLoading = ref(false);
-
-    // Clear form fields
-    const clearForm = () => {
-      email.value = "";
-      password.value = "";
-      errorMessage.value = "";
-    };
 
     // Form validation
     const validateForm = () => {
@@ -137,61 +125,45 @@ export default {
       return true;
     };
 
-    // Error handling
-    const handleAuthError = (error) => {
-      switch (error.code) {
-        case 'auth/invalid-email':
-          errorMessage.value = 'Invalid email address';
-          break;
-        case 'auth/user-disabled':
-          errorMessage.value = 'This account has been disabled';
-          break;
-        case 'auth/user-not-found':
-          errorMessage.value = 'No account found with this email';
-          break;
-        case 'auth/wrong-password':
-          errorMessage.value = 'Incorrect password';
-          break;
-        case 'auth/email-already-in-use':
-          errorMessage.value = 'Email already in use';
-          break;
-        case 'auth/weak-password':
-          errorMessage.value = 'Password should be at least 6 characters';
-          break;
-        default:
-          errorMessage.value = 'An error occurred. Please try again.';
-      }
-    };
-
-    // Sign in with Google
-    const signInWithGoogle = async () => {
-      isLoading.value = true;
-      const provider = new GoogleAuthProvider();
-      try {
-        const result = await signInWithPopup(auth, provider);
-        console.log("User signed in with Google:", result.user);
-        router.push('/home');
-      } catch (error) {
-        console.error("Error signing in with Google:", error.message);
-        handleAuthError(error);
-      } finally {
-        isLoading.value = false;
-      }
-    };
-
     // Create account with email/password
     const createAccount = async () => {
       if (!validateForm()) return;
       
       isLoading.value = true;
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
-        console.log("User registered:", userCredential.user);
-        clearForm();
-        router.push('/home');
+        const result = await authService.registerUser(email.value, password.value);
+        
+        if (result.success) {
+          console.log("Registration successful");
+          email.value = "";
+          password.value = "";
+          router.push('/home');
+        } else {
+          errorMessage.value = result.error;
+        }
       } catch (error) {
-        console.error("Error registering:", error.message);
-        handleAuthError(error);
+        console.error("Registration error:", error);
+        errorMessage.value = 'An unexpected error occurred';
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
+    // Google Sign In
+    const signInWithGoogle = async () => {
+      isLoading.value = true;
+      try {
+        const result = await authService.signInWithGoogle();
+        
+        if (result.success) {
+          console.log("Google sign in successful");
+          router.push('/home');
+        } else {
+          errorMessage.value = result.error;
+        }
+      } catch (error) {
+        console.error("Google sign in error:", error);
+        errorMessage.value = 'An unexpected error occurred';
       } finally {
         isLoading.value = false;
       }
