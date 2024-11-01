@@ -78,7 +78,7 @@
           >
             <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             <img
-              :src="item.avatar || `/placeholder.svg?height=80&width=80&text=${item.name}`"
+              :src="defaultAvatar"
               :alt="item.name"
               class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10"
             />
@@ -125,6 +125,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/ui/NavBar.vue';
+
+import defaultAvatar from '@/assets/images/default-avatar.png';
 
 const activeTab = ref('friends');
 const selectedItems = ref([]);
