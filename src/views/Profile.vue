@@ -14,16 +14,23 @@
         <img :src="userAvatar" alt="User Avatar" class="w-24 h-24 rounded-full mt-20" />
 
         <!-- User Name -->
-        <h2 class="text-xl font-semibold text-center">Person 1</h2>
+        <h2 class="text-xl font-semibold text-center mt-2">Person 1</h2>
 
         <!-- Spacing -->
         <div class="my-4"></div>
 
-        <hr class="border-white w-full mb-2" />
+        <hr class="border-white w-full" />
+        <ul class="space-y-2 text-center -mb-15"></ul>
 
         <!-- Friends List -->
-        <h3 class="text-lg font-medium text-center mt-5">Friends</h3>
-        <ul class="mt-2 space-y-2 text-center">
+        <div class="relative flex items-center justify-center">
+          <h3 class="text-lg font-medium underline">Friends</h3>
+          <span
+            class="absolute left-20 top-1/2 -translate-y-1/2 navigation-button bg-purple-600 text-white rounded-full w-7 h-auto items-center justify-center">
+            &gt; <!-- Right arrow symbol -->
+          </span>
+        </div>
+        <ul class="space-y-2 text-center -mt-10 mb-20">
           <li>Friend 1</li>
           <li>Friend 2</li>
           <li>Friend 3</li>
@@ -34,17 +41,18 @@
       <div class="right-panel w-5/6 ml-60">
         <!-- Recommended for You Section -->
         <div class="mb-10">
-          <h3 class="text-2xl font-semibold mb-1 mt-3">Recommended for You</h3>
+          <div class="flex items-center justify-between mt-3 mb-1">
+            <h3 class="text-2xl font-semibold">Recommended for You</h3>
+            <button class="bg-purple-600 text-white px-4 py-2 rounded-lg">
+              Generate Your Recommendation
+            </button>
+          </div>
           <hr class="border-gray-600 mb-4" />
 
           <!-- Carousel for Movie Cards -->
-          <div class="flex overflow-hidden relative"
-            @mousedown="startDrag"
-            @mousemove="onDrag"
-            @mouseup="stopDrag"
+          <div class="flex overflow-hidden relative" @mousedown="startDrag" @mousemove="onDrag" @mouseup="stopDrag"
             @mouseleave="stopDrag">
-            <div class="flex transition-transform"
-              :style="{ transform: `translateX(-${currentTranslate}px)` }">
+            <div class="flex transition-transform" :style="{ transform: `translateX(-${currentTranslate}px)` }">
               <div v-for="card in cards" :key="'rec-' + card"
                 class="relative flex flex-col shrink-0 w-56 bg-[#3f2763] rounded-lg shadow-md cards mx-1">
                 <div class="relative w-full h-full neon-border-wrapper">
@@ -57,7 +65,8 @@
                       <div class="w-full pl-4 mt-2">
                         <h5 class="text-lg font-semibold">Movie Title</h5>
                         <p class="mb-1">4.5 <span class="text-warning">★ ★ ★ ★ ★</span> (100 ratings)</p>
-                        <p class="text-sm truncate">Movie description goes here. It's a placeholder for a brief overview of the movie.</p>
+                        <p class="text-sm truncate">Movie description goes here. It's a placeholder for a brief overview
+                          of the movie.</p>
                       </div>
                     </div>
                     <hr class="border-gray-600 my-2" />
@@ -92,13 +101,9 @@
           <hr class="border-gray-600 mb-4" />
 
           <!-- Carousel for Movie Cards -->
-          <div class="flex overflow-hidden relative"
-            @mousedown="startDrag"
-            @mousemove="onDrag"
-            @mouseup="stopDrag"
+          <div class="flex overflow-hidden relative" @mousedown="startDrag" @mousemove="onDrag" @mouseup="stopDrag"
             @mouseleave="stopDrag">
-            <div class="flex transition-transform"
-              :style="{ transform: `translateX(-${currentTranslate}px)` }">
+            <div class="flex transition-transform" :style="{ transform: `translateX(-${currentTranslate}px)` }">
               <div v-for="card in cards" :key="'rec-' + card"
                 class="relative flex flex-col shrink-0 w-56 bg-[#3f2763] rounded-lg shadow-md cards mx-1">
                 <div class="relative w-full h-full neon-border-wrapper">
@@ -111,7 +116,8 @@
                       <div class="w-full pl-4 mt-2">
                         <h5 class="text-lg font-semibold">Movie Title</h5>
                         <p class="mb-1">4.5 <span class="text-warning">★ ★ ★ ★ ★</span> (100 ratings)</p>
-                        <p class="text-sm truncate">Movie description goes here. It's a placeholder for a brief overview of the movie.</p>
+                        <p class="text-sm truncate">Movie description goes here. It's a placeholder for a brief overview
+                          of the movie.</p>
                       </div>
                     </div>
                     <hr class="border-gray-600 my-2" />
@@ -254,7 +260,8 @@ html,
 body {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent body from scrolling */
+  overflow: hidden;
+  /* Prevent body from scrolling */
 }
 
 .main-content {
@@ -264,46 +271,62 @@ body {
 
 .flex {
   display: flex;
-  height: 100%; /* Ensure the flex container takes full height */
+  height: 100%;
+  /* Ensure the flex container takes full height */
 }
 
 .left-panel {
-  height: 100vh; /* Full height of the viewport */
-  z-index: 10; /* Ensure it stays above the background */
-  padding: 1rem; /* Add padding if needed */
-  box-sizing: border-box; /* Include padding in width/height */
+  height: 100vh;
+  /* Full height of the viewport */
+  z-index: 10;
+  /* Ensure it stays above the background */
+  padding: 1rem;
+  /* Add padding if needed */
+  box-sizing: border-box;
+  /* Include padding in width/height */
 }
 
 .right-panel {
-  width: 83.3333%; /* 5/6 of the width (1 - 1/6) */
-  padding: 1rem; /* Added padding to right panel */
-  overflow-y: auto; /* Allow scrolling only in the right panel */
-  box-sizing: border-box; /* Include padding in width */
+  width: 83.3333%;
+  /* 5/6 of the width (1 - 1/6) */
+  padding: 1rem;
+  /* Added padding to right panel */
+  overflow-y: auto;
+  /* Allow scrolling only in the right panel */
+  box-sizing: border-box;
+  /* Include padding in width */
 }
 
 /* Preventing internal scrollbars */
 .right-panel>* {
-  flex-shrink: 0; /* Prevent children from shrinking */
+  flex-shrink: 0;
+  /* Prevent children from shrinking */
 }
 
 .movie-image-placeholder {
-  background: #4B5563; /* Tailwind's gray-600 */
+  background: #4B5563;
+  /* Tailwind's gray-600 */
 }
 
 .neon-border-wrapper {
   position: relative;
-  width: 100%; /* Ensure it takes full size of the card */
-  height: 100%; /* Ensure it takes full size of the card */
+  width: 100%;
+  /* Ensure it takes full size of the card */
+  height: 100%;
+  /* Ensure it takes full size of the card */
 }
 
 .neon-border {
   position: absolute;
-  inset: 0; /* Cover the entire card */
+  inset: 0;
+  /* Cover the entire card */
   border: 2px solid #675ff2;
-  border-radius: 8px; /* Adjusted radius for better appearance */
+  border-radius: 8px;
+  /* Adjusted radius for better appearance */
   box-shadow: 0 0 10px #675ff2;
   opacity: 0.5;
-  pointer-events: none; /* Allow interaction with the card below */
+  pointer-events: none;
+  /* Allow interaction with the card below */
   transition: all 0.3s ease;
 }
 
@@ -313,17 +336,25 @@ body {
 }
 
 .navigation-button {
-  background-color: #9e8bba; /* Background color for the button */
-  color: white; /* Text color */
-  border: none; /* Remove default border */
-  border-radius: 25%; /* Make it circular */
-  padding: 10px; /* Add some padding for the button */
-  cursor: pointer; /* Change cursor on hover */
-  z-index: 20; /* Ensure it stays above the carousel */
+  background-color: #9e8bba;
+  /* Background color for the button */
+  color: white;
+  /* Text color */
+  border: none;
+  /* Remove default border */
+  border-radius: 25%;
+  /* Make it circular */
+  padding: 10px;
+  /* Add some padding for the button */
+  cursor: pointer;
+  /* Change cursor on hover */
+  z-index: 20;
+  /* Ensure it stays above the carousel */
 }
 
 /* Additional styles for the carousel */
 .carousel {
-  transition: transform 0.3s ease; /* Smooth transition for carousel */
+  transition: transform 0.3s ease;
+  /* Smooth transition for carousel */
 }
 </style>
