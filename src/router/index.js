@@ -3,23 +3,16 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { auth } from '../firebaseConfig';
 import HomePage from '../views/HomePage.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
-<<<<<<< Updated upstream
-import LoginForm from '../components/UserLogin/LoginForm.vue'
-import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue' 
-import EnhancedFriendsPage from '../components/friends/EnhancedFriendsPage.vue'
-=======
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
 import WatchParty from '../components/WatchParty/WatchParty.vue';
 import MovieRoulette from '@/components/MovieRoulette/MovieRoulette.vue';
-// import MovieRoulette from '../components/MovieRoulette/MovieRoulette.vue';
->>>>>>> Stashed changes
+import MeetTheTeam from '@/views/MeetTheTeam.vue';
 
-// Define routes
 const routes = [
   {
     path: '/',
-    redirect: '/register'
+    redirect: '/home'  // Updated to redirect to home instead of register
   },
   {
     path: '/register',
@@ -38,39 +31,37 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/swipe',
+    path: '/swipe',  // Updated from /movie-swiper to /swipe
     name: 'MovieSwiper',
     component: MovieSwiper,
     meta: { requiresAuth: true }
   },
   {
-<<<<<<< Updated upstream
-    path: '/friends',
-    name: 'Friends',
-    component: EnhancedFriendsPage,
-    meta: { requiresAuth: true }
-=======
     path: '/watch-party',
     name: 'WatchParty',
     component: WatchParty,
     meta: { requiresAuth: true }
   },
   {
-    path: '/movie-roulette', // New route path for MovieRoulette
+    path: '/movie-roulette',
     name: 'MovieRoulette',
     component: MovieRoulette,
-    meta: { requiresAuth: true } // Optional auth requirement
->>>>>>> Stashed changes
-  }
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/meet-the-team',
+    name: 'MeetTheTeam',
+    component: MeetTheTeam,
+    meta: { requiresAuth: true }
+  },
 ];
 
-// Create a new router instance
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes,
+  routes
 });
 
-// Navigation guard to check authentication
+// Navigation guard
 router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !auth.currentUser) {
     next('/login');
