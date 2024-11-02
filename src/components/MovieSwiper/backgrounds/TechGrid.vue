@@ -1,3 +1,4 @@
+<!-- TechGrid.vue -->
 <template>
   <div class="tech-grid">
     <div 
@@ -14,7 +15,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, defineProps } from 'vue'
+
+// Define props
+const props = defineProps({
+  primaryColor: {
+    type: String,
+    default: 'rgba(77, 181, 255, 0.2)' // Default blue color
+  },
+  glowColor: {
+    type: String,
+    default: 'rgba(77, 181, 255, 0.5)'
+  }
+})
 
 //const activeCell = ref(null)
 const activeCells = ref(new Set())
@@ -26,6 +39,8 @@ const isActive = (index) => {
 const getCellStyle = (index) => {
   const isActivated = isActive(index)
   return {
+    '--primary-color': props.primaryColor,
+    '--glow-color': props.glowColor,
     transition: 'all 0.3s ease',
     opacity: isActivated ? '1' : '0.3',
     transform: isActivated ? 'scale(1.1)' : 'scale(1)',
@@ -90,8 +105,8 @@ onMounted(() => {
 
 .grid-cell {
   position: relative;
-  background: rgba(77, 181, 255, 0.1);
-  border: 1px solid rgba(77, 181, 255, 0.2);
+  background: var(--primary-color);
+  border: 1px solid var(--primary-color);
   border-radius: 4px;
   pointer-events: auto;
   overflow: hidden;
@@ -105,15 +120,15 @@ onMounted(() => {
   inset: 0;
   background: linear-gradient(45deg, 
     transparent, 
-    rgba(77, 181, 255, 0.2),
+    var(--primary-color),
     transparent
   );
   transform: translateX(-100%);
 }
 
 .grid-cell:hover {
-  background: rgba(77, 181, 255, 0.3);
-  box-shadow: 0 0 10px rgba(77, 181, 255, 0.5);
+  background: var(--glow-color);
+  box-shadow: 0 0 10px var(--glow-color);
 }
 
 .grid-cell:hover .cell-content {
@@ -121,10 +136,10 @@ onMounted(() => {
 }
 
 .grid-cell.active {
-  background: rgba(77, 181, 255, 0.3);
+  background: var(--glow-color);
   box-shadow: 
-    0 0 10px rgba(77, 181, 255, 0.5),
-    0 0 20px rgba(77, 181, 255, 0.3);
+    0 0 10px var(--glow-color),
+    0 0 20px var(--glow-color);
   animation: pulse 1s ease-in-out infinite;
 }
 

@@ -38,7 +38,6 @@
           <!-- Dropdown Menu -->
           <div v-if="isMenuOpen" class="dropdown-menu">
             <router-link to="/profile" class="menu-item">Profile</router-link>
-            <router-link to="/liked" class="menu-item">Liked Movies</router-link>
             <button @click="handleSignOut" class="menu-item logout">
               Sign Out
             </button>
@@ -73,6 +72,9 @@ const navLinks = [
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
+  { name: 'Friends', path: '/friends' }, // 
+
+  
 ];
 
 onMounted(() => {

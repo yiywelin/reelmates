@@ -1,3 +1,4 @@
+<!-- SciFiBackground.vue -->
 <template>
   <div class="sci-fi-background">
     <div class="stars">

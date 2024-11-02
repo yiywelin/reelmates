@@ -5,7 +5,8 @@ import HomePage from '../views/HomePage.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
-import Profile from '../views/Profile.vue';
+import UserProfile from '../views/UserProfile.vue';
+import EnhancedFriendsPage from '../components/friends/EnhancedFriendsPage.vue'
 
 // Define routes
 const routes = [
@@ -36,9 +37,15 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/friends',
+    name: 'Friends',
+    component: EnhancedFriendsPage,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/profile',
-    name: 'Profile',
-    component: Profile,
+    name: 'UserProfile',
+    component: UserProfile,
     meta: { requiresAuth: true }
   }
 ];

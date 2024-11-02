@@ -1,7 +1,26 @@
 <template>
   <div class="swiper-container">
-    <SciFiBackground />
-    
+    <div class="background-container">
+      <!-- Current background -->
+      <transition name="fade">
+        <component 
+          :is="getBackgroundComponent"
+          v-if="getBackgroundComponent"
+          :key="displayedMovies[0]?.id"
+          class="background-element"
+        />
+      </transition>
+
+      <!-- Preload next background (hidden) -->
+      <div style="display: none;">
+        <component 
+          :is="getNextBackgroundComponent"
+          v-if="getNextBackgroundComponent"
+          :key="'next-' + (displayedMovies[1]?.id || '')"
+        />
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="text-white text-xl">
       Loading movies...
@@ -17,8 +36,8 @@
     
     <!-- Content -->
     <template v-else>
-      <div class="flex flex-col items-center justify-center flex-grow">
-        <div class="card-stack-container">
+      <div class="flex flex-col items-center justify-center flex-grow pointer-events-none" style="z-index: 1;">
+        <div class="card-stack-container pointer-events-auto">
           <div class="card-stack">
             <MovieCard
               v-for="(movie, index) in displayedMovies"
@@ -31,28 +50,21 @@
           </div>
         </div>
 
-        <div class="controls-container">
-          <div class="text-center">
-            <p v-if="currentIndex >= movies.length" class="text-xl text-white">
-              {{ isLoadingMore ? 'Loading more movies...' : 'No more movies to swipe!' }}
-            </p>
-            <p v-else class="text-xl text-white">
-              {{ swipeMessage }}
-            </p>
-          </div>
-
-          <div v-if="currentIndex < movies.length" class="flex gap-4 justify-center mt-4">
+        <div class="controls-container pointer-events-auto">
+          <div v-if="currentIndex < movies.length" class="button-container">
             <button
               @click="handleManualSwipe('left')"
-              class="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              class="action-button pass-button"
+              aria-label="Pass"
             >
-              Pass
+              <div class="icon">✕</div>
             </button>
             <button
               @click="handleManualSwipe('right')"
-              class="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+              class="action-button like-button"
+              aria-label="Like"
             >
-              Like
+              <div class="icon">♥</div>
             </button>
           </div>
         </div>
@@ -66,9 +78,33 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
 import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
+import { useRoute } from 'vue-router'
 import MovieCard from './MovieCard.vue'
 import SciFiBackground from './backgrounds/SciFiBackground.vue'
+import RomanceBackground from './backgrounds/RomanceBackground.vue'
+import ActionBackground from './backgrounds/ActionBackground.vue'
+import ThrillerBackground from './backgrounds/ThrillerBackground.vue'
+import DramaBackground from './backgrounds/DramaBackground.vue'
+import AnimationBackground from './backgrounds/AnimationBackground.vue'
+import ComedyBackground from './backgrounds/ComedyBackground.vue'
+import AdventureBackground from './backgrounds/AdventureBackground.vue'
+import FantasyBackground from './backgrounds/FantasyBackground.vue'
+import CrimeBackground from './backgrounds/CrimeBackground.vue'
+import CinematicBackground from '../Backgrounds/CinematicBackground.vue'
 import tmdbService from '../../services/tmdbService'
+
+const GENRE_MAP = {
+  28: 'action',      // Action
+  35: 'comedy',      // Comedy
+  18: 'drama',       // Drama
+  12: 'adventure',   // Adventure
+  878: 'scifi',      // Science Fiction
+  14: 'fantasy',     // Fantasy
+  53: 'thriller',    // Thriller
+  10749: 'romance',  // Romance
+  80: 'crime',       // Crime
+  16: 'animation'    // Animation
+}
 
 const auth = getAuth()
 const currentIndex = ref(0)
@@ -79,14 +115,81 @@ const error = ref(null)
 const loading = ref(true)
 const currentPage = ref(1)
 const isLoadingMore = ref(false)
+const route = useRoute()
+
+const BACKGROUND_MAP = {
+    action: ActionBackground,
+    comedy: ComedyBackground,
+    drama: DramaBackground,
+    adventure: AdventureBackground,
+    scifi: SciFiBackground,
+    fantasy: FantasyBackground,
+    thriller: ThrillerBackground,
+    romance: RomanceBackground,
+    crime: CrimeBackground,
+    animation: AnimationBackground
+}
+
+// Determine which background to show based on genres
+// Update getBackgroundComponent with null checks and debugging
+const getBackgroundComponent = computed(() => {
+  // Check if we have movies to display
+  if (!displayedMovies.value?.length) {
+    console.log('No movies to display, using default background');
+    return CinematicBackground;
+  }
+
+  const currentMovie = displayedMovies.value[0];
+  if (!currentMovie) {
+    console.log('No current movie, using default background');
+    return CinematicBackground;
+  }
+
+  console.log('Current movie:', currentMovie.title);
+  console.log('Full movie object:', currentMovie);
+
+  // Check if genre_ids exists
+  if (!currentMovie.genre_ids || !Array.isArray(currentMovie.genre_ids)) {
+    console.log('No genre_ids found for movie:', currentMovie);
+    return CinematicBackground;
+  }
+
+  // Convert genre_ids to genre names
+  const movieGenres = currentMovie.genre_ids
+    .map(id => GENRE_MAP[id])
+    .filter(Boolean); // Remove any undefined genres
+  
+  console.log('Movie genres in order:', movieGenres);
+
+  // Find first genre with a matching background
+  const firstMatchingGenre = movieGenres.find(genre => BACKGROUND_MAP[genre]);
+  console.log('Selected background genre:', firstMatchingGenre);
+
+  return BACKGROUND_MAP[firstMatchingGenre] || CinematicBackground;
+})
+
+  // computed property for next background
+  const getNextBackgroundComponent = computed(() => {
+  if (!displayedMovies.value?.[1]) return null
+  
+  const nextMovie = displayedMovies.value[1]
+  const nextGenres = nextMovie.genre_ids
+    .map(id => GENRE_MAP[id])
+    .filter(Boolean)
+  
+  const nextGenre = nextGenres.find(genre => BACKGROUND_MAP[genre])
+  return BACKGROUND_MAP[nextGenre] || CinematicBackground
+})
+
+// Get genres from route query
+const selectedGenres = computed(() => {
+  const genresParam = route?.query?.genres
+  return genresParam ? genresParam.split(',') : []
+})
 
 // Show 3 cards at a time
 const displayedMovies = computed(() => {
   return movies.value.slice(currentIndex.value, currentIndex.value + 3)
-})
-
-const swipeMessage = computed(() => {
-  return "Swipe right to like, left to pass"
 })
 
 // Load movies from TMDB
@@ -94,7 +197,26 @@ const loadMovies = async (page = 1) => {
   try {
     loading.value = true
     error.value = null
-    const fetchedMovies = await tmdbService.getPopularMovies(page)
+    
+    const fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
+    console.log('Fetched movies:', fetchedMovies);
+    
+    // Filter movies by selected genres - improved filtering
+    if (fetchedMovies.length === 0) {
+        if (page === 1) {
+            error.value = 'No movies found for selected genres. Try different genres!'
+            movies.value = []
+        }
+        return
+    }
+    
+    if (fetchedMovies.length === 0) {
+      if (page === 1) {
+        error.value = 'No movies found for selected genres. Try different genres!'
+        movies.value = []
+      }
+      return
+    }
     
     if (page === 1) {
       movies.value = fetchedMovies
@@ -102,8 +224,8 @@ const loadMovies = async (page = 1) => {
       movies.value = [...movies.value, ...fetchedMovies]
     }
   } catch (err) {
-    error.value = 'Failed to load movies. Please try again.'
     console.error('Error loading movies:', err)
+    error.value = 'Failed to load movies. Please try again.'
   } finally {
     loading.value = false
   }
@@ -195,49 +317,143 @@ const handleManualSwipe = (direction) => {
 watch(currentIndex, () => {
   checkAndLoadMore()
 })
+watch(selectedGenres, async (newGenres) => {
+  if (newGenres.length > 0) {
+    currentIndex.value = 0
+    currentPage.value = 1
+    await loadMovies()
+  }
+})
 
-// Load initial data when component mounts
 onMounted(async () => {
-  await Promise.all([
-    loadMovies(),
-    loadLikedMovies()
-  ])
+  try {
+    await Promise.all([
+      loadMovies(),
+      loadLikedMovies()
+    ])
+  } catch (err) {
+    console.error('Error loading initial data:', err)
+    error.value = 'Failed to load initial data. Please try again.'
+  }
 })
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.background-element {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
 .swiper-container {
   position: relative;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
   width: 100%;
+  background: #0a0a1f;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center vertically */
+  justify-content: center;
   align-items: center;
-  padding: 2rem;
+}
+
+.background-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .card-stack-container {
-  /* Remove flex: 1 as it's causing the container to stretch */
   position: relative;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2rem; /* Add space between card and controls */
+  margin-bottom: 2rem;
+  z-index: 2;
 }
 
 .card-stack {
   position: relative;
   width: 340px;
   height: 500px;
+  z-index: 2;
 }
 
 .controls-container {
   width: 100%;
   max-width: 2xl;
   text-align: center;
+  margin-bottom: 2rem;
+  z-index: 2;
 }
+
+.text-white,
+.text-red-500 {
+  position: relative;
+  z-index: 2;
+}
+
+.button-container {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: rgba(10, 10, 31, 0.8); /* Dark background matching app theme */
+}
+
+.icon-size {
+  width: 24px;
+  height: 24px;
+}
+
+.pass-button {
+  border-color: #DB3DCF; /* Pink neon border */
+  color: #DB3DCF; /* Pink neon icon */
+  box-shadow: 0 0 10px rgba(219, 61, 207, 0.3); /* Subtle neon glow */
+}
+
+.pass-button:hover {
+  background: rgba(219, 61, 207, 0.2);
+  box-shadow: 0 0 20px rgba(219, 61, 207, 0.5);
+  transform: scale(1.1);
+}
+
+.like-button {
+  border-color: #675FF2; /* Purple neon border */
+  color: #675FF2; /* Purple neon icon */
+  box-shadow: 0 0 10px rgba(103, 95, 242, 0.3); /* Subtle neon glow */
+}
+
+.like-button:hover {
+  background: rgba(103, 95, 242, 0.2);
+  box-shadow: 0 0 20px rgba(103, 95, 242, 0.5);
+  transform: scale(1.1);
+}
+
 
 /* Keep your existing animation keyframes */
 @keyframes exitLeft {
