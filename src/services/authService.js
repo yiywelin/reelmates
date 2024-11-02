@@ -117,11 +117,6 @@ export const authService = {
   // Create user document in Firestore
   async createUserDocument(user) {
     try {
-      // Set default avatar for new users
-      // await updateProfile(userCredential.user, {
-      //   photoURL: defaultAvatar
-      // });
-
       const userRef = doc(db, "users", user.uid);
       await setDoc(userRef, {
         email: user.email,
