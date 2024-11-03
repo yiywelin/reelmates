@@ -1,182 +1,129 @@
-```vue
+<!-- RomanceBackground.vue -->
 <template>
   <div class="romance-background">
-    <!-- Floating Hearts -->
-    <div class="hearts-container">
-      <div v-for="n in 20" :key="`heart-${n}`" 
-           class="floating-heart"
-           :style="getHeartStyle(n)">
-        ❤
-      </div>
+    <TechGrid 
+      primaryColor="rgba(255, 182, 193, 0.15)"
+      glowColor="rgba(255, 105, 180, 0.4)"
+    />
+    
+    <!-- Floating hearts -->
+    <div class="floating-hearts">
+      <div 
+        v-for="n in 15" 
+        :key="`heart-${n}`" 
+        class="heart"
+        :style="getHeartStyle()"
+      ></div>
     </div>
 
-    <!-- Gradient Orbs -->
-    <div class="gradient-orbs">
-      <div class="orb orb-1"></div>
-      <div class="orb orb-2"></div>
-      <div class="orb orb-3"></div>
-    </div>
-
-    <!-- Romantic Light Rays -->
-    <div class="light-rays">
-      <div v-for="n in 8" :key="`ray-${n}`"
-           class="light-ray"
-           :style="getRayStyle(n)">
-      </div>
+    <!-- Glowing orbs -->
+    <div class="glowing-orbs">
+      <div 
+        v-for="n in 8" 
+        :key="`orb-${n}`" 
+        class="orb"
+        :style="getOrbStyle()"
+      ></div>
     </div>
 
     <!-- Sparkles -->
     <div class="sparkles">
-      <div v-for="n in 30" :key="`sparkle-${n}`"
-           class="sparkle"
-           :style="getSparkleStyle(n)">
-        ✦
-      </div>
+      <div 
+        v-for="n in 20" 
+        :key="`sparkle-${n}`" 
+        class="sparkle"
+        :style="getSparkleStyle()"
+      ></div>
     </div>
 
-    <!-- Soft Overlay -->
-    <div class="romantic-overlay"></div>
+    <!-- Flowing ribbons -->
+    <div class="ribbons">
+      <div 
+        v-for="n in 6" 
+        :key="`ribbon-${n}`" 
+        class="ribbon"
+        :style="getRibbonStyle(n)"
+      ></div>
+    </div>
   </div>
 </template>
 
 <script setup>
-const getHeartStyle = (index) => {
-  const delay = index * 0.7
-  const duration = 15 + Math.random() * 10
-  const size = 10 + Math.random() * 20
-  
-  return {
-    '--delay': `${delay}s`,
-    '--duration': `${duration}s`,
-    '--size': `${size}px`,
-    left: `${Math.random() * 100}%`,
-    opacity: 0.1 + Math.random() * 0.3
-  }
-}
+import TechGrid from './TechGrid.vue'
 
-const getRayStyle = (index) => {
-  const rotation = (index * 45) % 360
-  const delay = index * -2
-  return {
-    transform: `rotate(${rotation}deg)`,
-    animationDelay: `${delay}s`
-  }
-}
+const getHeartStyle = () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  animationDelay: `${Math.random() * 5}s`,
+  animationDuration: `${10 + Math.random() * 5}s`,
+  transform: `scale(${0.5 + Math.random() * 0.5})`
+})
 
-const getSparkleStyle = (index) => {
-  const delay = index * 0.3
-  const duration = 3 + Math.random() * 2
-  const size = 2 + Math.random() * 3
-  
-  return {
-    '--delay': `${delay}s`,
-    '--duration': `${duration}s`,
-    '--size': `${size}px`,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`
-  }
-}
+const getOrbStyle = () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  animationDelay: `${Math.random() * 3}s`,
+  transform: `scale(${0.8 + Math.random() * 0.4})`
+})
+
+const getSparkleStyle = () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  animationDelay: `${Math.random() * 3}s`,
+  animationDuration: `${2 + Math.random() * 2}s`
+})
+
+const getRibbonStyle = (index) => ({
+  left: `${(index / 6) * 100}%`,
+  animationDelay: `${index * 0.5}s`,
+  height: `${200 + Math.random() * 100}px`
+})
 </script>
 
 <style scoped>
 .romance-background {
   position: fixed;
   inset: 0;
-  background: linear-gradient(
-    135deg,
-    #1a0f1f 0%,
-    #2b1429 50%,
-    #1f1a2b 100%
-  );
+  background: linear-gradient(135deg, #2d1f3d, #1f1f3d);
   overflow: hidden;
 }
 
 /* Floating Hearts */
-.hearts-container {
+.floating-hearts {
   position: absolute;
   inset: 0;
   pointer-events: none;
 }
 
-.floating-heart {
+.heart {
   position: absolute;
-  font-size: var(--size);
-  color: #DB3DCF;
-  animation: floatHeart var(--duration) linear infinite;
-  animation-delay: var(--delay);
-  opacity: 0;
-  filter: blur(1px);
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 182, 193, 0.3);
+  clip-path: path('M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402m5.726-20.583c-2.203 0-4.446 1.042-5.726 3.238-1.285-2.206-3.522-3.248-5.719-3.248-3.183 0-6.281 2.187-6.281 6.191 0 4.661 5.571 9.429 12 15.809 6.43-6.38 12-11.148 12-15.809 0-4.011-3.095-6.181-6.274-6.181');
+  animation: heartFloat 10s ease-in-out infinite;
+  filter: drop-shadow(0 0 5px rgba(255, 182, 193, 0.5));
 }
 
-/* Gradient Orbs */
-.gradient-orbs {
+/* Glowing Orbs */
+.glowing-orbs {
   position: absolute;
   inset: 0;
-  filter: blur(80px);
+  pointer-events: none;
 }
 
 .orb {
   position: absolute;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 192, 203, 0.2) 0%,
+    rgba(255, 182, 193, 0.1) 50%,
+    transparent 70%
+  );
   border-radius: 50%;
-  opacity: 0.5;
-  animation: orbFloat 20s infinite ease-in-out;
-}
-
-.orb-1 {
-  width: 50vh;
-  height: 50vh;
-  background: radial-gradient(circle at center, 
-    rgba(219, 61, 207, 0.3),
-    transparent 70%
-  );
-  top: -25vh;
-  left: 20%;
-}
-
-.orb-2 {
-  width: 45vh;
-  height: 45vh;
-  background: radial-gradient(circle at center, 
-    rgba(103, 95, 242, 0.2),
-    transparent 70%
-  );
-  bottom: -20vh;
-  right: 20%;
-  animation-delay: -7s;
-}
-
-.orb-3 {
-  width: 40vh;
-  height: 40vh;
-  background: radial-gradient(circle at center, 
-    rgba(255, 182, 193, 0.2),
-    transparent 70%
-  );
-  top: 50%;
-  left: 60%;
-  animation-delay: -14s;
-}
-
-/* Light Rays */
-.light-rays {
-  position: absolute;
-  inset: 0;
-  opacity: 0.4;
-}
-
-.light-ray {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200%;
-  height: 1px;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(219, 61, 207, 0.2),
-    transparent
-  );
-  transform-origin: left center;
-  animation: rotateRay 10s linear infinite;
+  animation: orbGlow 4s ease-in-out infinite;
 }
 
 /* Sparkles */
@@ -188,81 +135,83 @@ const getSparkleStyle = (index) => {
 
 .sparkle {
   position: absolute;
-  color: #FFB6C1;
-  font-size: var(--size);
-  animation: twinkle var(--duration) infinite ease-in-out;
-  animation-delay: var(--delay);
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: sparkleTwinkle 3s ease-in-out infinite;
 }
 
-/* Overlay */
-.romantic-overlay {
+/* Flowing Ribbons */
+.ribbons {
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-    circle at center,
-    transparent 0%,
-    rgba(26, 15, 31, 0.4) 100%
+  pointer-events: none;
+}
+
+.ribbon {
+  position: absolute;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 182, 193, 0.3),
+    rgba(255, 182, 193, 0.5),
+    rgba(255, 182, 193, 0.3),
+    transparent
   );
-  mix-blend-mode: overlay;
+  animation: ribbonFlow 8s ease-in-out infinite;
 }
 
-/* Animations */
-@keyframes floatHeart {
-  0% {
-    transform: translateY(100vh) scale(1) rotate(0deg);
-    opacity: 0;
-  }
-  10% {
-    opacity: var(--opacity);
-  }
-  90% {
-    opacity: var(--opacity);
-  }
-  100% {
-    transform: translateY(-20vh) scale(0.5) rotate(360deg);
-    opacity: 0;
-  }
-}
-
-@keyframes orbFloat {
+@keyframes heartFloat {
   0%, 100% {
-    transform: translate(0, 0);
-  }
-  50% {
-    transform: translate(-5%, -5%) scale(1.1);
-  }
-}
-
-@keyframes rotateRay {
-  from {
-    transform: rotate(0deg) translateX(0) scaleX(1);
+    transform: translate(0, 0) rotate(0deg) scale(var(--scale, 1));
     opacity: 0;
   }
-  5% {
-    opacity: 1;
-  }
-  45% {
+  25% {
     opacity: 1;
   }
   50% {
-    transform: rotate(180deg) translateX(0) scaleX(1.5);
-    opacity: 0;
+    transform: translate(20px, -30px) rotate(10deg) scale(var(--scale, 1));
+    opacity: 1;
   }
-  100% {
-    transform: rotate(360deg) translateX(0) scaleX(1);
-    opacity: 0;
+  75% {
+    opacity: 1;
   }
 }
 
-@keyframes twinkle {
+@keyframes orbGlow {
   0%, 100% {
-    opacity: 0.1;
+    opacity: 0.5;
     transform: scale(1);
   }
   50% {
-    opacity: 0.7;
+    opacity: 1;
     transform: scale(1.2);
   }
 }
+
+@keyframes sparkleTwinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes ribbonFlow {
+  0%, 100% {
+    transform: translateY(-100%) scaleY(1);
+    opacity: 0;
+  }
+  10%, 90% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(100%) scaleY(1.2);
+  }
+}
 </style>
-```

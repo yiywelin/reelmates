@@ -29,7 +29,7 @@
           @click="toggleGenre(genre.id)"
         >
           <div class="neon-border"></div>
-          <span class="genre-icon">{{ genre.icon }}</span>
+          <component :is="genre.icon" class="w-8 h-8 text-current" />
           <span class="genre-name">{{ genre.name }}</span>
           <div class="neon-glow"></div>
         </div>
@@ -66,23 +66,33 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TheatricalBackground from '../components/Backgrounds/TheatricalBackground.vue'
 import NavBar from '../components/ui/NavBar.vue'
-// import TheaterBackground from '@/components/Backgrounds/TheaterBackground.vue';
-//import CinematicBackground from '@/components/Backgrounds/CinematicBackground.vue';
+import { 
+  Flame,
+  Laugh,
+  Clapperboard,
+  Map,
+  Rocket,
+  Sparkles,
+  Ghost,
+  Heart,
+  Fingerprint,
+  Palette
+} from 'lucide-vue-next'
 
 const router = useRouter()
 
 const genres = [
-  { id: 'action', name: 'Action', icon: '💥' },
-  { id: 'comedy', name: 'Comedy', icon: '😄' },
-  { id: 'drama', name: 'Drama', icon: '🎭' },
-  { id: 'adventure', name: 'Adventure', icon: '🗺️' },
-  { id: 'scifi', name: 'Science Fiction', icon: '🚀' },
-  { id: 'fantasy', name: 'Fantasy', icon: '🔮' },
-  { id: 'thriller', name: 'Thriller', icon: '😱' },
-  { id: 'romance', name: 'Romance', icon: '💝' },
-  { id: 'crime', name: 'Crime', icon: '🕵️' },
-  { id: 'animation', name: 'Animation', icon: '🎨' }
-]
+  { id: 'action', name: 'Action', icon: Flame },
+  { id: 'comedy', name: 'Comedy', icon: Laugh },
+  { id: 'drama', name: 'Drama', icon: Clapperboard },
+  { id: 'adventure', name: 'Adventure', icon: Map },
+  { id: 'scifi', name: 'Science Fiction', icon: Rocket },
+  { id: 'fantasy', name: 'Fantasy', icon: Sparkles },
+  { id: 'thriller', name: 'Thriller', icon: Ghost },
+  { id: 'romance', name: 'Romance', icon: Heart },
+  { id: 'crime', name: 'Crime', icon: Fingerprint },
+  { id: 'animation', name: 'Animation', icon: Palette }
+];
 
 const selectedGenres = ref([])
 const canSwipe = computed(() => selectedGenres.value.length > 0)
@@ -102,12 +112,13 @@ const toggleGenre = (genreId) => {
 // }
 
 const startSwiping = () => {
-  router.push({
-    path: '/swipe',
-    query: { genres: selectedGenres.value.join(',') }
-  })
+  if (selectedGenres.value.length > 0) {
+    router.push({
+      path: '/swipe',
+      query: { genres: selectedGenres.value.join(',') }
+    })
+  }
 }
-
 </script>
 
 <style scoped>
@@ -132,6 +143,12 @@ const startSwiping = () => {
   text-align: center;
   margin-bottom: 4rem;
   animation: fadeIn 1s ease-out;
+}
+
+.genre-button .icon {
+  width: 3rem;  
+  height: 3rem;
+  color: currentColor;
 }
 
 .main-title {

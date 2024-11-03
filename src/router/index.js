@@ -3,9 +3,12 @@ import { createRouter, createWebHistory } from 'vue-router';
 import { auth } from '../firebaseConfig'
 import HomePage from '../views/HomePage.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
-import LoginForm from '../components/UserLogin/LoginForm.vue'
-import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue'
+import LoginForm from '../components/UserLogin/LoginForm.vue';
+import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
+import UserProfile from '../views/UserProfile.vue';
+import EnhancedFriendsPage from '../components/friends/EnhancedFriendsPage.vue'
 import Recommendations from '../views/Recommendations.vue' 
+
 
 // Define routes
 const routes = [
@@ -39,6 +42,18 @@ const routes = [
     path: '/recommendations',
     name: 'Recommended',
     component: Recommendations
+  },
+  {
+    path: '/friends',
+    name: 'Friends',
+    component: EnhancedFriendsPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'UserProfile',
+    component: UserProfile,
+    meta: { requiresAuth: true }
   }
 ];
 
@@ -64,4 +79,3 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router;
-

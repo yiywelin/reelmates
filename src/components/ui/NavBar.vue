@@ -38,7 +38,6 @@
           <!-- Dropdown Menu -->
           <div v-if="isMenuOpen" class="dropdown-menu">
             <router-link to="/profile" class="menu-item">Profile</router-link>
-            <router-link to="/liked" class="menu-item">Liked Movies</router-link>
             <button @click="handleSignOut" class="menu-item logout">
               Sign Out
             </button>
@@ -55,7 +54,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '../../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -66,12 +65,16 @@ const router = useRouter();
 const currentUser = ref(null);
 const isMenuOpen = ref(false);
 const userAvatar = ref(defaultAvatar); 
+provide('userAvatar', userAvatar);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
+  { name: 'Friends', path: '/friends' }, // 
+
+  
 ];
 
 onMounted(() => {

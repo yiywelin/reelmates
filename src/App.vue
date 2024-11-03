@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div v-if="initializing" class="loading-screen">
-      <!-- You can replace this with a nice loading animation -->
+      <!-- can replace this with a nice loading animation -->
       <div class="loading-content">
         <div class="spinner"></div>
         <p class="loading-text">Loading...</p>
