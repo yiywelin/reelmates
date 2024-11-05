@@ -83,6 +83,7 @@
   import { collection, query, where, getDocs, doc, updateDoc, arrayUnion } from 'firebase/firestore';
   import { db } from '@/firebaseConfig';
   import { LinkIcon } from 'lucide-vue-next';
+//   import { UserPlus } from 'lucide-vue-next';
   
   const props = defineProps({
     isOpen: {

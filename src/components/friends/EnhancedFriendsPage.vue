@@ -35,6 +35,19 @@
                 Add Friend
               </span>
             </div>
+
+            <!-- New Create Group button -->
+            <div class="relative group" v-if="activeTab === 'groups'">
+              <button
+                @click="showCreateGroupModal = true"
+                class="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+              >
+                <UserGroupIcon class="w-6 h-6" />
+              </button>
+              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Create Group
+              </span>
+            </div>
           
             <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
               <input
@@ -198,6 +211,8 @@
       </div>
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
       <AddFriendModal :is-open="showAddFriendModal" @close="showAddFriendModal = false" @friendAdded="handleFriendAdded" />
+      <CreateGroupModal :is-open="showCreateGroupModal" @close="showCreateGroupModal = false" @groupCreated="handleGroupCreated" />
+
     </div>
   </div>
 </template>
@@ -208,13 +223,15 @@ import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 // import { UserPlusIcon } from 'lucide-vue-next'; // Add this import
-import { UserPlusIcon } from '@heroicons/vue/24/solid';
+import { UserPlusIcon, UserGroupIcon } from '@heroicons/vue/24/solid';
 import MovieNightPlanningModal from '@/components/friends/CreateWatchPartyModal.vue';
 import { getAuth } from 'firebase/auth'
 // import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { collection, getDocs, query, where, getDoc, doc } from 'firebase/firestore';
 import AddFriendModal from '@/components/friends/AddFriendModal.vue';
+import CreateGroupModal from '@/components/friends/CreateGroupModal.vue';
+
 
 
 
@@ -237,6 +254,8 @@ const showDetailsTimeout = ref(null);
 const hideDetailsTimeout = ref(null);
 const showPlanningModal = ref(false);
 const showAddFriendModal = ref(false);
+const showCreateGroupModal = ref(false);
+
 
 const friends = ref([]);
 const groups = ref([]);
@@ -307,6 +326,11 @@ const loadFriends = async () => {
 const handleFriendAdded = async () => {
   await loadFriends();
   showAddFriendModal.value = false;
+};
+
+const handleGroupCreated = async () => {
+  await loadGroups();
+  showCreateGroupModal.value = false;
 };
 
 const loadGroups = async () => {
@@ -504,6 +528,8 @@ const getLikedMovies = (item) => {
 
 onMounted(async () => {
   await loadFriends()
+    await loadGroups()
+
 })
 </script>
 
