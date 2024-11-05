@@ -23,8 +23,33 @@
               Groups
             </button>
           </div>
-          <div class="flex items-center space-x-2">
-            <div class="relative w-64">
+          <div class="flex items-center space-x-2 w-full sm:w-auto">
+            <div class="relative group" v-if="activeTab === 'friends'">
+              <button
+              @click="showAddFriendModal = true"
+                class="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+              >
+                <UserPlusIcon class="w-6 h-6" />
+              </button>
+              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Add Friend
+              </span>
+            </div>
+
+            <!-- New Create Group button -->
+            <div class="relative group" v-if="activeTab === 'groups'">
+              <button
+                @click="showCreateGroupModal = true"
+                class="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+              >
+                <UserGroupIcon class="w-6 h-6" />
+              </button>
+              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Create Group
+              </span>
+            </div>
+          
+            <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
               <input
                 v-model="searchQuery"
                 type="text"
@@ -33,12 +58,14 @@
               />
               <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
             </div>
+            
             <button
               @click="toggleGenreFilter"
               class="px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300"
             >
               Filter
             </button>
+       
           </div>
         </div>
         
@@ -62,6 +89,12 @@
       </div>
 
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+        <div v-if="activeTab === 'friends' && friends.length === 0" class="text-center col-span-full">
+          <p class="text-xl mb-4">You have no friends, here's a cute cat for you.</p>
+          <div class="w-80 h-64 mx-auto overflow-hidden rounded-lg shadow-lg">
+            <img :src="randomCatGif" alt="Cute cat" class="w-full h-full object-cover" />
+          </div>        
+      </div>
         <div
           v-for="item in paginatedItems"
           :key="item.id"
@@ -88,6 +121,7 @@
             <div v-if="activeTab === 'friends'" class="absolute bottom-2 left-2 z-10">
               {{ getSnackEmoji(item.snackPreference) }}
             </div>
+            
             <div v-if="activeTab === 'groups'" class="text-xs relative z-10 text-gray-300">{{ item.members.length }} members</div>
           </button>
           <transition
@@ -98,44 +132,53 @@
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 translate-y-1"
           >
-            <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
+            
+          <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-50"></div>
               <div class="relative z-10">
                 <h3 class="text-lg font-semibold mb-2 text-white">{{ item.name }}</h3>
-                <div v-if="activeTab === 'friends'" class="space-y-3">
-                  <p class="text-sm text-gray-300 flex items-center">
-                    <span class="mr-2">{{ getSnackEmoji(item.snackPreference) }}</span>
-                    <span>{{ item.snackPreference }}</span>
-                  </p>
-                  <div>
-                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Matched Genres:</h4>
-                    <div class="flex flex-wrap gap-1">
-                      <span v-for="genre in item.genres" :key="genre" class="text-xs bg-blue-500/30 text-blue-200 px-2 py-1 rounded-full">{{ genre }}</span>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Matched Movies:</h4>
+                <template v-if="activeTab === 'friends'">
+                  <p class="text-sm text-gray-300">{{ item.email }}</p>
+                  <p class="text-sm text-gray-300">Last Active: {{ formatDate(item.lastActive) }}</p>
+                  <div class="mt-2">
+                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Most Recent Likes:</h4>
                     <ul class="text-xs text-gray-300">
-                      <li v-for="movie in item.matchedMovies" :key="movie" class="mb-1 flex items-center">
-                        <span class="mr-2">🎬</span>{{ movie }}
+                      <li v-for="movie in getLikedMovies(item)" :key="movie" class="mb-1">
+                        {{ movie }}
                       </li>
                     </ul>
                   </div>
-                </div>
-                <div v-if="activeTab === 'groups'">
-                  <h4 class="text-sm font-semibold mb-1 text-gray-400">Members:</h4>
-                  <ul class="text-xs text-gray-300">
-                    <li v-for="member in item.members.slice(0, 3)" :key="member.id" class="mb-1 flex items-center">
-                      <span class="mr-2">👤</span>{{ member.name }}
-                    </li>
-                    <li v-if="item.members.length > 3" class="text-gray-400 italic">and {{ item.members.length - 3 }} more...</li>
-                  </ul>
-                </div>
+                </template>
+                <template v-else>
+                  <p class="text-sm text-gray-300">Members: {{ item.members ? item.members.length : 0 }}</p>
+                  <div class="mt-2">
+                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Members:</h4>
+                    <ul class="text-xs text-gray-300">
+                      <li v-for="member in item.memberNames?.slice(0, 5)" :key="member" class="mb-1">
+                        {{ member }}
+                      </li>
+                      <li v-if="item.members && item.members.length > 5" class="text-xs text-gray-400 italic">
+                        and {{ item.members.length - 5 }} more...
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="mt-2">
+                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Movie Preferences:</h4>
+                    <p class="text-xs text-gray-300">Genres: {{ item.moviePreferences?.genres?.join(', ') || 'N/A' }}</p>
+                    <p class="text-xs text-gray-300">Release Years: {{ item.moviePreferences?.releaseYearRange?.start || 'N/A' }} - {{ item.moviePreferences?.releaseYearRange?.end || 'N/A' }}</p>
+                  </div>
+                  <div v-if="item.upcomingEvents && item.upcomingEvents.length > 0" class="mt-2">
+                    <h4 class="text-sm font-semibold mb-1 text-gray-400">Next Event:</h4>
+                    <p class="text-xs text-gray-300">{{ item.upcomingEvents[0].movieName }}</p>
+                    <p class="text-xs text-gray-300">{{ formatDate(item.upcomingEvents[0].date) }}</p>
+                  </div>
+                </template>
               </div>
             </div>
           </transition>
         </div>
       </div>
+      
 
       <div class="flex justify-center items-center space-x-2 mt-4">
         <button
@@ -167,6 +210,9 @@
         </button>
       </div>
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
+      <AddFriendModal :is-open="showAddFriendModal" @close="showAddFriendModal = false" @friendAdded="handleFriendAdded" />
+      <CreateGroupModal :is-open="showCreateGroupModal" @close="showCreateGroupModal = false" @groupCreated="handleGroupCreated" />
+
     </div>
   </div>
 </template>
@@ -176,8 +222,26 @@
 import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
-import MovieNightPlanningModal from './createWatchPartyModal.vue';
+// import { UserPlusIcon } from 'lucide-vue-next'; // Add this import
+import { UserPlusIcon, UserGroupIcon } from '@heroicons/vue/24/solid';
+import MovieNightPlanningModal from '@/components/friends/CreateWatchPartyModal.vue';
+import { getAuth } from 'firebase/auth'
+// import { collection, getDocs, query, where } from 'firebase/firestore'
+import { db } from '../../firebaseConfig'
+import { collection, getDocs, query, where, getDoc, doc } from 'firebase/firestore';
+import AddFriendModal from '@/components/friends/AddFriendModal.vue';
+import CreateGroupModal from '@/components/friends/CreateGroupModal.vue';
 
+
+
+
+
+
+// Initialize auth
+const auth = getAuth()
+
+const loading = ref(false);
+const error = ref(null);
 
 const hoveredItem = ref(null);
 const activeTab = ref('friends');
@@ -188,40 +252,160 @@ const currentPage = ref(1);
 const showGenreFilter = ref(false);
 const showDetailsTimeout = ref(null);
 const hideDetailsTimeout = ref(null);
+const showPlanningModal = ref(false);
+const showAddFriendModal = ref(false);
+const showCreateGroupModal = ref(false);
 
-const ITEMS_PER_PAGE = 15;
 
 const friends = ref([]);
 const groups = ref([]);
 const genres = ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Horror', 'Thriller', 'Romance', 'Adventure', 'Fantasy', 'Animation'];
 
-onMounted(() => {
-  // Mock data generation
-  friends.value = Array.from({ length: 30 }, (_, i) => ({
-    id: i + 1,
-    name: `Friend ${String.fromCharCode(65 + i % 26)}${Math.floor(i / 26) + 1}`,
-    avatar: `/placeholder.svg?height=80&width=80&text=${String.fromCharCode(65 + i % 26)}${Math.floor(i / 26) + 1}`,
-    matchedMovies: ['Inception', 'The Matrix', 'Interstellar', 'Pulp Fiction', 'The Shawshank Redemption']
-      .sort(() => 0.5 - Math.random()).slice(0, 3),
-    genres: ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Horror'].sort(() => 0.5 - Math.random()).slice(0, 2),
-    snackPreference: ['Popcorn', 'Nachos', 'Candy', 'Soda', 'Ice Cream'][Math.floor(Math.random() * 5)],
-  })).sort((a, b) => a.name.localeCompare(b.name));
+const ITEMS_PER_PAGE = 15
 
-  groups.value = [
-    { id: 1, name: 'Movie Buffs', members: friends.value.slice(0, 5) },
-    { id: 2, name: 'Sci-Fi Lovers', members: friends.value.slice(5, 10) },
-    { id: 3, name: 'Comedy Club', members: friends.value.slice(10, 15) },
-    { id: 4, name: 'Drama Enthusiasts', members: friends.value.slice(15, 20) },
-    { id: 5, name: 'Action Fans', members: friends.value.slice(20, 25) },
-  ];
+
+const catGifs = [
+  'https://media.giphy.com/media/5uv4Cjy3vVX5KUKdOQ/giphy.gif?cid=ecf05e477riobw5yqyoot5y9vn36q8lqb98qwi8qddivvirc&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+  'https://media.giphy.com/media/4Iw2OzgiiTc4M/giphy.gif?cid=790b7611ovp4xe5rovqpuqj16fernfibkp8ij95akh2en7vp&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+  'https://media.giphy.com/media/C23cMUqoZdqMg/giphy.gif?cid=790b7611ovp4xe5rovqpuqj16fernfibkp8ij95akh2en7vp&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+  'https://media.giphy.com/media/1KHBPmEOkv0B2/giphy.gif?cid=ecf05e47rpaxxiup39k10pr5jomdr249iwh98s4h4iaul2oz&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+  'https://media.giphy.com/media/v6aOjy0Qo1fIA/giphy.gif?cid=790b76113knd32aq79520997blnzwoxrtzapkin8uo56lqmc&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+  'https://media.giphy.com/media/aPAvJNgLDQL8qBSuxl/giphy.gif?cid=790b7611xi4nrzb77dlaxn7vye0z2g2g7nkp98bda5l9zn8t&ep=v1_gifs_search&rid=giphy.gif&ct=g',
+  'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExM2t3djkwZGlmZ2wzYWhzbWxmNzg0dnJscTluNnk4amxtZ3htN2loYSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/wkPgpQeAlCnXW/giphy.gif'
+];
+
+const randomCatGif = computed(() => {
+  return catGifs[Math.floor(Math.random() * catGifs.length)];
 });
+
+const loadFriends = async () => {
+  try {
+    loading.value = true;
+    if (!auth.currentUser) {
+      throw new Error('User not authenticated');
+    }
+    
+    const userRef = doc(db, 'users', auth.currentUser.uid);
+    const userDoc = await getDoc(userRef);
+    
+    if (!userDoc.exists()) {
+      throw new Error('User document not found');
+    }
+
+    const userData = userDoc.data();
+    const friendIds = userData.friends || [];
+
+    const friendPromises = friendIds.map(async (friendId) => {
+      const friendRef = doc(db, 'users', friendId);
+      const friendDoc = await getDoc(friendRef);
+      if (friendDoc.exists()) {
+        const friendData = friendDoc.data();
+        return {
+          id: friendId,
+          name: friendData.username,
+          email: friendData.email,
+          photoURL: friendData.photoURL || defaultAvatar.value,
+          lastActive: friendData.lastActive,
+          likedMovies: friendData.likedMovies || [],
+          genres: friendData.genres || [],
+          snackPreference: friendData.snackPreference || 'Popcorn'
+        };
+      }
+      return null;
+    });
+
+    const friendsData = await Promise.all(friendPromises);
+    friends.value = friendsData.filter(friend => friend !== null);
+  } catch (err) {
+    console.error('Error loading friends:', err);
+    error.value = 'Failed to load friends. Please try again.';
+  } finally {
+    loading.value = false;
+  }
+};
+const handleFriendAdded = async () => {
+  await loadFriends();
+  showAddFriendModal.value = false;
+};
+
+const handleGroupCreated = async () => {
+  await loadGroups();
+  showCreateGroupModal.value = false;
+};
+
+const loadGroups = async () => {
+  try {
+    if (!auth.currentUser) {
+      throw new Error('User not authenticated');
+    }
+
+    const groupsRef = collection(db, 'groups');
+    const q = query(groupsRef, where('members', 'array-contains', auth.currentUser.uid));
+    const querySnapshot = await getDocs(q);
+
+    const groupPromises = querySnapshot.docs.map(async (groupDoc) => {
+      const groupData = groupDoc.data();
+      const memberNames = await fetchMemberNames(groupData.members);
+      return {
+        id: groupDoc.id,
+        name: groupData.name,
+        avatar: groupData.avatar,
+        members: groupData.members || [],
+        memberNames: memberNames,
+        moviePreferences: groupData.moviePreferences || {},
+        upcomingEvents: groupData.upcomingEvents || []
+      };
+    });
+
+    groups.value = await Promise.all(groupPromises);
+  } catch (err) {
+    console.error('Error loading groups:', err);
+    error.value = 'Failed to load groups. Please try again.';
+  }
+};
+
+const fetchMemberNames = async (memberIds) => {
+  const memberPromises = memberIds.map(async (memberId) => {
+    const memberRef = doc(db, 'users', memberId);
+    const memberDoc = await getDoc(memberRef);
+    if (memberDoc.exists()) {
+      return memberDoc.data().username;
+    }
+    return null;
+  });
+
+  const memberNames = await Promise.all(memberPromises);
+  return memberNames.filter(name => name !== null);
+};
+
+const loadData = async () => {
+  loading.value = true;
+  error.value = null;
+  try {
+    if  (activeTab.value === 'friends') {
+      await loadFriends();
+    } else {
+      await loadGroups();
+    }
+  } catch (err) {
+    error.value = `Failed to load ${activeTab.value}. Please try again.`;
+  } finally {
+    loading.value = false;
+  }
+};
+
+
+
 
 const filteredItems = computed(() => {
   const items = activeTab.value === 'friends' ? friends.value : groups.value;
   return items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.value.toLowerCase());
+    const name = item.name || item.username || '';
+    const matchesSearch = name.toLowerCase().includes(searchQuery.value.toLowerCase());
     const matchesGenres = selectedGenres.value.length === 0 || 
-      (activeTab.value === 'friends' && item.genres.some(genre => selectedGenres.value.includes(genre)));
+      (activeTab.value === 'friends' && item.genres && item.genres.some(genre => selectedGenres.value.includes(genre))) ||
+      (activeTab.value === 'groups' && item.moviePreferences && item.moviePreferences.genres && 
+       item.moviePreferences.genres.some(genre => selectedGenres.value.includes(genre)));
     return matchesSearch && matchesGenres;
   });
 });
@@ -232,12 +416,15 @@ const paginatedItems = computed(() => {
   return filteredItems.value.slice(startIndex, endIndex);
 });
 
+
+
 const totalPages = computed(() => Math.ceil(filteredItems.value.length / ITEMS_PER_PAGE));
 
 const setActiveTab = (tab) => {
   activeTab.value = tab;
   selectedItems.value = [];
   currentPage.value = 1;
+  loadData();
 };
 
 const toggleSelection = (item) => {
@@ -248,6 +435,7 @@ const toggleSelection = (item) => {
     selectedItems.value.splice(index, 1);
   }
 };
+
 
 const isSelected = (item) => selectedItems.value.some(i => i.id === item.id);
 
@@ -298,8 +486,12 @@ const getShootingStarStyle = () => {
 };
 
 const openPlanMovieNightDialog = () => {
-  // Implement plan movie night dialog logic
-  console.log('Open plan movie night dialog');
+  showPlanningModal.value = true;
+};
+
+const formatDate = (timestamp) => {
+  if (!timestamp) return 'N/A';
+  return new Date(timestamp.seconds * 1000).toLocaleString();
 };
 
 const showDetails = (item) => {
@@ -315,6 +507,30 @@ const hideDetails = () => {
     hoveredItem.value = null;
   }, 300);
 };
+
+const getLikedMovies = (item) => {
+  if (!item.likedMovies || !Array.isArray(item.likedMovies)) return [];
+  const uniqueMovies = new Set();
+  return item.likedMovies
+    .slice()
+    .reverse()
+    .filter(movie => {
+      const movieName = typeof movie === 'string' ? movie : (movie?.name || movie?.title || 'Unknown Movie');
+      if (!uniqueMovies.has(movieName)) {
+        uniqueMovies.add(movieName);
+        return true;
+      }
+      return false;
+    })
+    .slice(0, 3)
+    .map(movie => typeof movie === 'string' ? movie : (movie?.name || movie?.title || 'Unknown Movie'));
+};
+
+onMounted(async () => {
+  await loadFriends()
+    await loadGroups()
+
+})
 </script>
 
 <style scoped>
