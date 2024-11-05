@@ -1,9 +1,8 @@
-```vue
 <template>
   <nav class="navbar">
     <div class="nav-content">
       <!-- Logo Section -->
-      <router-link to="/" class="logo-section">
+      <router-link to="/home" class="logo-section">
         <img src="@/assets/images/Reelmates_Logo.png" alt="Reelmates" class="logo-image" />
       </router-link>
 
@@ -69,26 +68,16 @@ provide('userAvatar', userAvatar);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
-  { name: 'Recommendations', path: '/recommendations' },
+  { name: 'Swipe Movies', path: '/swipe' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
-  { name: 'Friends', path: '/friends' }, // 
-
-  
+  { name: 'Meet the Team', path: '/meet-the-team' },
 ];
 
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     currentUser.value = user;
-
-    // Debug logs
-    console.log('User object:', user);
-    console.log('User photoURL:', user?.photoURL);
-    console.log('Default Avatar:', defaultAvatar);
-
     userAvatar.value = user?.photoURL || defaultAvatar;
-    // Debug log after assignment
-    console.log('Final avatar value:', userAvatar.value);
   });
 });
 
@@ -306,4 +295,3 @@ const handleImageError = (e) => {
   }
 }
 </style>
-```
