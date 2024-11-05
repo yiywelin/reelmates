@@ -37,6 +37,7 @@
           <!-- Dropdown Menu -->
           <div v-if="isMenuOpen" class="dropdown-menu">
             <router-link to="/profile" class="menu-item">Profile</router-link>
+            <router-link to="/friends" class="menu-item">Friends</router-link>
             <button @click="handleSignOut" class="menu-item logout">
               Sign Out
             </button>
@@ -69,6 +70,7 @@ provide('userAvatar', userAvatar);
 const navLinks = [
   { name: 'Home', path: '/home' },
   { name: 'Swipe Movies', path: '/swipe' },
+  { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
   { name: 'Meet the Team', path: '/meet-the-team' },
