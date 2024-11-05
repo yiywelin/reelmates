@@ -39,6 +39,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/friends',
+    name: 'Friends',
+    component: EnhancedFriendsPage,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/watch-party',
     name: 'WatchParty',
     component: WatchParty,
