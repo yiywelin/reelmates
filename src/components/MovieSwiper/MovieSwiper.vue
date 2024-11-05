@@ -116,6 +116,7 @@ const loading = ref(true)
 const currentPage = ref(1)
 const isLoadingMore = ref(false)
 const route = useRoute()
+const swipedMovieIds = ref(new Set())
 
 const BACKGROUND_MAP = {
     action: ActionBackground,
@@ -197,32 +198,44 @@ const loadMovies = async (page = 1) => {
   try {
     loading.value = true
     error.value = null
+
+    await loadUserMovieHistory()
+    console.log('Loaded swiped movies before fetching:', Array.from(swipedMovieIds.value))
     
     const fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
     console.log('Fetched movies:', fetchedMovies);
+
+    const swipedIds = new Set(Array.from(swipedMovieIds.value).map(String))
     
-    // Filter movies by selected genres - improved filtering
-    if (fetchedMovies.length === 0) {
-        if (page === 1) {
-            error.value = 'No movies found for selected genres. Try different genres!'
-            movies.value = []
-        }
-        return
+    // Filter out movies that have already been swiped
+    const newMovies = fetchedMovies.filter(movie => {
+      const movieId = String(movie.id)
+      const isSwiped = swipedIds.has(movieId)
+      return !isSwiped
+    })
+    
+    console.log('Movies after filtering:', newMovies.map(m => ({id: m.id, title: m.title})))
+    
+    // If we filtered out too many movies, fetch more
+    if (newMovies.length < 10 && fetchedMovies.length > 0) {
+      const nextPageMovies = await loadMovies(page + 1)
+      newMovies.push(...nextPageMovies)
     }
     
-    if (fetchedMovies.length === 0) {
+    if (newMovies.length === 0) {
       if (page === 1) {
-        error.value = 'No movies found for selected genres. Try different genres!'
+        error.value = 'No new movies found for selected genres. Try different genres!'
         movies.value = []
       }
-      return
-    }
+      return []
+    }  
     
     if (page === 1) {
-      movies.value = fetchedMovies
+      movies.value = newMovies
     } else {
-      movies.value = [...movies.value, ...fetchedMovies]
+      movies.value = [...movies.value, ...newMovies]
     }
+    return newMovies
   } catch (err) {
     console.error('Error loading movies:', err)
     error.value = 'Failed to load movies. Please try again.'
@@ -243,8 +256,8 @@ const checkAndLoadMore = async () => {
   }
 }
 
-// Load user's liked movies from Firestore
-const loadLikedMovies = async () => {
+// Load user's swiped movies from Firestore
+const loadUserMovieHistory = async () => {
   if (!auth.currentUser) return
   
   try {
@@ -252,10 +265,14 @@ const loadLikedMovies = async () => {
     if (userDoc.exists()) {
       const userData = userDoc.data()
       likedMovies.value = userData.likedMovies || []
+      
+      // Get all swiped movie IDs (both likes and passes)
+      const swipedMovies = userData.swipedMovies || []
+      swipedMovieIds.value = new Set(swipedMovies.map(movie => movie.movieId))
     }
   } catch (err) {
-    console.error('Error loading liked movies:', err)
-    error.value = 'Failed to load liked movies'
+    console.error('Error loading movie history:', err)
+    error.value = 'Failed to load movie history'
   }
 }
 
@@ -264,6 +281,7 @@ const recordSwipe = async (movie, isLike) => {
   if (!auth.currentUser) return
   
   try {
+    console.log(`Recording swipe for movie ${movie.id} (${movie.title})`, isLike ? 'like' : 'pass')
     const userRef = doc(db, 'users', auth.currentUser.uid)
     const swipeData = {
       movieId: movie.id,
@@ -272,6 +290,9 @@ const recordSwipe = async (movie, isLike) => {
       posterPath: movie.posterPath,
       swipedAt: new Date().toISOString()
     }
+
+    swipedMovieIds.value.add(movie.id)
+    console.log('Updated swiped movies set:', Array.from(swipedMovieIds.value))
 
     await updateDoc(userRef, {
       swipedMovies: arrayUnion({
@@ -328,8 +349,8 @@ watch(selectedGenres, async (newGenres) => {
 onMounted(async () => {
   try {
     await Promise.all([
-      loadMovies(),
-      loadLikedMovies()
+      loadUserMovieHistory(),
+      loadMovies()
     ])
   } catch (err) {
     console.error('Error loading initial data:', err)
