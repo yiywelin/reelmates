@@ -224,7 +224,7 @@ import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 // import { UserPlusIcon } from 'lucide-vue-next'; // Add this import
 import { UserPlusIcon, UserGroupIcon } from '@heroicons/vue/24/solid';
-import MovieNightPlanningModal from '@/components/Friends/CreateWatchPartyModal.vue';
+import MovieNightPlanningModal from '@/components/Friends/createWatchPartyModal.vue';
 import { getAuth } from 'firebase/auth'
 // import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
