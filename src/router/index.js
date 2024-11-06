@@ -2,6 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { auth } from '../firebaseConfig';
 import HomePage from '../views/HomePage.vue';
+import TheRealHomePage from '../views/TheRealHomePage.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
@@ -25,6 +26,12 @@ const routes = [
     path: '/login',
     name: 'Login',
     component: LoginForm
+  },
+  {
+    path: '/therealhomepage',
+    name: 'TheRealHomePage',
+    component: TheRealHomePage,
+    meta: { requiresAuth: true }
   },
   {
     path: '/home',

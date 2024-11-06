@@ -63,6 +63,7 @@ const isMenuOpen = ref(false);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
+  { name: 'HOME', path: '/therealhomepage' },
   { name: 'Swipe Movies', path: '/swipe' },
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
