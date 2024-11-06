@@ -1,9 +1,8 @@
-```vue
 <template>
   <nav class="navbar">
     <div class="nav-content">
       <!-- Logo Section -->
-      <router-link to="/" class="logo-section">
+      <router-link to="/home" class="logo-section">
         <img src="@/assets/images/Reelmates_Logo.png" alt="Reelmates" class="logo-image" />
       </router-link>
 
@@ -26,18 +25,16 @@
         <div v-if="currentUser" class="user-menu">
           <!-- User Info -->
           <div class="user-info" @click="toggleMenu">
-            <img 
-              :src="userAvatar" 
-              :alt="currentUser.displayName || currentUser.email"
-              class="user-avatar"
-              @error="handleImageError"
-            />
+            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl animate-glow">
+                {{ currentUser.email[0].toUpperCase() }}
+            </div>
             <span class="user-name">{{ currentUser.displayName || currentUser.email }}</span>
           </div>
 
           <!-- Dropdown Menu -->
           <div v-if="isMenuOpen" class="dropdown-menu">
             <router-link to="/profile" class="menu-item">Profile</router-link>
+            <router-link to="/friends" class="menu-item">Friends</router-link>
             <button @click="handleSignOut" class="menu-item logout">
               Sign Out
             </button>
@@ -54,41 +51,28 @@
 </template>
 
 <script setup>
-import { ref, onMounted, provide } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '../../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { authService } from '@/services/authService';
-import defaultAvatar from '@/assets/images/default-avatar.png';
 
 const router = useRouter();
 const currentUser = ref(null);
 const isMenuOpen = ref(false);
-const userAvatar = ref(defaultAvatar); 
-provide('userAvatar', userAvatar);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
+  { name: 'Swipe Movies', path: '/swipe' },
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
-  { name: 'Friends', path: '/friends' }, // 
-
-  
+  { name: 'Meet the Team', path: '/meet-the-team' },
 ];
 
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     currentUser.value = user;
-
-    // Debug logs
-    console.log('User object:', user);
-    console.log('User photoURL:', user?.photoURL);
-    console.log('Default Avatar:', defaultAvatar);
-
-    userAvatar.value = user?.photoURL || defaultAvatar;
-    // Debug log after assignment
-    console.log('Final avatar value:', userAvatar.value);
   });
 });
 
@@ -103,9 +87,6 @@ const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
 
-const handleImageError = (e) => {
-  e.target.src = defaultAvatar;
-};
 </script>
 
 <style scoped>
@@ -190,7 +171,7 @@ const handleImageError = (e) => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 8px;
@@ -201,13 +182,13 @@ const handleImageError = (e) => {
   background: rgba(103, 95, 242, 0.1);
 }
 
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(103, 95, 242, 0.5);
-  transition: all 0.3s ease;
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.8); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
 }
 
 .user-name {
@@ -221,7 +202,7 @@ const handleImageError = (e) => {
 
 .dropdown-menu {
   position: absolute;
-  top: 120%;
+  top: calc(100% + 0.5rem);
   right: 0;
   width: 200px;
   background: rgba(10, 10, 31, 0.95);
@@ -306,4 +287,3 @@ const handleImageError = (e) => {
   }
 }
 </style>
-```

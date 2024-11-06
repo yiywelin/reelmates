@@ -1,5 +1,32 @@
 <template>
   <div class="swiper-container">
+    <!-- Back Button -->
+    <div class="absolute top-4 left-4 z-50">
+      <button 
+        @click="$router.push('/home')"
+        class="relative w-12 h-12 flex items-center justify-center"
+      >
+        <!-- Outer glow ring - corrected to match your X button style -->
+        <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
+        
+        <!-- Arrow icon -->
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          class="w-6 h-6 text-[#DB3DCF]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M15 19l-7-7 7-7" 
+          />
+        </svg>
+      </button>
+    </div>
+
     <div class="background-container">
       <!-- Current background -->
       <transition name="fade">
@@ -68,6 +95,13 @@
             </button>
           </div>
         </div>
+
+        <!-- Add the Match Overlay -->
+        <MatchOverlay
+          v-if="showMatchOverlay"
+          :matches="matchedUsers"
+          @close="closeMatchOverlay"
+        />
       </div>
     </template>
   </div>
@@ -76,7 +110,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
-import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { useRoute } from 'vue-router'
 import MovieCard from './MovieCard.vue'
@@ -92,6 +126,7 @@ import FantasyBackground from './backgrounds/FantasyBackground.vue'
 import CrimeBackground from './backgrounds/CrimeBackground.vue'
 import CinematicBackground from '../Backgrounds/CinematicBackground.vue'
 import tmdbService from '../../services/tmdbService'
+import MatchOverlay from './MatchOverlay.vue'
 
 const GENRE_MAP = {
   28: 'action',      // Action
@@ -116,6 +151,9 @@ const loading = ref(true)
 const currentPage = ref(1)
 const isLoadingMore = ref(false)
 const route = useRoute()
+const swipedMovieIds = ref(new Set())
+const showMatchOverlay = ref(false)
+const matchedUsers = ref([])
 
 const BACKGROUND_MAP = {
     action: ActionBackground,
@@ -197,32 +235,44 @@ const loadMovies = async (page = 1) => {
   try {
     loading.value = true
     error.value = null
+
+    await loadUserMovieHistory()
+    console.log('Loaded swiped movies before fetching:', Array.from(swipedMovieIds.value))
     
     const fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
     console.log('Fetched movies:', fetchedMovies);
+
+    const swipedIds = new Set(Array.from(swipedMovieIds.value).map(String))
     
-    // Filter movies by selected genres - improved filtering
-    if (fetchedMovies.length === 0) {
-        if (page === 1) {
-            error.value = 'No movies found for selected genres. Try different genres!'
-            movies.value = []
-        }
-        return
+    // Filter out movies that have already been swiped
+    const newMovies = fetchedMovies.filter(movie => {
+      const movieId = String(movie.id)
+      const isSwiped = swipedIds.has(movieId)
+      return !isSwiped
+    })
+    
+    console.log('Movies after filtering:', newMovies.map(m => ({id: m.id, title: m.title})))
+    
+    // If we filtered out too many movies, fetch more
+    if (newMovies.length < 10 && fetchedMovies.length > 0) {
+      const nextPageMovies = await loadMovies(page + 1)
+      newMovies.push(...nextPageMovies)
     }
     
-    if (fetchedMovies.length === 0) {
+    if (newMovies.length === 0) {
       if (page === 1) {
-        error.value = 'No movies found for selected genres. Try different genres!'
+        error.value = 'No new movies found for selected genres. Try different genres!'
         movies.value = []
       }
-      return
-    }
+      return []
+    }  
     
     if (page === 1) {
-      movies.value = fetchedMovies
+      movies.value = newMovies
     } else {
-      movies.value = [...movies.value, ...fetchedMovies]
+      movies.value = [...movies.value, ...newMovies]
     }
+    return newMovies
   } catch (err) {
     console.error('Error loading movies:', err)
     error.value = 'Failed to load movies. Please try again.'
@@ -243,8 +293,8 @@ const checkAndLoadMore = async () => {
   }
 }
 
-// Load user's liked movies from Firestore
-const loadLikedMovies = async () => {
+// Load user's swiped movies from Firestore
+const loadUserMovieHistory = async () => {
   if (!auth.currentUser) return
   
   try {
@@ -252,18 +302,78 @@ const loadLikedMovies = async () => {
     if (userDoc.exists()) {
       const userData = userDoc.data()
       likedMovies.value = userData.likedMovies || []
+      
+      // Get all swiped movie IDs (both likes and passes)
+      const swipedMovies = userData.swipedMovies || []
+      swipedMovieIds.value = new Set(swipedMovies.map(movie => movie.movieId))
     }
   } catch (err) {
-    console.error('Error loading liked movies:', err)
-    error.value = 'Failed to load liked movies'
+    console.error('Error loading movie history:', err)
+    error.value = 'Failed to load movie history'
   }
 }
+
+// Check movie matches with friends
+const checkMovieMatches = async (movieId) => {
+  if (!auth.currentUser) return []
+  
+  try {
+    // Get current user's friends
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+    const userData = userDoc.data()
+    const friendIds = userData.friends || []
+    
+    // Get all friends' liked movies
+    const matches = []
+    
+    // Check each friend's liked movies
+    await Promise.all(friendIds.map(async (friendId) => {
+      const friendDoc = await getDoc(doc(db, 'users', friendId))
+      if (friendDoc.exists()) {
+        const friendData = friendDoc.data()
+        const friendLikedMovies = friendData.likedMovies || []
+        
+        // Check if friend liked this movie
+        const matchedMovie = friendLikedMovies.find(movie => String(movie.movieId) === String(movieId))
+        
+        if (matchedMovie) {
+          matches.push({
+            friendId,
+            friendEmail: friendData.email,
+            movieId,
+            movieTitle: matchedMovie.title,
+            matchedAt: new Date().toISOString()
+          })
+        }
+      }
+    }))
+    
+    return matches
+  } catch (error) {
+    console.error('Error checking movie matches:', error)
+    return []
+  }
+}
+
+// get all movie matches for the current user
+// const getMatches = async () => {
+//   if (!auth.currentUser) return []
+  
+//   try {
+//     const matchesSnapshot = await getDocs(collection(db, 'users', auth.currentUser.uid, 'matches'))
+//     return matchesSnapshot.docs.map(doc => doc.data())
+//   } catch (error) {
+//     console.error('Error getting matches:', error)
+//     return []
+//   }
+// }
 
 // Record swipe in Firestore
 const recordSwipe = async (movie, isLike) => {
   if (!auth.currentUser) return
   
   try {
+    console.log(`Recording swipe for movie ${movie.id} (${movie.title})`, isLike ? 'like' : 'pass')
     const userRef = doc(db, 'users', auth.currentUser.uid)
     const swipeData = {
       movieId: movie.id,
@@ -272,6 +382,9 @@ const recordSwipe = async (movie, isLike) => {
       posterPath: movie.posterPath,
       swipedAt: new Date().toISOString()
     }
+
+    swipedMovieIds.value.add(movie.id)
+    console.log('Updated swiped movies set:', Array.from(swipedMovieIds.value))
 
     await updateDoc(userRef, {
       swipedMovies: arrayUnion({
@@ -284,11 +397,40 @@ const recordSwipe = async (movie, isLike) => {
       await updateDoc(userRef, {
         likedMovies: arrayUnion(swipeData)
       })
+
+      // Check for matches when liking a movie
+      const matches = await checkMovieMatches(movie.id)
+      
+      if (matches.length > 0) {
+        // Store matches in Firestore
+        await Promise.all(matches.map(async (match) => {
+          // Create a matches collection for the current user
+          const matchRef = doc(db, 'users', auth.currentUser.uid, 'matches', `${match.friendId}-${match.movieId}`)
+          await setDoc(matchRef, match)
+          
+          // Create a matches collection for the friend
+          const friendMatchRef = doc(db, 'users', match.friendId, 'matches', `${auth.currentUser.uid}-${match.movieId}`)
+          await setDoc(friendMatchRef, {
+            ...match,
+            friendId: auth.currentUser.uid,
+            friendEmail: auth.currentUser.email
+          })
+          
+          // Show match notification
+          // You can implement this based on your UI needs
+          console.log(`Matched with ${match.friendEmail} on ${match.movieTitle}!`)
+        }))
+      }
     }
   } catch (err) {
     console.error('Error recording swipe:', err)
     error.value = 'Failed to record swipe'
   }
+}
+
+const closeMatchOverlay = () => {
+  showMatchOverlay.value = false
+  matchedUsers.value = []
 }
 
 const handleSwipe = async (direction) => {
@@ -298,6 +440,16 @@ const handleSwipe = async (direction) => {
   if (direction === 'right') {
     likedMovies.value.push(currentMovie)
     await recordSwipe(currentMovie, true)
+
+    // Check for matches
+    const matches = await checkMovieMatches(currentMovie.id)
+    if (matches.length > 0) {
+      matchedUsers.value = matches.map(match => ({
+        friendEmail: match.friendEmail,
+        movieTitle: currentMovie.title
+      }))
+      showMatchOverlay.value = true
+    }
   } else {
     await recordSwipe(currentMovie, false)
   }
@@ -328,8 +480,8 @@ watch(selectedGenres, async (newGenres) => {
 onMounted(async () => {
   try {
     await Promise.all([
-      loadMovies(),
-      loadLikedMovies()
+      loadUserMovieHistory(),
+      loadMovies()
     ])
   } catch (err) {
     console.error('Error loading initial data:', err)
