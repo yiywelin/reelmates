@@ -1,20 +1,23 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
-import { auth } from '../firebaseConfig'
+import { auth } from '../firebaseConfig';
 import HomePage from '../views/HomePage.vue';
+import SelectGenre from '../views/SelectGenre.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
 import UserProfile from '../views/UserProfile.vue';
-import EnhancedFriendsPage from '../components/friends/EnhancedFriendsPage.vue'
-import Recommendations from '../views/Recommendations.vue' 
+import EnhancedFriendsPage from '../components/friends/EnhancedFriendsPage.vue';
+import WatchParty from '../components/WatchParty/WatchParty.vue';
+import MovieRoulette from '@/components/MovieRoulette/MovieRoulette.vue';
+import MeetTheTeam from '@/views/MeetTheTeam.vue';
+import Recommendations from '../views/Recommendations.vue';
 
 
-// Define routes
 const routes = [
   {
     path: '/',
-    redirect: '/register'
+    redirect: '/home'
   },
   {
     path: '/register',
@@ -30,6 +33,12 @@ const routes = [
     path: '/home',
     name: 'HomePage',
     component: HomePage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/select-genre',
+    name: 'SelectGenre',
+    component: SelectGenre,
     meta: { requiresAuth: true }
   },
   {
@@ -50,32 +59,43 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/watch-party',
+    name: 'WatchParty',
+    component: WatchParty,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/movie-roulette',
+    name: 'MovieRoulette',
+    component: MovieRoulette,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/meet-the-team',
+    name: 'MeetTheTeam',
+    component: MeetTheTeam,
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/profile',
     name: 'UserProfile',
     component: UserProfile,
     meta: { requiresAuth: true }
-  }
+  },
 ];
 
-// Create a new router instance
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes,
+  routes
 });
 
-// Navigation guard to check authentication
+// Navigation guard
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
-  const currentUser = auth.currentUser
-
-  // Handle navigation based on auth state
-  if (requiresAuth && !currentUser) {
+  if (to.meta.requiresAuth && !auth.currentUser) {
     next('/login');
-  } else if ((to.path === '/login' || to.path === '/register') && currentUser) {
-    next('/home');
   } else {
     next();
   }
-})
+});
 
 export default router;

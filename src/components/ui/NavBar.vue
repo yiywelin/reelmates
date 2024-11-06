@@ -1,20 +1,29 @@
-```vue
 <template>
   <nav class="navbar">
     <div class="nav-content">
       <!-- Logo Section -->
-      <router-link to="/" class="logo-section">
+      <router-link to="/home" class="logo-section">
         <img src="@/assets/images/Reelmates_Logo.png" alt="Reelmates" class="logo-image" />
       </router-link>
 
+      <!-- Hamburger Menu Button -->
+      <button class="mobile-menu-button" @click="toggleMobileMenu" aria-label="Toggle menu">
+        <div class="hamburger-icon" :class="{ 'open': isMobileMenuOpen }">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </button>
+
       <!-- Navigation Links -->
-      <div class="nav-links">
+      <div class="nav-links" :class="{ 'mobile-open': isMobileMenuOpen }">
         <router-link 
           v-for="link in navLinks" 
           :key="link.path"
           :to="link.path"
           class="nav-link"
           active-class="active"
+          @click="isMobileMenuOpen = false"
         >
           <span class="link-text">{{ link.name }}</span>
           <div class="link-indicator"></div>
@@ -26,18 +35,17 @@
         <div v-if="currentUser" class="user-menu">
           <!-- User Info -->
           <div class="user-info" @click="toggleMenu">
-            <img 
-              :src="userAvatar" 
-              :alt="currentUser.displayName || currentUser.email"
-              class="user-avatar"
-              @error="handleImageError"
-            />
+            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl animate-glow">
+                {{ currentUser.email[0].toUpperCase() }}
+            </div>
             <span class="user-name">{{ currentUser.displayName || currentUser.email }}</span>
           </div>
 
           <!-- Dropdown Menu -->
           <div v-if="isMenuOpen" class="dropdown-menu">
-            <router-link to="/profile" class="menu-item">Profile</router-link>
+            <router-link to="/profile" class="menu-item" @click="closeAllMenus">Profile</router-link>
+            <router-link to="/friends" class="menu-item" @click="closeAllMenus">Friends</router-link>
+            <router-link to="/meet-the-team" class="menu-item" @click="closeAllMenus">About us</router-link>
             <button @click="handleSignOut" class="menu-item logout">
               Sign Out
             </button>
@@ -54,47 +62,46 @@
 </template>
 
 <script setup>
-import { ref, onMounted, provide } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from '../../firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { authService } from '@/services/authService';
-import defaultAvatar from '@/assets/images/default-avatar.png';
 
 const router = useRouter();
 const currentUser = ref(null);
 const isMenuOpen = ref(false);
-const userAvatar = ref(defaultAvatar); 
-provide('userAvatar', userAvatar);
+const isMobileMenuOpen = ref(false);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
+  { name: 'Swipe Movies', path: '/select-genre' },
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },
-  { name: 'Friends', path: '/friends' }, // 
-
-  
 ];
 
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
     currentUser.value = user;
-
-    // Debug logs
-    console.log('User object:', user);
-    console.log('User photoURL:', user?.photoURL);
-    console.log('Default Avatar:', defaultAvatar);
-
-    userAvatar.value = user?.photoURL || defaultAvatar;
-    // Debug log after assignment
-    console.log('Final avatar value:', userAvatar.value);
   });
+  window.addEventListener('resize', handleResize);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
+const handleResize = () => {
+  if (window.innerWidth > 768) {
+    isMobileMenuOpen.value = false;
+  }
+};
 
 const handleSignOut = async () => {
   const result = await authService.logout();
   if (result.success) {
+    closeAllMenus();
     router.push('/login');
   }
 };
@@ -103,8 +110,13 @@ const toggleMenu = () => {
   isMenuOpen.value = !isMenuOpen.value;
 };
 
-const handleImageError = (e) => {
-  e.target.src = defaultAvatar;
+const toggleMobileMenu = () => {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+const closeAllMenus = () => {
+  isMenuOpen.value = false;
+  isMobileMenuOpen.value = false;
 };
 </script>
 
@@ -136,12 +148,52 @@ const handleImageError = (e) => {
   display: flex;
   align-items: center;
   text-decoration: none;
+  z-index: 101;
 }
 
 .logo-image {
-  height: 45px;
+  height: 40px;
   object-fit: contain;
   filter: drop-shadow(0 0 10px rgba(103, 95, 242, 0.3));
+}
+
+/* Mobile Menu Button */
+.mobile-menu-button {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  z-index: 101;
+}
+
+.hamburger-icon {
+  width: 24px;
+  height: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #D0CCE3;
+  transition: all 0.3s ease;
+}
+
+.hamburger-icon.open span:nth-child(1) {
+  transform: translateY(9px) rotate(45deg);
+}
+
+.hamburger-icon.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger-icon.open span:nth-child(3) {
+  transform: translateY(-9px) rotate(-45deg);
 }
 
 /* Navigation Links */
@@ -190,7 +242,7 @@ const handleImageError = (e) => {
 .user-info {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 8px;
@@ -199,15 +251,6 @@ const handleImageError = (e) => {
 
 .user-info:hover {
   background: rgba(103, 95, 242, 0.1);
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(103, 95, 242, 0.5);
-  transition: all 0.3s ease;
 }
 
 .user-name {
@@ -221,7 +264,7 @@ const handleImageError = (e) => {
 
 .dropdown-menu {
   position: absolute;
-  top: 120%;
+  top: calc(100% + 0.5rem);
   right: 0;
   width: 200px;
   background: rgba(10, 10, 31, 0.95);
@@ -229,7 +272,7 @@ const handleImageError = (e) => {
   border-radius: 12px;
   border: 1px solid rgba(103, 95, 242, 0.2);
   padding: 0.5rem;
-  animation: fadeIn 0.2s ease-out;
+  z-index: 102;
 }
 
 .menu-item {
@@ -276,10 +319,100 @@ const handleImageError = (e) => {
   box-shadow: 0 0 15px rgba(103, 95, 242, 0.5);
 }
 
+/* Responsive Styles */
+@media (max-width: 768px) {
+.nav-content {
+    padding: 0 1rem;
+  }
+
+  .mobile-menu-button {
+    display: block;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    flex-direction: column;
+    padding: 5rem 2rem;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 99;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem;
+  }
+
+  .nav-links.mobile-open {
+    transform: translateX(0);
+  }
+
+  .nav-link {
+    width: 100%;
+    text-align: center;
+    background-color: #1A1A33;
+    border-radius: 8px;
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 0 0 10px rgba(219, 61, 207, 0.3);
+    transition: all 0.3s ease;
+    z-index: 99;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    background: #1A1A33; /* Even lighter background for hover/active */
+    color: #DB3DCF;
+    text-shadow: 
+      0 0 10px rgba(219, 61, 207, 0.8),
+      0 0 20px rgba(219, 61, 207, 0.4);
+  }
+
+  .nav-link.active {
+    background: #1A1A33;
+    color: #DB3DCF;
+  }
+
+  .link-indicator {
+    display: none;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .logo-image {
+    height: 32px;
+  }
+
+  /* Close button style */
+  .mobile-menu-button {
+    z-index: 100;
+  }
+
+  .mobile-menu-button .hamburger-icon span {
+    background: #DB3DCF;
+    height: 2px;
+    border-radius: 2px;
+  }
+
+  /* Logo and user section adjustment */
+  .logo-section,
+  .user-section {
+    position: relative;
+    z-index: 100;
+  }
+}
+
+/* Animation for menu items */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -287,23 +420,8 @@ const handleImageError = (e) => {
   }
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .nav-content {
-    padding: 0 1rem;
-  }
-
-  .nav-links {
-    display: none; /* Hide navigation links on mobile */
-  }
-
-  .user-name {
-    display: none; /* Hide username on mobile */
-  }
-
-  .logo-image {
-    height: 24px;
-  }
+.nav-links.mobile-open .nav-link {
+  animation: fadeIn 0.3s ease forwards;
+  animation-delay: calc(var(--index) * 0.1s);
 }
 </style>
-```

@@ -137,7 +137,7 @@ export default {
           console.log("Registration successful");
           email.value = "";
           password.value = "";
-          router.push('/home');
+          router.push('/select-genre');
         } else {
           errorMessage.value = result.error;
         }
@@ -157,7 +157,7 @@ export default {
         
         if (result.success) {
           console.log("Google sign in successful");
-          router.push('/home');
+          router.push('/select-genre');
         } else {
           errorMessage.value = result.error;
         }
