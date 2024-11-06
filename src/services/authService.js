@@ -14,8 +14,7 @@ import {
   setDoc, 
   getDoc, 
   updateDoc, 
-  serverTimestamp,
-  userDocRef 
+  serverTimestamp, 
 } from 'firebase/firestore';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 
@@ -90,7 +89,8 @@ export const authService = {
       const userCredential = await signInWithPopup(auth, provider);
       
       // Check if user document exists, if not create it
-      const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+      const userRef = doc(db, "users", userCredential.user.uid);
+      const userDoc = await getDoc(userRef);
 
       let isNewUser = false;
 
@@ -101,7 +101,7 @@ export const authService = {
         const userData = userDoc.data();
         isNewUser = userData.isNewUser || false;
       
-        await setDoc(userDocRef, {
+        await setDoc(userRef, {
           ...userData,
           lastLogin: serverTimestamp(),
           // If they were a new user, mark them as not new anymore
