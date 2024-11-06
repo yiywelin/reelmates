@@ -63,7 +63,7 @@ const isMenuOpen = ref(false);
 
 const navLinks = [
   { name: 'Home', path: '/home' },
-  { name: 'Swipe Movies', path: '/swipe' },
+  { name: 'Swipe Movies', path: '/select-genre' },
   { name: 'Recommendations', path: '/recommendations' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
   { name: 'Watch Party', path: '/watch-party' },

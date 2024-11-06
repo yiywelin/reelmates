@@ -14,7 +14,8 @@ import {
   setDoc, 
   getDoc, 
   updateDoc, 
-  serverTimestamp 
+  serverTimestamp,
+  userDocRef 
 } from 'firebase/firestore';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 
@@ -35,6 +36,7 @@ export const authService = {
       
       return {
         success: true,
+        isNewUser: true,
         user: userCredential.user
       };
     } catch (error) {
@@ -51,12 +53,25 @@ export const authService = {
     try {
       // 1. Sign in user
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // Check if user is a new user
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      const userData = userDoc.data();
+
+      if (userData?.isNewUser) {
+        // Update isNewUser flag to false after first login
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          ...userData,
+          isNewUser: false
+        }, { merge: true });
+      }
       
       // 2. Update last login timestamp
       await this.updateUserLastLogin(userCredential.user.uid);
       
       return {
         success: true,
+        isNewUser: userData?.isNewUser || false,
         user: userCredential.user
       };
     } catch (error) {
@@ -76,14 +91,28 @@ export const authService = {
       
       // Check if user document exists, if not create it
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
+
+      let isNewUser = false;
+
       if (!userDoc.exists()) {
+        isNewUser = true;
         await this.createUserDocument(userCredential.user);
       } else {
+        const userData = userDoc.data();
+        isNewUser = userData.isNewUser || false;
+      
+        await setDoc(userDocRef, {
+          ...userData,
+          lastLogin: serverTimestamp(),
+          // If they were a new user, mark them as not new anymore
+          ...(userData.isNewUser && { isNewUser: false })
+        }, { merge: true });
         await this.updateUserLastLogin(userCredential.user.uid);
       }
 
       return {
         success: true,
+        isNewUser,
         user: userCredential.user
       };
     } catch (error) {
@@ -127,7 +156,8 @@ export const authService = {
         likedMovies: [],
         friends: [],
         username: user.email.split('@')[0], // Basic username from email
-        photoURL: defaultAvatar
+        photoURL: defaultAvatar,
+        isNewUser: true
       });
     } catch (error) {
       console.error("Error creating user document:", error);
