@@ -12,7 +12,7 @@
         <div class="text-center mb-16 animate-fadeIn mt-12">
           <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
             [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
-            {{ isLoggedIn ? 'Your Recommended Movies' : 'Popular Movies' }}
+            {{ 'Your Recommended Movies' }}
           </span>
         </div>
 
@@ -73,6 +73,8 @@
                 class="px-4 md:px-6 lg:px-8 relative rounded-2xl cursor-pointer overflow-hidden
                   transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
                 @click="navigateToMovie(movie)"
+                @mouseenter="loadTrailer(movie)"
+                @mouseleave="closeTrailer"
               >
                 <div class="relative pb-[150%]">
                   <img 
@@ -83,6 +85,23 @@
                     class="absolute inset-0 w-full h-full object-cover rounded-2xl
                       transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl"
                   />
+                  <div 
+                    v-if="currentTrailer && currentTrailer.id === movie.id" 
+                    class="absolute inset-0 bg-black bg-opacity-75 rounded-2xl overflow-hidden"
+                  >
+                    <div class="absolute inset-0 flex items-center justify-center">
+                      <div class="relative w-full h-0 pb-[56.25%]">
+                        <iframe 
+                          :src="`https://www.youtube.com/embed/${currentTrailer.key}?autoplay=1`" 
+                          frameborder="0" 
+                          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                          allowfullscreen
+                          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95%] h-auto aspect-video"
+                          style="min-height: 60%;"
+                        ></iframe>
+                      </div>
+                    </div>
+                  </div>
                   <div class="absolute inset-x-0 bottom-0 p-6 md:p-8 lg:p-10 bg-gradient-to-t 
                     from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent 
                     rounded-b-2xl translate-y-full transition-transform duration-300 
@@ -104,7 +123,7 @@
                         rounded-lg text-sm md:text-base font-medium transition-all duration-300 
                         hover:bg-[#7B74FF] hover:-translate-y-0.5
                         hover:shadow-[0_4px_12px_rgba(103,95,242,0.3)]">
-                        View Details
+                        Start watch party
                       </span>
                     </div>
                   </div>
@@ -140,8 +159,9 @@
   </div>
 </template>
 
+
 <script setup>
-import { ref, onMounted, computed, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
@@ -164,8 +184,7 @@ const touchStart = ref(null)
 const touchEnd = ref(null)
 const carouselRef = ref(null)
 const visibleMovies = ref(3)
-
-const isLoggedIn = computed(() => !!auth.currentUser)
+const currentTrailer = ref(null)
 
 // Carousel functionality
 const updateVisibleMovies = () => {
@@ -270,10 +289,16 @@ const tmdbService = {
   async getPopularMovies() {
     const data = await this.fetchFromTMDB('/movie/popular?language=en-US&page=1')
     return data.results.map(movie => this.processMovie(movie))
+  },
+
+  async getMovieTrailer(movieId) {
+    const data = await this.fetchFromTMDB(`/movie/${movieId}/videos?language=en-US`)
+    return data.results.find(video => video.type === 'Trailer')
   }
 }
 
 // Utility function to shuffle array
+
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -289,15 +314,9 @@ const loadMovies = async () => {
     error.value = null
     currentIndex.value = 0 // Reset carousel position
     
-    if (!auth.currentUser) {
-      const popularMovies = await tmdbService.getPopularMovies()
-      movies.value = popularMovies
-      return
-    }
-
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
-    const likedMovies = userDoc.exists() ? (userDoc.data().likedMovies || []) : []
-
+    const likedMovies = userDoc.exists() ? (userDoc.data().likedMovies.movieId|| []) : []
+    console.log("Likedmovies:"+likedMovies)
     if (likedMovies.length === 0) {
       const popularMovies = await tmdbService.getPopularMovies()
       movies.value = popularMovies
@@ -307,7 +326,8 @@ const loadMovies = async () => {
     const shuffledLikedMovies = shuffleArray([...likedMovies])
     const numberOfSources = Math.min(4, shuffledLikedMovies.length)
     const selectedMovies = shuffledLikedMovies.slice(0, numberOfSources)
-    
+    console.log(numberOfSources)
+    console.log(selectedMovies)
     const recommendationsPromises = selectedMovies.map(movieId => 
       tmdbService.getRecommendations(movieId)
     )
@@ -330,6 +350,33 @@ const loadMovies = async () => {
   } finally {
     loading.value = false
   }
+    if (!auth.currentUser) {
+      const popularMovies = await tmdbService.getPopularMovies()
+      movies.value = popularMovies
+      return
+    }
+}
+
+
+const loadTrailer = async (movie) => {
+  try {
+    const trailer = await tmdbService.getMovieTrailer(movie.id)
+    if (trailer) {
+      currentTrailer.value = {
+        id: movie.id,
+        key: trailer.key
+      }
+    } else {
+      currentTrailer.value = null
+    }
+  } catch (err) {
+    console.error('Error loading trailer:', err)
+    currentTrailer.value = null
+  }
+}
+
+const closeTrailer = () => {
+  currentTrailer.value = null
 }
 
 const navigateToMovie = (movie) => {
