@@ -224,13 +224,13 @@ import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 // import { UserPlusIcon } from 'lucide-vue-next'; // Add this import
 import { UserPlusIcon, UserGroupIcon } from '@heroicons/vue/24/solid';
-import MovieNightPlanningModal from '@/components/Friends/CreateWatchPartyModal.vue';
+import MovieNightPlanningModal from '@/components/friends/createWatchPartyModal.vue';
 import { getAuth } from 'firebase/auth'
 // import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { collection, getDocs, query, where, getDoc, doc } from 'firebase/firestore';
-import AddFriendModal from '@/components/Friends/AddFriendModal.vue';
-import CreateGroupModal from '@/components/Friends/CreateGroupModal.vue';
+import AddFriendModal from '@/components/friends/AddFriendModal.vue';
+import CreateGroupModal from '@/components/friends/CreateGroupModal.vue';
 
 
 
