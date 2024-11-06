@@ -173,7 +173,7 @@ const startSwiping = () => {
 }
 
 .neon-text {
-  font-size: 2rem;
+  font-size: 2.5rem;
   color: #DB3DCF;
   text-shadow: 
     0 0 5px #DB3DCF,

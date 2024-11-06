@@ -1,5 +1,6 @@
 <template>
     <div class="h-screen bg-gray-900 text-white overflow-hidden relative">
+      <NavBar />
       <div class="absolute inset-0 bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 animate-gradient"></div>
   
       <div class="fixed top-4 right-4 z-50 space-y-2" ref="notifications"></div>
@@ -101,7 +102,11 @@
   </template>
   
   <script>
+  import NavBar from '@/components/ui/NavBar.vue'
   export default {
+    components: {
+    NavBar
+    },
     data() {
       return {
         notifications: [],
