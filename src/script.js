@@ -36,21 +36,21 @@ let chatRoomTitle = document.getElementById("chat-room-title");
 let lastSender = ""; // Keeps track of the last message's sender to group messages
 
 // Testing
-let chatRoom = "1";
-let username = "Bob";
-let userid = "5";
-chatRoomTitle.textContent = "Hallows";
+// let chatRoom = "1";
+// let username = "Bob";
+// let userid = "5";
+// chatRoomTitle.textContent = "Hallows";
 
 // NOTE: we will be getting parameters from previous page via url parameters
 // ?chatid=&username=&userid=&chatname=
 
-// let queryString = window.location.search;
-// let urlParams = new URLSearchParams(queryString);
+let queryString = window.location.search;
+let urlParams = new URLSearchParams(queryString);
 
-// let chatRoom = urlParams.get('chatid');
-// let username = urlParams.get('username');
-// let userid = urlParams.get('userid');
-// chatRoomTitle.textContent = urlParams.get('chatname');   // chatroomName
+let chatRoom = urlParams.get('chatid');
+let username = urlParams.get('username');
+let userid = urlParams.get('userid');
+chatRoomTitle.textContent = urlParams.get('chatname');   // chatroomName
 
 
 
