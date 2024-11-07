@@ -6,52 +6,62 @@ const firebaseConfig = {
     // storageBucket: "YOUR_STORAGE_BUCKET",
     // messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
     // appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyDbJrpGdM6mUDPD-iGTQK97Nz_iMtnQNGQ",
+    authDomain: "wad2-20e6f.firebaseapp.com",
+    projectId: "wad2-20e6f",
+    storageBucket: "wad2-20e6f.firebasestorage.app",
+    messagingSenderId: "1075148882917",
+    appId: "1:1075148882917:web:7279d743c8f7f78664250c",
+    measurementId: "G-ELR7RHQCYY"
 };
 
 
-// Have to authenticate?
-// Chat page should only be accessible to the logged-in user
 
 // Initialize Firebase and Firestore
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Selecting HTML elements by their ID
-const usernameInput = document.getElementById("username");
-const chatRoomInput = document.getElementById("chat-room");
-const joinRoomButton = document.getElementById("join-room");
-const messageInput = document.getElementById("message-input");
-const sendButton = document.getElementById("send-btn");
-const messagesDiv = document.getElementById("messages");
-const chatRoomTitle = document.getElementById("chat-room-title");
-const usernameDisplay = document.getElementById("username-display");
+// const usernameInput = document.getElementById("username");
+// const chatRoomInput = document.getElementById("chat-room");
+// const joinRoomButton = document.getElementById("join-room");
+let messageInput = document.getElementById("message-input");
+let sendButton = document.getElementById("send-btn");
+let messagesDiv = document.getElementById("messages");
+messagesDiv.style.overflowY = "scroll";
+let chatRoomTitle = document.getElementById("chat-room-title");
+// const usernameDisplay = document.getElementById("username-display");
 
-let chatRoom = ""; // Variable to store the current chat room name
-let username = ""; // Variable to store the user's name
+
 let lastSender = ""; // Keeps track of the last message's sender to group messages
 
+// Testing
+let chatRoom = "1";
+let username = "Bob";
+let userid = "5";
+chatRoomTitle.textContent = "Hallows";
 
-// The below code is to be removed in the actual implementation
-// Join a chat room when the "Join Room" button is clicked
-joinRoomButton.addEventListener("click", () => {
-    username = usernameInput.value.trim();
-    chatRoom = chatRoomInput.value.trim();
+// NOTE: we will be getting parameters from previous page via url parameters
+// ?chatid=&username=&userid=&chatname=
 
-    if (!username || !chatRoom) {
-        alert("Please enter both username and chat room name.");
-        return;
-    }
+// let queryString = window.location.search;
+// let urlParams = new URLSearchParams(queryString);
 
-    document.querySelector(".setup-section").style.display = "none"; // Hide setup, this is to be removed
-    chatRoomTitle.textContent = chatRoom;
-    usernameDisplay.textContent = `Username: ${username}`; 
-    messagesDiv.innerHTML = "";  // Clear previous messages
-    loadMessages(chatRoom);  // Load messages in real-time
-});
+// let chatRoom = urlParams.get('chatid');
+// let username = urlParams.get('username');
+// let userid = urlParams.get('userid');
+// chatRoomTitle.textContent = urlParams.get('chatname');   // chatroomName
+
+
+
+
+messagesDiv.innerHTML = "";  // Clear previous messages
+loadMessages(chatRoom);  // Load messages in real-time
+
 
 // Load messages from Firestore in real-time
 function loadMessages(room) {
-    db.collection("chatrooms").doc(room).collection("messages")
+    db.collection("chats").doc(room).collection("messages")
         .orderBy("timestamp", "asc")
         .onSnapshot((snapshot) => {
             messagesDiv.innerHTML = "";  // Clear messages before loading
@@ -59,6 +69,7 @@ function loadMessages(room) {
             snapshot.forEach(doc => {
                 const message = doc.data();
                 displayMessage(message);
+                scrollToBottom();
             });
             lastSender = "";  // Reset last sender after reloading messages
         });
@@ -70,21 +81,23 @@ function displayMessage(message) {
     const messageDiv = document.createElement("div");
 
     // Check if the message is from the same sender as the last message
-    if (lastSender !== message.username) {
+    // check check
+    if (lastSender !== message.userid) {
         usernameLabel.classList.add("username-label");
         usernameLabel.textContent = message.username;
         messagesDiv.appendChild(usernameLabel);
-        lastSender = message.username;  // Update last sender to the current one
+        lastSender = message.userid;  // Update last sender to the current one
     }
 
     messageDiv.classList.add("message");
-    messageDiv.classList.add(message.username === username ? "sent" : "received");
+    messageDiv.classList.add(message.userid === userid ? "sent" : "received");
 
-    
-    messageDiv.setAttribute("data-username", message.username);
+
+    // Clarify
+    messageDiv.setAttribute("data-userid", message.userid);
     messageDiv.textContent = message.text;
     messagesDiv.appendChild(messageDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the latest message
+    scrollToBottom();
 }
 
 // Send a message when the "Send" button is clicked
@@ -93,16 +106,23 @@ sendButton.addEventListener("click", () => {
 
     if (!messageText) return;
 
-    db.collection("chatrooms").doc(chatRoom).collection("messages").add({
+    db.collection("chats").doc(chatRoom).collection("messages").add({
+        userid: userid,
         username: username,
         text: messageText,
         timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     messageInput.value = "";  // Clear the message input field
+
+    scrollToBottom();
 });
 
 
+function scrollToBottom() {
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    // Auto-scroll to the latest message  
+}
 
 // to get info from chat homepage
 // Parse the room name from URL parameters
