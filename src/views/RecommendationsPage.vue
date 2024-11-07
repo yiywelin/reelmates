@@ -7,7 +7,6 @@
     <div class="flex-grow relative">
       <div class="relative flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
         <TheatricalBackground />
-        
         <!-- Header -->
         <div class="text-center mb-16 animate-fadeIn mt-12">
           <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
@@ -109,7 +108,7 @@
                     </h3>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-yellow-400">★</span>
-                      <span class="text-white">{{ movie.voteAverage?.toFixed(1) || 'N/A' }}</span>
+                      <span class="text-white">{{ movie.voteAverage?.toFixed(1) + '/10' || 'N/A' }}</span>
                       <span v-if="movie.basedOn" class="text-sm text-gray-400">
                         (Similar to {{ movie.basedOn }})
                       </span>
@@ -309,9 +308,15 @@ const loadMovies = async () => {
     loading.value = true
     error.value = null
     currentIndex.value = 0 
-    
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
-    const likedMovies = userDoc.exists() ? (userDoc.data().likedMovies.movieId|| []) : []
+    const likedMovieslst = userDoc.data().likedMovies
+    const likedMovies = []
+    likedMovieslst.forEach(movieobj =>
+      likedMovies.push(movieobj.movieId)
+    )
+    console.log(userDoc)
+    console.log(userDoc.data())
+    console.log(likedMovieslst)
     console.log("Likedmovies:"+likedMovies)
     if (likedMovies.length === 0) {
       const popularMovies = await tmdbService.getPopularMovies()
@@ -320,7 +325,7 @@ const loadMovies = async () => {
     }
 
     const shuffledLikedMovies = shuffleArray([...likedMovies])
-    const numberOfSources = Math.min(4, shuffledLikedMovies.length)
+    const numberOfSources = Math.min(8, shuffledLikedMovies.length)
     const selectedMovies = shuffledLikedMovies.slice(0, numberOfSources)
     console.log(numberOfSources)
     console.log(selectedMovies)
@@ -329,7 +334,7 @@ const loadMovies = async () => {
     )
     
     const recommendationsArrays = await Promise.all(recommendationsPromises)
-    
+    console.log(recommendationsArrays)
     let allRecommendations = recommendationsArrays.flat()
     
     const seenIds = new Set(likedMovies)
