@@ -16,12 +16,10 @@
           </span>
         </div>
 
-        <!-- Loading State -->
         <div v-if="loading" class="flex items-center justify-center w-full py-12">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6961]"></div>
         </div>
 
-        <!-- Error State -->
         <div v-else-if="error" class="w-full max-w-[1600px] mx-auto px-4 text-center py-12">
           <div class="text-[#FF6961] text-lg mb-4">{{ error }}</div>
           <button 
@@ -34,7 +32,6 @@
 
         <!-- Movie Carousel -->
         <div v-else-if="movies.length" class="relative w-full max-w-[1600px] mx-auto px-4 md:px-16 lg:px-20">
-          <!-- Navigation Buttons -->
           <button 
             class="absolute top-1/2 -translate-y-1/2 w-12 md:w-16 h-12 md:h-16 rounded-full
               bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
@@ -83,7 +80,7 @@
                       : '/placeholder-movie.jpg'"
                     :alt="movie.title"
                     class="absolute inset-0 w-full h-full object-cover rounded-2xl
-                      transition-all duration-300 group-hover:scale-105 group-hover:shadow-2xl"
+                      transition-all duration-300 group-hover:scale-135 group-hover:shadow-2xl"
                   />
                   <div 
                     v-if="currentTrailer && currentTrailer.id === movie.id" 
@@ -150,7 +147,6 @@
           </button>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="text-center py-12">
           <p class="text-lg text-[#D0CCE3]">No movies found. Try refreshing the page.</p>
         </div>
@@ -193,11 +189,11 @@ const updateVisibleMovies = () => {
   const width = window.innerWidth
   
   if (width < 640) {
-    visibleMovies.value = 1 // Mobile
+    visibleMovies.value = 1
   } else if (width < 1024) {
-    visibleMovies.value = 2 // Tablet
+    visibleMovies.value = 2
   } else {
-    visibleMovies.value = 3 // Desktop and up
+    visibleMovies.value = 3 
   }
   
   if (currentIndex.value > movies.value.length - visibleMovies.value) {
@@ -256,7 +252,7 @@ const handleKeydown = (e) => {
   }
 }
 
-// TMDB service
+
 const tmdbService = {
   async fetchFromTMDB(endpoint) {
     const response = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}`)
@@ -297,7 +293,7 @@ const tmdbService = {
   }
 }
 
-// Utility function to shuffle array
+
 
 const shuffleArray = (array) => {
   for (let i = array.length - 1; i > 0; i--) {
@@ -307,12 +303,12 @@ const shuffleArray = (array) => {
   return array
 }
 
-// Main loading function
+
 const loadMovies = async () => {
   try {
     loading.value = true
     error.value = null
-    currentIndex.value = 0 // Reset carousel position
+    currentIndex.value = 0 
     
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
     const likedMovies = userDoc.exists() ? (userDoc.data().likedMovies.movieId|| []) : []
