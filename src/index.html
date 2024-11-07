@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enhanced Chat App</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css"> <!-- keep/progress only -->
 </head>
 
 <body>
@@ -13,21 +13,22 @@
         <!-- Header Section -->
         <header class="chat-header">
             <h2 id="chat-room-title">Chat Room</h2>
-            <span class="username-display" id="username-display">Username:</span>
+            <!-- <span class="username-display" id="username-display">Username:</span> -->
         </header>
 
         <!-- For testing purposes only -->
         <!-- In the actual platform, the user's details will be obtained from the previous page -->
-        <!-- as the user has logged in earlier on their journey -->
+        <!-- via the url parameters chatid, userid and username -->
         <!-- Setup Section for joining a room -->
-        <div class="setup-section">
+        <!-- <div class="setup-section">
             <label for="username">Username:</label>
             <input type="text" id="username" placeholder="Enter your username">
 
             <label for="chat-room">Chat Room:</label>
             <input type="text" id="chat-room" placeholder="Enter chat room name">
             <button id="join-room">Join Room</button>
-        </div>
+        </div> -->
+
 
         <!-- Main Chat Window -->
         <div id="chat-window" class="chat-window">
@@ -44,7 +45,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
-    <script src="script.js"></script>
+    <script src="script.js"></script>  <!-- change -->
 </body>
 
 </html>
