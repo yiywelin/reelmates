@@ -2,7 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { auth } from '../firebaseConfig';
 import HomePage from '../views/HomePage.vue';
-import TheRealHomePage from '../views/TheRealHomePage.vue';
+import SelectGenre from '../views/SelectGenre.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
@@ -15,7 +15,7 @@ import MeetTheTeam from '@/views/MeetTheTeam.vue';
 const routes = [
   {
     path: '/',
-    redirect: '/home'  // Updated to redirect to home instead of register
+    redirect: '/home'
   },
   {
     path: '/register',
@@ -40,7 +40,13 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/swipe',  // Updated from /movie-swiper to /swipe
+    path: '/select-genre',
+    name: 'SelectGenre',
+    component: SelectGenre,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/swipe',
     name: 'MovieSwiper',
     component: MovieSwiper,
     meta: { requiresAuth: true }
