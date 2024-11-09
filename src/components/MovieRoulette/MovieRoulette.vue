@@ -5,43 +5,68 @@
     <div class="roulette-container">
       <!-- Title -->
       <div class="neon-text">Movie Roulette</div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        Loading your movies...
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-state">
+        {{ error }}
+      </div>
      
-      <!-- Selected Movie Display -->
-      <div class="selected-movie">
-        {{ selectedMovie || 'Spin to select a movie' }}
-      </div>
-
-      <!-- Movies Display with Clean Selection -->
-      <div class="movies-display">
-        <div 
-          v-for="(movie, index) in visibleMovies" 
-          :key="index"
-          class="movie-item"
-          :class="{
-            'movie-item-alt': index % 2 === 0,
-            'movie-item-selected': index === 3,
-          }"
-        >
-          {{ movie }}
+      <!-- Content when movies are loaded -->
+      <template v-else>
+        <!-- Selected Movie Display -->
+        <div class="selected-movie">
+          {{ selectedMovie || 'Spin to select a movie' }}
         </div>
-      </div>
 
-      <!-- Spin Button -->
-      <button 
-        class="spin-button"
-        :class="{ 'active': !isSpinning }"
-        @click="handleRouletteButton"
-      >
-        <div class="button-glow"></div>
-        <div class="light-beam"></div>
-        <span class="button-text">{{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}</span>
-      </button>
+        <!-- Movies Display -->
+        <div v-if="movies.length > 0" class="movies-display">
+          <div 
+            v-for="(movie, index) in visibleMovies" 
+            :key="index"
+            class="movie-item"
+            :class="{
+              'movie-item-alt': index % 2 === 0,
+              'movie-item-selected': index === 3,
+            }"
+          >
+            {{ movie }}
+          </div>
+        </div>
+
+        <!-- No Movies Message -->
+        <div v-else class="no-movies-message">
+          You haven't liked any movies yet. 
+          Go back and like some movies to use the roulette!
+        </div>
+
+        <!-- Spin Button -->
+        <button 
+          class="spin-button"
+          :class="{ 'active': !isSpinning }"
+          :disabled="movies.length === 0"
+          @click="handleRouletteButton"
+        >
+          <div class="button-glow"></div>
+          <div class="light-beam"></div>
+          <span class="button-text">
+            {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
+          </span>
+        </button>
+      </template>
     </div>
   </div>
 </template>
 
 <script>
 import NavBar from '@/components/ui/NavBar.vue'
+import { getAuth } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../../firebaseConfig'
 
 export default {
   name: 'MovieRoulette',
@@ -50,29 +75,70 @@ export default {
   },
   data() {
     return {
-      movies: [
-        "The Godfather", "Pulp Fiction", "Inception", "Star Wars",
-        "Jurassic Park", "The Matrix", "Titanic", "Avatar",
-        "Fight Club", "Goodfellas", "Dark Knight", "Jaws",
-        "E.T.", "Indiana Jones", "Back to Future", "Terminator",
-        "Alien", "Blade Runner", "Die Hard", "The Shining",
-        "Mad Max", "Top Gun", "Rocky", "Ghostbusters",
-        "Predator", "The Thing", "RoboCop", "Scarface"
-      ],
+      movies: [],
       spinSpeed: 8,
       selectedMovie: "",
       isSpinning: false,
       visibleMovies: [],
-      spinInterval: null
+      spinInterval: null,
+      loading: true,
+      error: null
     }
   },
   created() {
     // Initialize visible movies
-    this.resetVisibleMovies()
+    console.log('Component created, fetching movies...')
+    this.fetchLikedMovies()
   },
   methods: {
+    async fetchLikedMovies() {
+      const auth = getAuth()
+      console.log('Current user:', auth.currentUser)
+      if (!auth.currentUser) return
+
+      try {
+        this.loading = true
+        this.error = null
+        
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          const likedMovies = userData.likedMovies || []
+          console.log("Liked movies: " + likedMovies)
+          
+          // Map liked movies to just their titles
+          this.movies = likedMovies.map(movie => movie.title)
+          
+          // Initialize visible movies only if we have movies
+          if (this.movies.length > 0) {
+            this.resetVisibleMovies()
+          } else {
+            this.error = "No liked movies found. Like some movies first!"
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching liked movies:', err)
+        this.error = "Failed to load your liked movies"
+      } finally {
+        this.loading = false
+      }
+    },
     resetVisibleMovies() {
-      this.visibleMovies = this.movies.slice(0, 7)
+      if (this.movies.length === 0) {
+        this.visibleMovies = []
+        return
+      }
+      
+      // If we have less than 7 movies, duplicate them to fill the display
+      if (this.movies.length < 7) {
+        this.visibleMovies = [
+          ...this.movies,
+          ...this.movies,
+          ...this.movies
+        ].slice(0, 7)
+      } else {
+        this.visibleMovies = this.movies.slice(0, 7)
+      }
     },
     handleRouletteButton() {
       if (this.isSpinning) {
@@ -83,7 +149,7 @@ export default {
     },
 
     startRoulette() {
-      if (this.isSpinning) return
+      if (this.isSpinning || this.movies.length === 0) return
       this.isSpinning = true
       
       // Calculate spin interval based on speed
@@ -103,7 +169,10 @@ export default {
       if (!this.isSpinning) return
 
       // Clear the spinning interval
-      clearInterval(this.spinInterval)
+      if (this.spinInterval) {
+        clearInterval(this.spinInterval)
+        this.spinInterval = null
+      }
       
       // Select final movie
       const finalMovie = this.movies[Math.floor(Math.random() * this.movies.length)]
@@ -161,6 +230,26 @@ export default {
   flex-direction: column;
   height: calc(100vh - 70px); /* Subtract the padding-top */
   justify-content: space-between;
+}
+
+.loading-state,
+.error-state,
+.no-movies-message {
+  font-size: 1.2rem;
+  padding: 2rem;
+  text-align: center;
+  color: #D0CCE3;
+}
+
+.error-state {
+  color: #ff6b6b;
+}
+
+.spin-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #4a4a6a;
+  box-shadow: none;
 }
 
 .neon-text {
