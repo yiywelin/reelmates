@@ -20,7 +20,40 @@
     
     <!-- Movie Content -->
     <div class="card-content">
-      <div class="movie-poster-container">
+      <transition name="fade">
+        <div v-if="showOverview" class="movie-overview-overlay">
+          <div class="movie-overview-content">
+            <div class="overview-header">
+              <h3 class="overview-title" :style="{ color: getPrimaryGenreColors.primary }">
+                About this movie
+              </h3>
+              <button 
+                @click="closeOverview"
+                class="close-button"
+                :style="{ 
+                  '--hover-color': getPrimaryGenreColors.background,
+                  color: getPrimaryGenreColors.primary 
+                }"
+              >
+                ×
+              </button>
+            </div>
+            <p class="movie-overview">{{ movie.overview }}</p>
+            <div class="genre-tags" v-if="movie.genre_ids">
+              <span 
+                v-for="genreId in movie.genre_ids.slice(0, 3)" 
+                :key="genreId"
+                class="genre-tag"
+                :style="getGenreStyle(genreId)"
+              >
+                {{ getGenreName(genreId) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <div class="movie-poster-container" :class="{ 'blur-background': showOverview }">
         <img 
           :src="movie.posterPath || '/default-movie-poster.jpg'" 
           :alt="movie.title"
@@ -73,45 +106,6 @@
           </div>
           <span class="rating-number" :style="{ color: getPrimaryGenreColors.primary }">{{ formattedRating }}</span>
         </div>
-
-        <transition name="fade">
-          <div v-if="showOverview" class="movie-overview-container" @click.self="closeOverview">
-            <div class="movie-overview-content"
-              :style="{
-                '--scrollbar-thumb': getPrimaryGenreColors.primary,
-                '--scrollbar-track': getPrimaryGenreColors.background,
-                '--scrollbar-thumb-hover': adjustColorBrightness(getPrimaryGenreColors.primary, 20)
-              }"
-            >
-              <div class="overview-header" :style="{ borderColor: getPrimaryGenreColors.primary + '40' }">
-                <h3 class="overview-title" :style="{ color: getPrimaryGenreColors.primary }">
-                  About this movie
-                </h3>
-                <button 
-                  @click="closeOverview"
-                  class="close-button"
-                  :style="{ 
-                    '--hover-color': getPrimaryGenreColors.background,
-                    color: getPrimaryGenreColors.primary 
-                  }"
-                >
-                  ×
-                </button>
-              </div>
-              <p class="movie-overview">{{ movie.overview }}</p>
-              <div class="genre-tags" v-if="movie.genre_ids">
-                <span 
-                  v-for="genreId in movie.genre_ids.slice(0, 3)" 
-                  :key="genreId"
-                  class="genre-tag"
-                  :style="getGenreStyle(genreId)"
-                >
-                  {{ getGenreName(genreId) }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </transition>
       </div>
     </div>
   </div>
@@ -397,6 +391,24 @@ const adjustColorBrightness = (hex, percent) => {
   position: relative;
   height: 75%;
   overflow: hidden;
+  transition: filter 0.3s ease;
+}
+
+.blur-background {
+  filter: blur(3px) brightness(0.7);
+}
+
+.movie-overview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
 }
 
 .movie-card.dragging {
@@ -533,11 +545,10 @@ const adjustColorBrightness = (hex, percent) => {
 }
 
 .movie-overview-content {
-  height: 100%;
-  overflow-y: auto;
-  padding: 1rem;
-  scrollbar-width: thin;
-  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .movie-overview-content::-webkit-scrollbar {
@@ -548,16 +559,12 @@ const adjustColorBrightness = (hex, percent) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid;
-  transition: all 0.3s ease;
 }
 
 .overview-title {
-  font-size: 1.2rem;
-  font-weight: 500;
-  transition: color 0.3s ease;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
 }
 
 .close-button {
@@ -601,17 +608,19 @@ const adjustColorBrightness = (hex, percent) => {
 }
 
 .movie-overview {
+  flex: 1;
   color: #e2e8f0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.6;
-  margin-bottom: 1rem;
+  margin: 0;
+  overflow-y: auto;
 }
 
 .genre-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: auto;
 }
 
 .fade-enter-active,
