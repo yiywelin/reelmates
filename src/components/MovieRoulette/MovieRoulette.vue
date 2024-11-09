@@ -6,25 +6,9 @@
       <!-- Title -->
       <div class="neon-text">Movie Roulette</div>
      
-
       <!-- Selected Movie Display -->
       <div class="selected-movie">
         {{ selectedMovie || 'Spin to select a movie' }}
-      </div>
-      
-      <!-- Speed Control -->
-      <div class="speed-control">
-        <div class="speed-label">SPIN SPEED:</div>
-        <div class="speed-slider-wrapper">
-          <input 
-            type="range" 
-            min="1" 
-            max="15" 
-            v-model="spinSpeed" 
-            class="speed-slider"
-          />
-          <div class="speed-value">{{ spinSpeed }}x</div>
-        </div>
       </div>
 
       <!-- Movies Display with Clean Selection -->
@@ -145,28 +129,24 @@ export default {
 
 <style scoped>
 .movie-roulette-page {
-  min-height: 100vh;
-  padding-top: 90px;
+  height: 100vh;
+  padding-top: 70px; /* Reduced from 90px */
   background: #0a0a1f;
   color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .roulette-container {
   max-width: 800px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 1rem; /* Reduced from 2rem */
   text-align: center;
-}
-
-.title {
-  font-size: 3rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(to right, #675FF2, #DB3DCF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 70px); /* Subtract the padding-top */
+  justify-content: space-between;
 }
 
 .neon-text {
@@ -179,85 +159,33 @@ export default {
   animation: neonFlicker 2s infinite;
 }
 
-.title-line {
-  width: 100px;
-  height: 2px;
-  margin: 0.5rem auto 2rem;
-  background: linear-gradient(to right, #675FF2, #DB3DCF);
-}
-
 .selected-movie {
-  font-size: 2.5rem;
-  padding: 1.5rem;
-  margin: 2rem 0;
+  font-size: 2rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
   text-transform: uppercase;
   letter-spacing: 2px;
   border-top: 1px solid #675FF2;
   border-bottom: 1px solid #DB3DCF;
 }
 
-.speed-control {
-  margin: 2rem 0;
-}
-
-.speed-label {
-  font-size: 1.2rem;
-  letter-spacing: 2px;
-  margin-bottom: 1rem;
-}
-
-.speed-slider-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.speed-slider {
-  flex: 1;
-  max-width: 400px;
-  -webkit-appearance: none;
-  height: 4px;
-  background: linear-gradient(to right, #675FF2, #DB3DCF);
-  border-radius: 2px;
-  outline: none;
-}
-
-.speed-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #DB3DCF;
-  cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 10px rgba(219, 61, 207, 0.5);
-}
-
-.speed-value {
-  background: rgba(10, 10, 31, 0.95);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: 1px solid rgba(219, 61, 207, 0.3);
-  min-width: 60px;
-  text-align: center;
-}
-
 .movies-display {
   position: relative;
   max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem 0;
+  margin: 0.5rem auto;
+  padding: 1rem 0;
   background: rgba(10, 10, 31, 0.95);
   border-radius: 8px;
   overflow: hidden;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .movie-item {
-  padding: 1.2rem;
-  font-size: 1.2rem;
+  padding: 0.8rem;
+  font-size: 1.1rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   background: #13132b;
@@ -274,9 +202,9 @@ export default {
     rgba(103, 95, 242, 0.3),
     rgba(219, 61, 207, 0.3)
   ) !important;
-  font-size: 1.4rem;
+  font-size: 1.2rem;
   font-weight: bold;
-  padding: 1.5rem;
+  padding: 1rem;
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   transform: scale(1.02);
@@ -319,8 +247,8 @@ export default {
 
 .spin-button {
   position: relative;
-  padding: 1.5rem 4rem;
-  font-size: 1.5rem;
+  padding: 1rem 3rem;
+  font-size: 1.3rem;
   font-weight: bold;
   background: none;
   border: 2px solid #675FF2;
@@ -329,6 +257,7 @@ export default {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s ease;
+  margin: 1rem 0;
 }
 
 .button-glow {
@@ -375,30 +304,31 @@ export default {
 
 @media (max-width: 768px) {
   .roulette-container {
-    padding: 1rem;
+    padding: 0.5rem;
   }
-  
-  .title {
-    font-size: 2rem;
+
+  .neon-text{
+    font-size: 1.8rem;
   }
   
   .selected-movie {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
+    padding: 0.8rem;
   }
 
   .movie-item {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+
+  .movie-item-selected {
     font-size: 1rem;
     padding: 1rem;
   }
 
-  .movie-item-selected {
-    font-size: 1.2rem;
-    padding: 1.2rem;
-  }
-
   .spin-button {
-    padding: 1.2rem 3rem;
-    font-size: 1.2rem;
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
   }
 }
 </style>
