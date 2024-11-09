@@ -11,6 +11,8 @@ import EnhancedFriendsPage from '../components/Friends/EnhancedFriendsPage.vue';
 import WatchParty from '../components/WatchParty/WatchParty.vue';
 import MovieRoulette from '@/components/MovieRoulette/MovieRoulette.vue';
 import MeetTheTeam from '@/views/MeetTheTeam.vue';
+import Recommendations from '../views/RecommendationsPage.vue';
+
 
 const routes = [
   {
@@ -43,6 +45,12 @@ const routes = [
     path: '/swipe',
     name: 'MovieSwiper',
     component: MovieSwiper,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/recommendations',
+    name: 'Recommended',
+    component: Recommendations,
     meta: { requiresAuth: true }
   },
   {
