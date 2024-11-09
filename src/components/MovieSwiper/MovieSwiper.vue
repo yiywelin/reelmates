@@ -3,7 +3,7 @@
     <!-- Back Button -->
     <div class="absolute top-4 left-4 z-50">
       <button 
-        @click="$router.push('/home')"
+        @click="$router.push('/select-genre')"
         class="relative w-12 h-12 flex items-center justify-center"
       >
         <!-- Outer glow ring - corrected to match your X button style -->
@@ -74,6 +74,7 @@
               :index="index"
               :exit-direction="exitDirection"
               @swipe="handleSwipe"
+              @dragging="handleDragging"
             />
           </div>
         </div>
@@ -82,14 +83,14 @@
           <div v-if="currentIndex < movies.length" class="button-container">
             <button
               @click="handleManualSwipe('left')"
-              class="action-button pass-button"
+              :class="passButtonClasses"
               aria-label="Pass"
             >
               <div class="icon">✕</div>
             </button>
             <button
               @click="handleManualSwipe('right')"
-              class="action-button like-button"
+              :class="likeButtonClasses"
               aria-label="Like"
             >
               <div class="icon">♥</div>
@@ -156,6 +157,7 @@ const route = useRoute()
 const swipedMovieIds = ref(new Set())
 const showMatchOverlay = ref(false)
 const matchedUsers = ref([])
+const currentSwipeDirection = ref(null)
 
 const BACKGROUND_MAP = {
     action: ActionBackground,
@@ -231,6 +233,19 @@ const selectedGenres = computed(() => {
 const displayedMovies = computed(() => {
   return movies.value.slice(currentIndex.value, currentIndex.value + 3)
 })
+
+// computed properties for pass and like indicators
+const passButtonClasses = computed(() => ({
+  'action-button': true,
+  'pass-button': true,
+  'button-active': currentSwipeDirection.value === 'left'
+}))
+
+const likeButtonClasses = computed(() => ({
+  'action-button': true,
+  'like-button': true,
+  'button-active': currentSwipeDirection.value === 'right'
+}))
 
 // Load movies from TMDB
 const loadMovies = async (page = 1) => {
@@ -437,6 +452,7 @@ const closeMatchOverlay = () => {
 
 const handleSwipe = async (direction) => {
   exitDirection.value = direction
+  currentSwipeDirection.value = null 
   const currentMovie = movies.value[currentIndex.value]
   
   if (direction === 'right') {
@@ -464,7 +480,19 @@ const handleSwipe = async (direction) => {
 }
 
 const handleManualSwipe = (direction) => {
+  currentSwipeDirection.value = direction
   handleSwipe(direction)
+}
+
+const handleDragging = (dragAmount) => {
+  const threshold = 50 // Adjust this value to control sensitivity
+  if (dragAmount > threshold) {
+    currentSwipeDirection.value = 'right'
+  } else if (dragAmount < -threshold) {
+    currentSwipeDirection.value = 'left'
+  } else {
+    currentSwipeDirection.value = null
+  }
 }
 
 // Watch for changes in currentIndex to load more movies
@@ -585,9 +613,9 @@ onMounted(async () => {
 }
 
 .pass-button {
-  border-color: #DB3DCF; /* Pink neon border */
-  color: #DB3DCF; /* Pink neon icon */
-  box-shadow: 0 0 10px rgba(219, 61, 207, 0.3); /* Subtle neon glow */
+  border-color: #DB3DCF;
+  color: #DB3DCF;
+  box-shadow: 0 0 10px rgba(219, 61, 207, 0.3);
 }
 
 .pass-button:hover {
@@ -597,9 +625,9 @@ onMounted(async () => {
 }
 
 .like-button {
-  border-color: #675FF2; /* Purple neon border */
-  color: #675FF2; /* Purple neon icon */
-  box-shadow: 0 0 10px rgba(103, 95, 242, 0.3); /* Subtle neon glow */
+  border-color: #675FF2;
+  color: #675FF2;
+  box-shadow: 0 0 10px rgba(103, 95, 242, 0.3);
 }
 
 .like-button:hover {
@@ -607,6 +635,19 @@ onMounted(async () => {
   box-shadow: 0 0 20px rgba(103, 95, 242, 0.5);
   transform: scale(1.1);
 }
+
+.pass-button.button-active {
+  background: rgba(219, 61, 207, 0.3);
+  box-shadow: 0 0 20px rgba(219, 61, 207, 0.8);
+  transform: scale(1.1);
+}
+
+.like-button.button-active {
+  background: rgba(103, 95, 242, 0.3);
+  box-shadow: 0 0 20px rgba(103, 95, 242, 0.8);
+  transform: scale(1.1);
+}
+
 
 
 /* Keep your existing animation keyframes */

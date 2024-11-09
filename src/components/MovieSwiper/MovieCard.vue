@@ -114,20 +114,6 @@
         </transition>
       </div>
     </div>
-
-    <!-- Swipe Indicators -->
-    <div 
-      class="swipe-indicator like"
-      :style="{ opacity: getLikeOpacity }"
-    >
-      LIKE
-    </div>
-    <div 
-      class="swipe-indicator nope"
-      :style="{ opacity: getNopeOpacity }"
-    >
-      NOPE
-    </div>
   </div>
 </template>
 
@@ -223,7 +209,7 @@ const getGenreStyle = (genreId) => {
   }
 }
 
-const emit = defineEmits(['swipe'])
+const emit = defineEmits(['swipe', 'dragging'])
 
 const showOverview = ref(false)
 
@@ -333,9 +319,6 @@ const cardStyle = computed(() => {
   }
 })
 
-const getLikeOpacity = computed(() => Math.max(0, currentX.value / 100))
-const getNopeOpacity = computed(() => Math.max(0, -currentX.value / 100))
-
 // Drag handlers
 const startDrag = (event) => {
   isDragging.value = true
@@ -345,6 +328,7 @@ const startDrag = (event) => {
 const onDrag = (event) => {
   if (!isDragging.value) return
   currentX.value = event.clientX - startX.value
+  emit('dragging', currentX.value)
 }
 
 const startTouchDrag = (event) => {
@@ -355,6 +339,7 @@ const startTouchDrag = (event) => {
 const onTouchDrag = (event) => {
   if (!isDragging.value) return
   currentX.value = event.touches[0].clientX - startX.value
+  emit('dragging', currentX.value)
 }
 
 const endDrag = () => {
@@ -637,32 +622,6 @@ const adjustColorBrightness = (hex, percent) => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-}
-
-.swipe-indicator {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  padding: 1rem 2rem;
-  border-radius: 999px;
-  font-weight: bold;
-  font-size: 1.5rem;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.like {
-  right: 2rem;
-  background: rgba(76, 175, 80, 0.9);
-  color: white;
-  transform: rotate(15deg);
-}
-
-.nope {
-  left: 2rem;
-  background: rgba(255, 82, 82, 0.9);
-  color: white;
-  transform: rotate(-15deg);
 }
 
 @keyframes holographic {
