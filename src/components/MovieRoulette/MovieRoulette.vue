@@ -30,12 +30,11 @@
       <button 
         class="spin-button"
         :class="{ 'active': !isSpinning }"
-        :disabled="isSpinning"
-        @click="spinRoulette"
+        @click="handleRouletteButton"
       >
         <div class="button-glow"></div>
         <div class="light-beam"></div>
-        <span class="button-text">SPIN THE WHEEL</span>
+        <span class="button-text">{{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}</span>
       </button>
     </div>
   </div>
@@ -63,7 +62,8 @@ export default {
       spinSpeed: 8,
       selectedMovie: "",
       isSpinning: false,
-      visibleMovies: []
+      visibleMovies: [],
+      spinInterval: null
     }
   },
   created() {
@@ -74,44 +74,51 @@ export default {
     resetVisibleMovies() {
       this.visibleMovies = this.movies.slice(0, 7)
     },
-    async spinRoulette() {
+    handleRouletteButton() {
+      if (this.isSpinning) {
+        this.stopRoulette()
+      } else {
+        this.startRoulette()
+      }
+    },
+
+    startRoulette() {
       if (this.isSpinning) return
       this.isSpinning = true
       
-      // Calculate duration based on spin speed
-      const baseDuration = 4000 / (this.spinSpeed / 8)
-      const minSpins = 20 // Minimum number of movie changes
-      const totalSpins = minSpins + Math.floor(Math.random() * 10)
+      // Calculate spin interval based on speed
+      const spinInterval = 100 / (this.spinSpeed / 8) // Adjust timing as needed
       
-      // Select the final movie
+      // Start continuous spinning
+      this.spinInterval = setInterval(() => {
+        // Rotate the visible movies randomly
+        this.visibleMovies = [
+          ...this.movies.slice(-3),
+          ...this.movies.slice(0, 4)
+        ].sort(() => Math.random() - 0.5)
+      }, spinInterval)
+    },
+
+    async stopRoulette() {
+      if (!this.isSpinning) return
+
+      // Clear the spinning interval
+      clearInterval(this.spinInterval)
+      
+      // Select final movie
       const finalMovie = this.movies[Math.floor(Math.random() * this.movies.length)]
       
-      // Animation variables
-      let spinsCompleted = 0
-      const spinInterval = baseDuration / totalSpins
+      // Add a brief slowdown animation
+      const slowdownFrames = 10
+      const slowdownInterval = 100
       
-      // Create spinning effect
-      const spin = async () => {
-        return new Promise(resolve => {
-          const interval = setInterval(() => {
-            // Rotate the visible movies
-            this.visibleMovies = [
-              ...this.movies.slice(-3),
-              ...this.movies.slice(0, 4)
-            ].sort(() => Math.random() - 0.5)
-            
-            spinsCompleted++
-            
-            if (spinsCompleted >= totalSpins) {
-              clearInterval(interval)
-              resolve()
-            }
-          }, spinInterval)
-        })
+      for (let i = 0; i < slowdownFrames; i++) {
+        await new Promise(resolve => setTimeout(resolve, slowdownInterval * (i + 1)))
+        this.visibleMovies = [
+          ...this.movies.slice(-3),
+          ...this.movies.slice(0, 4)
+        ].sort(() => Math.random() - 0.5)
       }
-
-      // Execute the spin
-      await spin()
       
       // Show final result
       this.selectedMovie = finalMovie
@@ -122,6 +129,13 @@ export default {
       ].slice(0, 7)
       
       this.isSpinning = false
+    }
+  },
+
+  // Clean up interval when component is destroyed
+  beforeUnmount() {
+    if (this.spinInterval) {
+      clearInterval(this.spinInterval)
     }
   }
 }
@@ -288,9 +302,13 @@ export default {
   box-shadow: 0 0 30px rgba(219, 61, 207, 0.5);
 }
 
-.spin-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.spin-button:not(.active) {
+  border-color: #675FF2;
+  box-shadow: 0 0 30px rgba(103, 95, 242, 0.5);
+}
+
+.spin-button:not(.active) .button-glow {
+  background: linear-gradient(45deg, #ff4444, #ff6b6b);
 }
 
 @keyframes beam {
