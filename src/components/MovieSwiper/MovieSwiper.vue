@@ -104,6 +104,12 @@
           :matches="matchedUsers"
           @close="closeMatchOverlay"
         />
+
+        <FeatureReminderOverlay
+          v-if="showFeatureReminder"
+          @close="closeFeatureReminder"
+          @navigate="handleFeatureNavigation"
+        />
       </div>
     </template>
   </div>
@@ -112,11 +118,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
-import { doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
+import { doc, updateDoc, arrayUnion, getDoc, setDoc, increment } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { useRoute } from 'vue-router'
 import MovieCard from './MovieCard.vue'
 import SwipeInstructions from './SwipeInstructions.vue'
+import FeatureReminderOverlay from './FeatureReminderOverlay.vue'
 import SciFiBackground from './backgrounds/SciFiBackground.vue'
 import RomanceBackground from './backgrounds/RomanceBackground.vue'
 import ActionBackground from './backgrounds/ActionBackground.vue'
@@ -158,6 +165,8 @@ const swipedMovieIds = ref(new Set())
 const showMatchOverlay = ref(false)
 const matchedUsers = ref([])
 const currentSwipeDirection = ref(null)
+const swipeCount = ref(0)
+const showFeatureReminder = ref(false)
 
 const BACKGROUND_MAP = {
     action: ActionBackground,
@@ -372,19 +381,6 @@ const checkMovieMatches = async (movieId) => {
   }
 }
 
-// get all movie matches for the current user
-// const getMatches = async () => {
-//   if (!auth.currentUser) return []
-  
-//   try {
-//     const matchesSnapshot = await getDocs(collection(db, 'users', auth.currentUser.uid, 'matches'))
-//     return matchesSnapshot.docs.map(doc => doc.data())
-//   } catch (error) {
-//     console.error('Error getting matches:', error)
-//     return []
-//   }
-// }
-
 // Record swipe in Firestore
 const recordSwipe = async (movie, isLike) => {
   if (!auth.currentUser) return
@@ -404,6 +400,7 @@ const recordSwipe = async (movie, isLike) => {
     console.log('Updated swiped movies set:', Array.from(swipedMovieIds.value))
 
     await updateDoc(userRef, {
+      totalSwipes: increment(1),
       swipedMovies: arrayUnion({
         ...swipeData,
         isLike
@@ -471,12 +468,36 @@ const handleSwipe = async (direction) => {
   } else {
     await recordSwipe(currentMovie, false)
   }
+
+  // Increment swipe count and check if we should show reminder
+  swipeCount.value++
+
+  // Get current user data to check if they've seen the reminder
+  const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+  const hasSeenReminder = userDoc.data()?.hasSeenFeatureReminder || false
+  
+  if (swipeCount.value === 10 && !hasSeenReminder) {
+    showFeatureReminder.value = true
+    // Mark that user has seen the reminder
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      hasSeenFeatureReminder: true
+    })
+  }
   
   setTimeout(() => {
     currentIndex.value++
     exitDirection.value = null
     checkAndLoadMore()
   }, 300)
+}
+
+const closeFeatureReminder = () => {
+  showFeatureReminder.value = false
+}
+
+const handleFeatureNavigation = (path) => {
+  closeFeatureReminder()
+  route.push(path)
 }
 
 const handleManualSwipe = (direction) => {
@@ -495,10 +516,30 @@ const handleDragging = (dragAmount) => {
   }
 }
 
+const loadUserData = async () => {
+  if (!auth.currentUser) return
+  
+  try {
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+    if (userDoc.exists()) {
+      const userData = userDoc.data()
+      swipeCount.value = userData.totalSwipes || 0
+      
+      // If user has already seen the reminder, ensure we don't show it again
+      if (userData.hasSeenFeatureReminder) {
+        showFeatureReminder.value = false
+      }
+    }
+  } catch (err) {
+    console.error('Error loading user data:', err)
+  }
+}
+
 // Watch for changes in currentIndex to load more movies
 watch(currentIndex, () => {
   checkAndLoadMore()
 })
+
 watch(selectedGenres, async (newGenres) => {
   if (newGenres.length > 0) {
     currentIndex.value = 0
@@ -510,6 +551,7 @@ watch(selectedGenres, async (newGenres) => {
 onMounted(async () => {
   try {
     await Promise.all([
+      loadUserData(),
       loadUserMovieHistory(),
       loadMovies()
     ])
