@@ -63,6 +63,7 @@
     
     <!-- Content -->
     <template v-else>
+      <SwipeInstructions />
       <div class="flex flex-col items-center justify-center flex-grow pointer-events-none" style="z-index: 1;">
         <div class="card-stack-container pointer-events-auto">
           <div class="card-stack">
@@ -114,6 +115,7 @@ import { doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { useRoute } from 'vue-router'
 import MovieCard from './MovieCard.vue'
+import SwipeInstructions from './SwipeInstructions.vue'
 import SciFiBackground from './backgrounds/SciFiBackground.vue'
 import RomanceBackground from './backgrounds/RomanceBackground.vue'
 import ActionBackground from './backgrounds/ActionBackground.vue'

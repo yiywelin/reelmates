@@ -44,7 +44,7 @@
         :disabled="!canSwipe"
         @click="startSwiping"
       >
-        <span class="button-text">SWIPE NOW</span>
+        <span class="button-text">Start Matching</span>
         <div class="button-glow"></div>
         <div class="light-beam"></div>
       </button>
