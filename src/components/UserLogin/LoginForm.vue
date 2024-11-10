@@ -1,8 +1,75 @@
 <template>
   <div class="h-screen w-full flex">
-    <!-- Left Side - Wallpaper -->
-    <div class="hidden lg:flex lg:w-1/2 relative bg-[#D0CCE3]">
-      <img src="@/assets/images/moviePoster2.jpg" alt="Background Image" class="w-full h-full object-cover" />
+    <!-- Left Side - Feature Carousel -->
+    <div class="hidden lg:flex lg:w-1/2 relative bg-[#0a0a1f] overflow-hidden">
+      <!-- Carousel Container -->
+      <div class="feature-carousel relative h-full w-full">
+        <!-- Main Slide Content -->
+      <div v-for="(slide, index) in allSlides" 
+          :key="slide.id"
+          v-show="currentSlide === index"
+          class="absolute inset-0 transition-opacity duration-500"
+          :class="{ 'opacity-0': currentSlide !== index }">
+        
+        <!-- Common Background for All Slides -->
+        <img 
+          src="@/assets/images/moviePoster2.jpg" 
+          alt="Background" 
+          class="w-full h-full object-cover"
+        />
+        <!-- Gradient Overlay for Better Readability -->
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0a0a1f]/90 via-[#0a0a1f]/80 to-[#0a0a1f]/90"></div>
+
+        <!-- Slide Content -->
+        <template v-if="index === 0">
+          <!-- First Slide Content -->
+          <div class="absolute inset-0 flex flex-col justify-center items-center text-center p-8">
+            <h1 class="text-6xl font-bold bg-gradient-to-r from-[#675FF2] to-[#DB3DCF] 
+                      text-transparent bg-clip-text animate-gradient mb-4">
+              Reelmates
+            </h1>
+            <p class="text-2xl text-white/90">
+              Swipe, discover, and enjoy movies with friends.
+            </p>
+          </div>
+        </template>
+        
+        <template v-else>
+          <!-- Feature Slides -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center p-8">
+            <!-- Feature Content -->
+            <div class="max-w-lg text-center mt-24">
+              <component 
+                :is="slide.icon" 
+                class="w-20 h-20 mb-8 mx-auto text-[#DB3DCF] animate-pulse"
+              />
+              <h2 class="text-4xl font-bold mb-6 text-white
+                        bg-gradient-to-r from-[#675FF2] to-[#DB3DCF] 
+                        text-transparent bg-clip-text">
+                {{ slide.title }}
+              </h2>
+              <p class="text-xl text-white/90 leading-relaxed backdrop-blur-sm
+                        bg-[#0a0a1f]/30 p-6 rounded-lg">
+                {{ slide.description }}
+              </p>
+            </div>
+          </div>
+        </template>
+      </div>
+
+        <!-- Navigation Dots -->
+        <div class="absolute bottom-8 left-0 right-0 flex justify-center gap-2 z-30">
+          <button 
+            v-for="(_, index) in allSlides" 
+            :key="index"
+            @click="currentSlide = index"
+            class="w-2 h-2 rounded-full transition-all duration-300"
+            :class="currentSlide === index ? 
+              'bg-[#DB3DCF] w-8' : 
+              'bg-white/50 hover:bg-white/70'"
+          ></button>
+        </div>
+      </div>
     </div>
 
     <!-- Right Side - Login Form with Animated Background -->
@@ -80,19 +147,54 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { authService } from '../../services/authService';
+import {
+  Film,
+  Users,
+  ThumbsUp
+} from 'lucide-vue-next'
 
-export default {
-  name: "LoginForm",
-  setup() {
-    const router = useRouter();
-    const email = ref("");
-    const password = ref("");
-    const errorMessage = ref("");
-    const isLoading = ref(false);
+const router = useRouter();
+const email = ref("");
+const password = ref("");
+const errorMessage = ref("");
+const isLoading = ref(false);
+const currentSlide = ref(0);
+let carouselInterval;
+
+// Feature data
+const features = [
+{
+    id: 'feature-1',
+    title: "Swipe & Match",
+    description: "Swipe to like or pass and find movies that match your taste instantly.",
+    icon: Film
+  },
+  {
+    id: 'feature-2',
+    title: "Watch with Friends",
+    description: "Connect and find movies you and your friends will love for the perfect movie night.",
+    icon: Users
+  },
+  {
+    id: 'feature-3',
+    title: "Smart Recommendations",
+    description: "Get personalized movie picks based on your taste. Discover new favorites effortlessly.",
+    icon: ThumbsUp
+  }
+];
+
+// Combine intro slide with features for carousel
+const allSlides = computed(() => [
+  {
+    id: 'intro',
+    type: 'intro'
+  },
+  ...features
+]);
 
     // Form validation
     const validateForm = () => {
@@ -155,26 +257,70 @@ export default {
       }
     };
 
-    return {
-      email,
-      password,
-      errorMessage,
-      isLoading,
-      signIn,
-      signInWithGoogle
-    };
-  }
+// Auto-advance carousel
+const startCarousel = () => {
+  carouselInterval = setInterval(() => {
+    currentSlide.value = (currentSlide.value + 1) % allSlides.value.length;
+  }, 5000);
 };
+
+onMounted(() => {
+  startCarousel();
+});
+
+onUnmounted(() => {
+  if (carouselInterval) {
+    clearInterval(carouselInterval);
+  }
+});
 </script>
 
 <style scoped>
-.carousel-container {
-  transition: transform 0.5s ease-in-out;
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
-/* Ensure smooth transitions for carousel slides */
-.carousel-container > div {
-  transition: transform 0.5s ease-in-out;
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(30px, 30px) rotate(90deg); }
+  50% { transform: translate(0, 60px) rotate(180deg); }
+  75% { transform: translate(-30px, 30px) rotate(270deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Feature carousel styles */
+.feature-carousel::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 200px;
+  background: linear-gradient(to top, rgba(10, 10, 31, 0.9), transparent);
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* Text animations and effects */
+.animate-gradient {
+  background-size: 200% auto;
+  animation: gradient-shift 4s ease infinite;
+}
+
+.animate-pulse {
+  filter: drop-shadow(0 0 10px rgba(219, 61, 207, 0.5));
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Input autofill styling */
@@ -274,44 +420,21 @@ input:-webkit-autofill:focus {
   animation-delay: -12s;
 }
 
-@keyframes gradient {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translate(30px, 30px) rotate(90deg);
-  }
-  50% {
-    transform: translate(0, 60px) rotate(180deg);
-  }
-  75% {
-    transform: translate(-30px, 30px) rotate(270deg);
-  }
-}
-
 /* Enhanced button animations */
 button, a {
   transition: all 0.3s ease;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.8;
-  }
+/* Typography */
+h2 { letter-spacing: 0.5px; }
+p { 
+  line-height: 1.8;
+  letter-spacing: 0.3px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Transitions */
+.transition-opacity {
+  transition: opacity 0.5s ease-in-out;
 }
 </style>
