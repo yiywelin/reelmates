@@ -353,8 +353,11 @@ export default {
 
 .spin-button {
   position: relative;
-  padding: clamp(0.5rem, 3vh, 1rem) clamp(1.5rem, 5vw, 3rem);
-  font-size: clamp(1rem, 3vw, 1.3rem);
+  display: inline-flex; /* Change to inline-flex */
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 3rem;
+  font-size: 1.3rem;
   font-weight: bold;
   background: none;
   border: 2px solid #675FF2;
@@ -363,8 +366,9 @@ export default {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s ease;
-  margin: 0.5rem 0;
-  flex-shrink: 0;
+  margin: 1rem auto; /* Center the button */
+  min-width: fit-content; /* Fit to content */
+  max-width: max-content; /* Don't expand beyond content */
 }
 
 .button-glow {
