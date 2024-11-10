@@ -5,60 +5,68 @@
     <div class="roulette-container">
       <!-- Title -->
       <div class="neon-text">Movie Roulette</div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="loading-state">
+        Loading your movies...
+      </div>
+
+      <!-- Error State -->
+      <div v-else-if="error" class="error-state">
+        {{ error }}
+      </div>
      
-
-      <!-- Selected Movie Display -->
-      <div class="selected-movie">
-        {{ selectedMovie || 'Spin to select a movie' }}
-      </div>
-      
-      <!-- Speed Control -->
-      <div class="speed-control">
-        <div class="speed-label">SPIN SPEED:</div>
-        <div class="speed-slider-wrapper">
-          <input 
-            type="range" 
-            min="1" 
-            max="15" 
-            v-model="spinSpeed" 
-            class="speed-slider"
-          />
-          <div class="speed-value">{{ spinSpeed }}x</div>
+      <!-- Content when movies are loaded -->
+      <template v-else>
+        <!-- Selected Movie Display -->
+        <div class="selected-movie">
+          {{ selectedMovie || 'Spin to select a movie' }}
         </div>
-      </div>
 
-      <!-- Movies Display with Clean Selection -->
-      <div class="movies-display">
-        <div 
-          v-for="(movie, index) in visibleMovies" 
-          :key="index"
-          class="movie-item"
-          :class="{
-            'movie-item-alt': index % 2 === 0,
-            'movie-item-selected': index === 3,
-          }"
+        <!-- Movies Display -->
+        <div v-if="movies.length > 0" class="movies-display">
+          <div 
+            v-for="(movie, index) in visibleMovies" 
+            :key="index"
+            class="movie-item"
+            :class="{
+              'movie-item-alt': index % 2 === 0,
+              'movie-item-selected': index === 3,
+            }"
+          >
+            {{ movie }}
+          </div>
+        </div>
+
+        <!-- No Movies Message -->
+        <div v-else class="no-movies-message">
+          You haven't liked any movies yet. 
+          Go back and like some movies to use the roulette!
+        </div>
+
+        <!-- Spin Button -->
+        <button 
+          class="spin-button"
+          :class="{ 'active': !isSpinning }"
+          :disabled="movies.length === 0"
+          @click="handleRouletteButton"
         >
-          {{ movie }}
-        </div>
-      </div>
-
-      <!-- Spin Button -->
-      <button 
-        class="spin-button"
-        :class="{ 'active': !isSpinning }"
-        :disabled="isSpinning"
-        @click="spinRoulette"
-      >
-        <div class="button-glow"></div>
-        <div class="light-beam"></div>
-        <span class="button-text">SPIN THE WHEEL</span>
-      </button>
+          <div class="button-glow"></div>
+          <div class="light-beam"></div>
+          <span class="button-text">
+            {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
+          </span>
+        </button>
+      </template>
     </div>
   </div>
 </template>
 
 <script>
 import NavBar from '@/components/ui/NavBar.vue'
+import { getAuth } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '../../firebaseConfig'
 
 export default {
   name: 'MovieRoulette',
@@ -67,67 +75,119 @@ export default {
   },
   data() {
     return {
-      movies: [
-        "The Godfather", "Pulp Fiction", "Inception", "Star Wars",
-        "Jurassic Park", "The Matrix", "Titanic", "Avatar",
-        "Fight Club", "Goodfellas", "Dark Knight", "Jaws",
-        "E.T.", "Indiana Jones", "Back to Future", "Terminator",
-        "Alien", "Blade Runner", "Die Hard", "The Shining",
-        "Mad Max", "Top Gun", "Rocky", "Ghostbusters",
-        "Predator", "The Thing", "RoboCop", "Scarface"
-      ],
+      movies: [],
       spinSpeed: 8,
       selectedMovie: "",
       isSpinning: false,
-      visibleMovies: []
+      visibleMovies: [],
+      spinInterval: null,
+      loading: true,
+      error: null
     }
   },
   created() {
     // Initialize visible movies
-    this.resetVisibleMovies()
+    console.log('Component created, fetching movies...')
+    this.fetchLikedMovies()
   },
   methods: {
-    resetVisibleMovies() {
-      this.visibleMovies = this.movies.slice(0, 7)
+    async fetchLikedMovies() {
+      const auth = getAuth()
+      console.log('Current user:', auth.currentUser)
+      if (!auth.currentUser) return
+
+      try {
+        this.loading = true
+        this.error = null
+        
+        const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+        if (userDoc.exists()) {
+          const userData = userDoc.data()
+          const likedMovies = userData.likedMovies || []
+          console.log("Liked movies: " + likedMovies)
+          
+          // Map liked movies to just their titles
+          this.movies = likedMovies.map(movie => movie.title)
+          
+          // Initialize visible movies only if we have movies
+          if (this.movies.length > 0) {
+            this.resetVisibleMovies()
+          } else {
+            this.error = "No liked movies found. Like some movies first!"
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching liked movies:', err)
+        this.error = "Failed to load your liked movies"
+      } finally {
+        this.loading = false
+      }
     },
-    async spinRoulette() {
-      if (this.isSpinning) return
+    resetVisibleMovies() {
+      if (this.movies.length === 0) {
+        this.visibleMovies = []
+        return
+      }
+      
+      // If we have less than 7 movies, duplicate them to fill the display
+      if (this.movies.length < 7) {
+        this.visibleMovies = [
+          ...this.movies,
+          ...this.movies,
+          ...this.movies
+        ].slice(0, 7)
+      } else {
+        this.visibleMovies = this.movies.slice(0, 7)
+      }
+    },
+    handleRouletteButton() {
+      if (this.isSpinning) {
+        this.stopRoulette()
+      } else {
+        this.startRoulette()
+      }
+    },
+
+    startRoulette() {
+      if (this.isSpinning || this.movies.length === 0) return
       this.isSpinning = true
       
-      // Calculate duration based on spin speed
-      const baseDuration = 4000 / (this.spinSpeed / 8)
-      const minSpins = 20 // Minimum number of movie changes
-      const totalSpins = minSpins + Math.floor(Math.random() * 10)
+      // Calculate spin interval based on speed
+      const spinInterval = 100 / (this.spinSpeed / 8) // Adjust timing as needed
       
-      // Select the final movie
+      // Start continuous spinning
+      this.spinInterval = setInterval(() => {
+        // Rotate the visible movies randomly
+        this.visibleMovies = [
+          ...this.movies.slice(-3),
+          ...this.movies.slice(0, 4)
+        ].sort(() => Math.random() - 0.5)
+      }, spinInterval)
+    },
+
+    async stopRoulette() {
+      if (!this.isSpinning) return
+
+      // Clear the spinning interval
+      if (this.spinInterval) {
+        clearInterval(this.spinInterval)
+        this.spinInterval = null
+      }
+      
+      // Select final movie
       const finalMovie = this.movies[Math.floor(Math.random() * this.movies.length)]
       
-      // Animation variables
-      let spinsCompleted = 0
-      const spinInterval = baseDuration / totalSpins
+      // Add a brief slowdown animation
+      const slowdownFrames = 10
+      const slowdownInterval = 100
       
-      // Create spinning effect
-      const spin = async () => {
-        return new Promise(resolve => {
-          const interval = setInterval(() => {
-            // Rotate the visible movies
-            this.visibleMovies = [
-              ...this.movies.slice(-3),
-              ...this.movies.slice(0, 4)
-            ].sort(() => Math.random() - 0.5)
-            
-            spinsCompleted++
-            
-            if (spinsCompleted >= totalSpins) {
-              clearInterval(interval)
-              resolve()
-            }
-          }, spinInterval)
-        })
+      for (let i = 0; i < slowdownFrames; i++) {
+        await new Promise(resolve => setTimeout(resolve, slowdownInterval * (i + 1)))
+        this.visibleMovies = [
+          ...this.movies.slice(-3),
+          ...this.movies.slice(0, 4)
+        ].sort(() => Math.random() - 0.5)
       }
-
-      // Execute the spin
-      await spin()
       
       // Show final result
       this.selectedMovie = finalMovie
@@ -139,38 +199,64 @@ export default {
       
       this.isSpinning = false
     }
+  },
+
+  // Clean up interval when component is destroyed
+  beforeUnmount() {
+    if (this.spinInterval) {
+      clearInterval(this.spinInterval)
+    }
   }
 }
 </script>
 
 <style scoped>
 .movie-roulette-page {
-  min-height: 100vh;
-  padding-top: 90px;
+  height: 100vh;
+  height: 100dvh;
+  padding-top: 70px; /* Reduced from 90px */
   background: #0a0a1f;
   color: white;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .roulette-container {
   max-width: 800px;
+  width: 100%;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 0.5rem;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 70px);
+  gap: 0.5rem;
 }
 
-.title {
-  font-size: 3rem;
-  font-weight: bold;
-  text-transform: uppercase;
-  letter-spacing: 3px;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(to right, #675FF2, #DB3DCF);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+.loading-state,
+.error-state,
+.no-movies-message {
+  font-size: 1.2rem;
+  padding: 2rem;
+  text-align: center;
+  color: #D0CCE3;
+}
+
+.error-state {
+  color: #ff6b6b;
+}
+
+.spin-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #4a4a6a;
+  box-shadow: none;
 }
 
 .neon-text {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  margin-bottom: 0.5rem;
   color: #DB3DCF;
   text-shadow: 
     0 0 5px #DB3DCF,
@@ -179,85 +265,33 @@ export default {
   animation: neonFlicker 2s infinite;
 }
 
-.title-line {
-  width: 100px;
-  height: 2px;
-  margin: 0.5rem auto 2rem;
-  background: linear-gradient(to right, #675FF2, #DB3DCF);
-}
-
 .selected-movie {
-  font-size: 2.5rem;
-  padding: 1.5rem;
-  margin: 2rem 0;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  padding: 0.5rem;
+  margin: 0;
+  flex-shrink: 0;
   text-transform: uppercase;
   letter-spacing: 2px;
   border-top: 1px solid #675FF2;
   border-bottom: 1px solid #DB3DCF;
 }
 
-.speed-control {
-  margin: 2rem 0;
-}
-
-.speed-label {
-  font-size: 1.2rem;
-  letter-spacing: 2px;
-  margin-bottom: 1rem;
-}
-
-.speed-slider-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  max-width: 500px;
-  margin: 0 auto;
-}
-
-.speed-slider {
-  flex: 1;
-  max-width: 400px;
-  -webkit-appearance: none;
-  height: 4px;
-  background: linear-gradient(to right, #675FF2, #DB3DCF);
-  border-radius: 2px;
-  outline: none;
-}
-
-.speed-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #DB3DCF;
-  cursor: pointer;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 0 10px rgba(219, 61, 207, 0.5);
-}
-
-.speed-value {
-  background: rgba(10, 10, 31, 0.95);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border: 1px solid rgba(219, 61, 207, 0.3);
-  min-width: 60px;
-  text-align: center;
-}
-
 .movies-display {
   position: relative;
   max-width: 600px;
-  margin: 2rem auto;
-  padding: 2rem 0;
-  background: rgba(10, 10, 31, 0.95);
-  border-radius: 8px;
-  overflow: hidden;
+  margin: 0.5rem auto;
+  padding: 0.5rem 0;
+  flex: 1;
+  min-height: 0; /* Important for flex container */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
 }
 
 .movie-item {
-  padding: 1.2rem;
-  font-size: 1.2rem;
+  padding: clamp(0.4rem, 2vh, 0.8rem);
+  font-size: clamp(0.8rem, 3vw, 1.1rem);
   text-transform: uppercase;
   letter-spacing: 1px;
   background: #13132b;
@@ -274,9 +308,9 @@ export default {
     rgba(103, 95, 242, 0.3),
     rgba(219, 61, 207, 0.3)
   ) !important;
-  font-size: 1.4rem;
   font-weight: bold;
-  padding: 1.5rem;
+  font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+  padding: clamp(0.5rem, 2vh, 1rem);
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   transform: scale(1.02);
@@ -319,8 +353,8 @@ export default {
 
 .spin-button {
   position: relative;
-  padding: 1.5rem 4rem;
-  font-size: 1.5rem;
+  padding: clamp(0.5rem, 3vh, 1rem) clamp(1.5rem, 5vw, 3rem);
+  font-size: clamp(1rem, 3vw, 1.3rem);
   font-weight: bold;
   background: none;
   border: 2px solid #675FF2;
@@ -329,6 +363,8 @@ export default {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s ease;
+  margin: 0.5rem 0;
+  flex-shrink: 0;
 }
 
 .button-glow {
@@ -359,9 +395,13 @@ export default {
   box-shadow: 0 0 30px rgba(219, 61, 207, 0.5);
 }
 
-.spin-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+.spin-button:not(.active) {
+  border-color: #675FF2;
+  box-shadow: 0 0 30px rgba(103, 95, 242, 0.5);
+}
+
+.spin-button:not(.active) .button-glow {
+  background: linear-gradient(45deg, #ff4444, #ff6b6b);
 }
 
 @keyframes beam {
@@ -374,31 +414,70 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .roulette-container {
-    padding: 1rem;
+  movie-roulette-page {
+    padding-top: 60px; /* Smaller navbar on mobile */
   }
-  
-  .title {
-    font-size: 2rem;
+
+  .roulette-container {
+    height: calc(100% - 60px);
+    gap: 0.25rem;
+  }
+
+  .movies-display::before,
+  .movies-display::after {
+    height: 100px; /* Smaller gradient overlays */
+  }
+
+  .neon-text{
+    font-size: 1.8rem;
   }
   
   .selected-movie {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
+    padding: 0.8rem;
   }
 
   .movie-item {
+    font-size: 0.9rem;
+    padding: 0.8rem;
+  }
+
+  .movie-item-selected {
     font-size: 1rem;
     padding: 1rem;
   }
 
-  .movie-item-selected {
-    font-size: 1.2rem;
-    padding: 1.2rem;
+  .spin-button {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .movie-roulette-page {
+    padding-top: 50px;
   }
 
-  .spin-button {
-    padding: 1.2rem 3rem;
-    font-size: 1.2rem;
+  .roulette-container {
+    height: calc(100% - 50px);
+    gap: 0.2rem;
+  }
+
+  .neon-text {
+    margin-bottom: 0.25rem;
+  }
+
+  .selected-movie {
+    padding: 0.25rem;
+  }
+
+  .movies-display {
+    margin: 0.25rem auto;
+  }
+
+  .movies-display::before,
+  .movies-display::after {
+    height: 60px;
   }
 }
 </style>

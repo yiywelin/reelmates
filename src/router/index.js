@@ -7,10 +7,12 @@ import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
 import UserProfile from '../views/UserProfile.vue';
-import EnhancedFriendsPage from '../components/Friends/EnhancedFriendsPage.vue';
+import EnhancedFriendsPage from '@/components/Friends/EnhancedFriendsPage.vue';
 import WatchParty from '../components/WatchParty/WatchParty.vue';
 import MovieRoulette from '@/components/MovieRoulette/MovieRoulette.vue';
 import MeetTheTeam from '@/views/MeetTheTeam.vue';
+import Recommendations from '../views/RecommendationsPage.vue';
+
 
 const routes = [
   {
@@ -43,6 +45,12 @@ const routes = [
     path: '/swipe',
     name: 'MovieSwiper',
     component: MovieSwiper,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/recommendations',
+    name: 'Recommended',
+    component: Recommendations,
     meta: { requiresAuth: true }
   },
   {

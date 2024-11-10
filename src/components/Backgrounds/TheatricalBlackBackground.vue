@@ -11,7 +11,7 @@
     <div class="lines-container">
       <!-- Center Lines -->
       <div class="lines-group center">
-        <div v-for="n in 4" :key="`center-${n}`" 
+        <div v-for="n in 8" :key="`center-${n}`" 
              class="glowing-line"
              :style="getCenterLineStyle(n)">
           <div class="line-glow"></div>
@@ -20,7 +20,7 @@
 
       <!-- Left Diagonal Lines -->
       <div class="lines-group left">
-        <div v-for="n in 4" :key="`left-${n}`" 
+        <div v-for="n in 8" :key="`left-${n}`" 
              class="glowing-line"
              :style="getLeftLineStyle(n)">
           <div class="line-glow"></div>
@@ -29,7 +29,7 @@
 
       <!-- Right Diagonal Lines -->
       <div class="lines-group right">
-        <div v-for="n in 4" :key="`right-${n}`" 
+        <div v-for="n in 8" :key="`right-${n}`" 
              class="glowing-line"
              :style="getRightLineStyle(n)">
           <div class="line-glow"></div>
@@ -68,7 +68,7 @@ const getRightLineStyle = (index) => ({
 .modern-container {
   position: fixed;
   inset: 0;
-  background: #0A0A1F;
+  background: #070D0D;
   overflow: hidden;
   perspective: 1000px;
   z-index: 0;
