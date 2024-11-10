@@ -28,12 +28,6 @@ const routes = [
     component: LoginForm
   },
   {
-    path: '/therealhomepage',
-    name: 'TheRealHomePage',
-    component: TheRealHomePage,
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/home',
     name: 'HomePage',
     component: HomePage,
