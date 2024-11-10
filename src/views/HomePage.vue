@@ -223,9 +223,10 @@ onMounted(async () => {
       moviesCardsInt = userData.likedMovies.slice(userDataLength - 5, userDataLength).reverse() || [];
     }
 
+
     const moviesCardsPopularMoviesValue = popularMovies.slice(3, 8);
     console.log(moviesCardsInt);
-    moviesCards.value = shuffle(moviesCardsInt.concat(moviesCardsPopularMoviesValue));
+    moviesCards.value = removeDuplicatesByTitle(shuffle(moviesCardsInt.concat(moviesCardsPopularMoviesValue)));
 
     console.log(moviesCards.value);
 
@@ -294,195 +295,206 @@ onMounted(async () => {
 //   }
 // }
 
-const loadGroups = async () => {
-  try {
-    if (!auth.currentUser) {
-      throw new Error('User not authenticated');
+const removeDuplicatesByTitle = (arr) => {
+  const seenTitles = new Set();
+  return arr.filter(item => {
+    if (seenTitles.has(item.title)) {
+      return false;
     }
-
-    const groupsRef = collection(db, 'groups');
-    const q = query(groupsRef, where('members', 'array-contains', auth.currentUser.uid));
-    const querySnapshot = await getDocs(q);
-
-    const groupPromises = querySnapshot.docs.map(async (groupDoc) => {
-      const groupData = groupDoc.data();
-      const memberNames = await fetchMemberNames(groupData.members);
-      return {
-        id: groupDoc.id,
-        name: groupData.name,
-        avatar: groupData.avatar,
-        members: groupData.members,
-        memberNames: memberNames,
-        moviePreferences: groupData.moviePreferences,
-        upcomingEvents: groupData.upcomingEvents || []
-      };
-    });
-
-    groups.value = await Promise.all(groupPromises);
-  } catch (err) {
-    console.error('Error loading groups:', err);
-    error.value = 'Failed to load groups. Please try again.';
-  }
+    seenTitles.add(item.title);
+    return true;
+  })
 };
 
-const fetchMemberNames = async (memberIds) => {
-  const memberPromises = memberIds.map(async (memberId) => {
-    const memberRef = doc(db, 'users', memberId);
-    const memberDoc = await getDoc(memberRef);
-    if (memberDoc.exists()) {
-      return memberDoc.data().username;
+  const loadGroups = async () => {
+    try {
+      if (!auth.currentUser) {
+        throw new Error('User not authenticated');
+      }
+
+      const groupsRef = collection(db, 'groups');
+      const q = query(groupsRef, where('members', 'array-contains', auth.currentUser.uid));
+      const querySnapshot = await getDocs(q);
+
+      const groupPromises = querySnapshot.docs.map(async (groupDoc) => {
+        const groupData = groupDoc.data();
+        const memberNames = await fetchMemberNames(groupData.members);
+        return {
+          id: groupDoc.id,
+          name: groupData.name,
+          avatar: groupData.avatar,
+          members: groupData.members,
+          memberNames: memberNames,
+          moviePreferences: groupData.moviePreferences,
+          upcomingEvents: groupData.upcomingEvents || []
+        };
+      });
+
+      groups.value = await Promise.all(groupPromises);
+    } catch (err) {
+      console.error('Error loading groups:', err);
+      error.value = 'Failed to load groups. Please try again.';
     }
-    return null;
+  };
+
+  const fetchMemberNames = async (memberIds) => {
+    const memberPromises = memberIds.map(async (memberId) => {
+      const memberRef = doc(db, 'users', memberId);
+      const memberDoc = await getDoc(memberRef);
+      if (memberDoc.exists()) {
+        return memberDoc.data().username;
+      }
+      return null;
+    });
+
+    const memberNames = await Promise.all(memberPromises);
+    return memberNames.filter(name => name !== null);
+  };
+
+  const initDragScroll = (selector) => {
+    const containers = document.querySelectorAll(selector);
+
+    containers.forEach(container => {
+      let isDown = false;
+      let startX;
+      let scrollLeft;
+
+      container.addEventListener('mousedown', (e) => {
+        isDown = true;
+        container.classList.add('active');
+        startX = e.pageX - container.offsetLeft;
+        scrollLeft = container.scrollLeft;
+      });
+
+      container.addEventListener('mouseleave', () => {
+        isDown = false;
+        container.classList.remove('active');
+      });
+
+      container.addEventListener('mouseup', () => {
+        isDown = false;
+        container.classList.remove('active');
+      });
+
+      container.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - container.offsetLeft;
+        const walk = (x - startX) * 2; // The multiplier controls the scroll speed
+        container.scrollLeft = scrollLeft - walk;
+      });
+
+      container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      });
+    });
+  };
+
+  onBeforeUnmount(() => {
+    window.removeEventListener('resize', handleResize);
+    const rightPanel = document.querySelector('.right-panel');
+    if (rightPanel) {
+      rightPanel.removeEventListener('wheel', scrollHandler);
+    }
   });
 
-  const memberNames = await Promise.all(memberPromises);
-  return memberNames.filter(name => name !== null);
-};
+  // Handler for scrolling on the right panel
+  const scrollHandler = (e) => {
+    e.preventDefault();
+    const rightPanel = document.querySelector('.right-panel');
+    rightPanel.scrollTop += e.deltaY; // Adjust the vertical scroll
+  };
 
-const initDragScroll = (selector) => {
-  const containers = document.querySelectorAll(selector);
-
-  containers.forEach(container => {
-    let isDown = false;
-    let startX;
-    let scrollLeft;
-
-    container.addEventListener('mousedown', (e) => {
-      isDown = true;
-      container.classList.add('active');
-      startX = e.pageX - container.offsetLeft;
-      scrollLeft = container.scrollLeft;
-    });
-
-    container.addEventListener('mouseleave', () => {
-      isDown = false;
-      container.classList.remove('active');
-    });
-
-    container.addEventListener('mouseup', () => {
-      isDown = false;
-      container.classList.remove('active');
-    });
-
-    container.addEventListener('mousemove', (e) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - container.offsetLeft;
-      const walk = (x - startX) * 2; // The multiplier controls the scroll speed
-      container.scrollLeft = scrollLeft - walk;
-    });
-
-    container.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      container.scrollLeft += e.deltaY;
-    });
+  onMounted(() => {
+    initDragScroll('.scroll-container');
   });
-};
 
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', handleResize);
-  const rightPanel = document.querySelector('.right-panel');
-  if (rightPanel) {
-    rightPanel.removeEventListener('wheel', scrollHandler);
-  }
-});
+  const scrollContainer = ref(null);
+  const forYouContainer = ref(null);
+  let scrollInterval;
+  let forYouScrollInterval;
 
-// Handler for scrolling on the right panel
-const scrollHandler = (e) => {
-  e.preventDefault();
-  const rightPanel = document.querySelector('.right-panel');
-  rightPanel.scrollTop += e.deltaY; // Adjust the vertical scroll
-};
+  const startScrolling = () => {
+    if (windowWidth.value > 768) {
+      scrollInterval = setInterval(() => {
+        if (scrollContainer.value) {
+          // Smooth scroll by a small amount
+          scrollContainer.value.scrollBy({
+            left: 1,
+            behavior: 'auto', // Change to 'auto' for immediate effect
+          });
 
-onMounted(() => {
-  initDragScroll('.scroll-container');
-});
-
-const scrollContainer = ref(null);
-const forYouContainer = ref(null);
-let scrollInterval;
-let forYouScrollInterval;
-
-const startScrolling = () => {
-  if (windowWidth.value > 768) {
-    scrollInterval = setInterval(() => {
-      if (scrollContainer.value) {
-        // Smooth scroll by a small amount
-        scrollContainer.value.scrollBy({
-          left: 1,
-          behavior: 'auto', // Change to 'auto' for immediate effect
-        });
-
-        // Check if the scroll has reached the end
-        if (scrollContainer.value.scrollLeft >= scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth) {
-          scrollContainer.value.scrollLeft = 0;
+          // Check if the scroll has reached the end
+          if (scrollContainer.value.scrollLeft >= scrollContainer.value.scrollWidth - scrollContainer.value.clientWidth) {
+            scrollContainer.value.scrollLeft = 0;
+          }
         }
-      }
-    }, 50); // Adjust the interval as necessary
-  }
-};
+      }, 50); // Adjust the interval as necessary
+    }
+  };
 
-const stopScrolling = () => {
-  clearInterval(scrollInterval);
-};
+  const stopScrolling = () => {
+    clearInterval(scrollInterval);
+  };
 
-const startForYouScrolling = () => {
-  if (windowWidth.value > 768) {
-    forYouScrollInterval = setInterval(() => {
-      if (forYouContainer.value) {
-        forYouContainer.value.scrollBy({
-          left: 1,
-          behavior: 'smooth',
-        });
-        if (forYouContainer.value.scrollLeft >= forYouContainer.value.scrollWidth - forYouContainer.value.clientWidth) {
-          forYouContainer.value.scrollLeft = 0;
+  const startForYouScrolling = () => {
+    if (windowWidth.value > 768) {
+      forYouScrollInterval = setInterval(() => {
+        if (forYouContainer.value) {
+          forYouContainer.value.scrollBy({
+            left: 1,
+            behavior: 'smooth',
+          });
+          if (forYouContainer.value.scrollLeft >= forYouContainer.value.scrollWidth - forYouContainer.value.clientWidth) {
+            forYouContainer.value.scrollLeft = 0;
+          }
         }
-      }
-    }, 5);
-  }
-};
+      }, 5);
+    }
+  };
 
-const stopForYouScrolling = () => {
-  clearInterval(forYouScrollInterval);
-};
+  const stopForYouScrolling = () => {
+    clearInterval(forYouScrollInterval);
+  };
 
-onMounted(() => {
-  scrollContainer.value = document.querySelector('.movies-container');
-  forYouContainer.value = document.querySelector('.for-you-container');
+  onMounted(() => {
+    scrollContainer.value = document.querySelector('.movies-container');
+    forYouContainer.value = document.querySelector('.for-you-container');
 
-  startScrolling();
-  startForYouScrolling();
+    startScrolling();
+    startForYouScrolling();
 
-  // Add hover event listeners to stop scrolling for both containers
-  const container = scrollContainer.value;
-  if (container) {
-    container.addEventListener('mouseover', stopScrolling);
-    container.addEventListener('mouseleave', startScrolling);
-  }
+    // Add hover event listeners to stop scrolling for both containers
+    const container = scrollContainer.value;
+    if (container) {
+      container.addEventListener('mouseover', stopScrolling);
+      container.addEventListener('mouseleave', startScrolling);
+    }
 
-  const forYou = forYouContainer.value;
-  if (forYou) {
-    forYou.addEventListener('mouseover', stopForYouScrolling);
-    forYou.addEventListener('mouseleave', startForYouScrolling);
-  }
-});
+    const forYou = forYouContainer.value;
+    if (forYou) {
+      forYou.addEventListener('mouseover', stopForYouScrolling);
+      forYou.addEventListener('mouseleave', startForYouScrolling);
+    }
+  });
 
-onBeforeUnmount(() => {
-  stopScrolling();
-  stopForYouScrolling();
+  onBeforeUnmount(() => {
+    stopScrolling();
+    stopForYouScrolling();
 
-  const container = scrollContainer.value;
-  if (container) {
-    container.removeEventListener('mouseover', stopScrolling);
-    container.removeEventListener('mouseleave', startScrolling);
-  }
+    const container = scrollContainer.value;
+    if (container) {
+      container.removeEventListener('mouseover', stopScrolling);
+      container.removeEventListener('mouseleave', startScrolling);
+    }
 
-  const forYou = forYouContainer.value;
-  if (forYou) {
-    forYou.removeEventListener('mouseover', stopForYouScrolling);
-    forYou.removeEventListener('mouseleave', startForYouScrolling);
-  }
-});
+    const forYou = forYouContainer.value;
+    if (forYou) {
+      forYou.removeEventListener('mouseover', stopForYouScrolling);
+      forYou.removeEventListener('mouseleave', startForYouScrolling);
+    }
+  });
 
 </script>
 
