@@ -1,22 +1,26 @@
 import { db } from '../firebaseConfig';
 import { collection, query, where, getDocs, addDoc, orderBy } from 'firebase/firestore';
+import { auth } from '../firebaseConfig';
 
 export const handleCreateWatchparty = async (selectedItems, activeTab) => {
   try {
-    // Get all selected user IDs
-    const userIds = new Set();
+    // Get current user ID
+    const currentUserId = auth.currentUser.uid
+    
+    // 1. Collect and sort all user IDs (including current user)
+    const userIds = new Set([currentUserId])
     
     for (const item of selectedItems) {
       if (activeTab === 'groups') {
         // Add all members from the group
-        item.members.forEach(memberId => userIds.add(memberId));
+        item.members.forEach(memberId => userIds.add(memberId))
       } else {
         // Add individual friend ID
-        userIds.add(item.id);
+        userIds.add(item.id)
       }
     }
 
-    const sortedUserIds = Array.from(userIds).sort();
+    const sortedUserIds = Array.from(userIds).sort()
 
     // Check for existing group
     const groupsRef = collection(db, 'groups');
