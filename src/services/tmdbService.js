@@ -1,4 +1,4 @@
-const TMDB_API_KEY = process.env.VUE_APP_TMDB_API_KEY
+const TMDB_API_KEY = '1d349c13bf966a4e71a6e01cbb3bbe78'
 const BASE_URL = 'https://api.themoviedb.org/3'
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500'
 
