@@ -84,6 +84,7 @@
   import { db } from '@/firebaseConfig';
   import { LinkIcon } from 'lucide-vue-next';
 //   import { UserPlus } from 'lucide-vue-next';
+  import { celebrate } from '@/utils/celebration'
   
   const props = defineProps({
     isOpen: {
@@ -160,6 +161,9 @@
       await updateDoc(friendRef, {
         friends: arrayUnion(auth.currentUser.uid)
       });
+  
+      // Add celebration
+      celebrate('friend')
   
       emit('friendAdded');
       closeModal();

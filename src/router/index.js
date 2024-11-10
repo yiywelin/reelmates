@@ -11,7 +11,7 @@ import EnhancedFriendsPage from '@/components/Friends/EnhancedFriendsPage.vue';
 import WatchParty from '../components/WatchParty/WatchParty.vue';
 import MovieRoulette from '@/components/MovieRoulette/MovieRoulette.vue';
 import MeetTheTeam from '@/views/MeetTheTeam.vue';
-import Recommendations from '../views/RecommendationsPage.vue';
+import RecommendationsPage from '../views/RecommendationsPage.vue';
 
 
 const routes = [
@@ -48,9 +48,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/recommendations',
-    name: 'Recommended',
-    component: Recommendations,
+    path: '/recommendations/:groupId/:chatId',
+    name: 'recommendations',
+    component: RecommendationsPage,
     meta: { requiresAuth: true }
   },
   {
