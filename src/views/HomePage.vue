@@ -184,6 +184,7 @@ const friendsData = ref([]);
 const groups = ref([]);
 const error = ref(null);
 const windowWidth = ref(window.innerWidth);
+var moviesCardsInt = [];
 
 // Update window width on resize
 const handleResize = () => {
@@ -205,10 +206,28 @@ onMounted(async () => {
     movies.value = popularMovies.slice(8, 18);
 
     loadGroups();
+    // loadUserMovieHistory()
 
-    const moviesCardsValue = await tmdbService.getMoviesByGenre([14, 53]);
-    moviesCards.value = moviesCardsValue.slice(0, 10);
-    // console.log(moviesCards);
+    const shuffle = (array) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
+
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+    if (userDoc.exists()) {
+      const userData = userDoc.data()
+      const userDataLength = userData.likedMovies.length
+      moviesCardsInt = userData.likedMovies.slice(userDataLength - 5, userDataLength).reverse() || [];
+    }
+
+    const moviesCardsPopularMoviesValue = popularMovies.slice(3, 8);
+    console.log(moviesCardsInt);
+    moviesCards.value = shuffle(moviesCardsInt.concat(moviesCardsPopularMoviesValue));
+
+    console.log(moviesCards.value);
 
     onAuthStateChanged(auth, async (user) => {
       currentUser.value = user;
@@ -259,6 +278,21 @@ onMounted(async () => {
   }
 });
 
+// const loadUserMovieHistory = async () => {
+//   if (!auth.currentUser) return
+
+//   try {
+//     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+//     if (userDoc.exists()) {
+//       const userData = userDoc.data()
+//       const userDataLength = userData.likedMovies.length
+//       moviesCardsInt = userData.likedMovies.slice(userDataLength - 5, userDataLength).reverse() || []
+//       // console.log(moviesCards);
+//     }
+//   } catch (err) {
+//     console.error('Error loading movie history:', err)
+//   }
+// }
 
 const loadGroups = async () => {
   try {
@@ -492,6 +526,7 @@ onBeforeUnmount(() => {
   height: 100%;
   /* Adjust this value for desired height */
   transition: transform 0.3s ease-in-out;
+  margin-right: 3px;
 }
 
 .for-you-card:hover {
@@ -500,10 +535,10 @@ onBeforeUnmount(() => {
 }
 
 .movie-card {
-  min-width: 200px; 
-  height: 270px; 
-  margin-right: 10px; 
-  display: inline-block; 
+  min-width: 200px;
+  height: 270px;
+  margin-right: 3px;
+  display: inline-block;
 }
 
 .movie-card:hover {

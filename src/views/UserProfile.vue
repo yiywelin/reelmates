@@ -458,6 +458,7 @@ onBeforeUnmount(() => {
   max-width: 300px;
   max-height: 250px;
   transition: transform 0.3s ease-in-out;
+  margin-right: 3px;
 }
 
 .your-likes-card:hover {
