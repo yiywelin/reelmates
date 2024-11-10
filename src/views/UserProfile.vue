@@ -80,7 +80,7 @@
           </div>
 
           <div ref="yourLikesContainer" class="your-likes-container scroll-container flex">
-            <div v-if="moviesCards.length >= 5">
+            <div v-if="moviesCards.length > 0">
               <!-- Desktop View (>768px) -->
               <div v-if="windowWidth > 768" class="flex overflow-x-auto">
                 <div v-for="movie in moviesCards" :key="movie.id"
@@ -143,12 +143,10 @@
                 <span class="text-lg font-semibold text-[#FF6961] 
             [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
             block" style="word-wrap: break-word; overflow-wrap: break-word;">
-                  {{ 'Swipe more movies to see this section!' }}
+                  {{ "You haven't liked any movies yet. Swipe more movies!" }}
                 </span>
               </div>
             </div>
-
-
 
           </div>
 
