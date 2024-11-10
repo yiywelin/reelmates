@@ -27,7 +27,8 @@
             <div class="relative group" v-if="activeTab === 'friends'">
               <button
               @click="showAddFriendModal = true"
-                class="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+                :class="['p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300', 
+                  friends.length === 0 ? 'pulse-button' : '']"
               >
                 <UserPlusIcon class="w-6 h-6" />
               </button>
@@ -40,7 +41,8 @@
             <div class="relative group" v-if="activeTab === 'groups'">
               <button
                 @click="showCreateGroupModal = true"
-                class="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300"
+                :class="['p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300',
+                  groups.length === 0 ? 'pulse-button' : '']"
               >
                 <UserGroupIcon class="w-6 h-6" />
               </button>
@@ -573,5 +575,25 @@ onMounted(async () => {
     transform: translate(300px, 300px) rotate(-45deg);
     opacity: 0;
   }
+}
+
+/* Add these animations to your existing style section */
+@keyframes pulse-attention {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    transform: scale(1);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    transform: scale(1);
+  }
+}
+
+.pulse-button {
+  animation: pulse-attention 2s infinite;
 }
 </style>

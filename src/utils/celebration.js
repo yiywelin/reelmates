@@ -1,4 +1,5 @@
 import confetti from 'canvas-confetti'
+import { playRandomSound } from './audio/audioPlayer'
 
 const duration = 3000
 const defaults = {
@@ -9,6 +10,13 @@ const defaults = {
 }
 
 export const celebrate = (type = 'friend') => {
+  // Play audio file from the appropriate folder
+  playRandomSound(type, { 
+    volume: 0.8,
+    fadeIn: true,
+    fadeInDuration: 500
+  })
+
   const animationEnd = Date.now() + duration
   
   const randomInRange = (min, max) => {
@@ -36,18 +44,4 @@ export const celebrate = (type = 'friend') => {
       origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
     })
   }, 250)
-
-  // Voice celebration
-  const message = type === 'friend' 
-    ? "Booyah! You have friends!" 
-    : "Booyah! You have a group!"
-
-  // Add a slight delay to sync better with the confetti
-  setTimeout(() => {
-    const utterance = new SpeechSynthesisUtterance(message)
-    utterance.pitch = 1.5
-    utterance.rate = 1.1
-    utterance.volume = 0.8
-    window.speechSynthesis.speak(utterance)
-  }, 100)
 } 
