@@ -83,6 +83,7 @@
   import { collection, addDoc, updateDoc, arrayUnion, doc } from 'firebase/firestore';
   import { db } from '@/firebaseConfig';
   import { useFriends } from '@/composables/useFriends';
+  import { celebrate } from '@/utils/celebration'
   
   const props = defineProps({
     isOpen: {
@@ -158,6 +159,8 @@
       );
   
       await Promise.all(updatePromises);
+  
+      celebrate('group');
   
       console.log('Group created successfully:', groupName.value);
       emit('groupCreated');
