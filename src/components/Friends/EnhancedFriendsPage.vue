@@ -256,7 +256,7 @@ const handleWatchpartyClick = async () => {
   try {
     const { groupId, chatId } = await handleCreateWatchparty(selectedItems.value, activeTab.value)
     router.push({
-      name: 'watchparty',
+      name: 'recommendations',
       params: { groupId, chatId }
     })
   } catch (error) {
