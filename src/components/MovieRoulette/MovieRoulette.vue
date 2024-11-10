@@ -213,6 +213,7 @@ export default {
 <style scoped>
 .movie-roulette-page {
   height: 100vh;
+  height: 100dvh;
   padding-top: 70px; /* Reduced from 90px */
   background: #0a0a1f;
   color: white;
@@ -223,13 +224,14 @@ export default {
 
 .roulette-container {
   max-width: 800px;
+  width: 100%;
   margin: 0 auto;
-  padding: 1rem; /* Reduced from 2rem */
+  padding: 0.5rem;
   text-align: center;
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 70px); /* Subtract the padding-top */
-  justify-content: space-between;
+  height: calc(100% - 70px);
+  gap: 0.5rem;
 }
 
 .loading-state,
@@ -253,7 +255,8 @@ export default {
 }
 
 .neon-text {
-  font-size: 2.5rem;
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  margin-bottom: 0.5rem;
   color: #DB3DCF;
   text-shadow: 
     0 0 5px #DB3DCF,
@@ -263,9 +266,10 @@ export default {
 }
 
 .selected-movie {
-  font-size: 2rem;
-  padding: 1rem;
-  margin: 0.5rem 0;
+  font-size: clamp(1.2rem, 4vw, 2rem);
+  padding: 0.5rem;
+  margin: 0;
+  flex-shrink: 0;
   text-transform: uppercase;
   letter-spacing: 2px;
   border-top: 1px solid #675FF2;
@@ -276,19 +280,18 @@ export default {
   position: relative;
   max-width: 600px;
   margin: 0.5rem auto;
-  padding: 1rem 0;
-  background: rgba(10, 10, 31, 0.95);
-  border-radius: 8px;
-  overflow: hidden;
+  padding: 0.5rem 0;
   flex: 1;
+  min-height: 0; /* Important for flex container */
   display: flex;
   flex-direction: column;
   justify-content: center;
+  gap: 0.25rem;
 }
 
 .movie-item {
-  padding: 0.8rem;
-  font-size: 1.1rem;
+  padding: clamp(0.4rem, 2vh, 0.8rem);
+  font-size: clamp(0.8rem, 3vw, 1.1rem);
   text-transform: uppercase;
   letter-spacing: 1px;
   background: #13132b;
@@ -305,9 +308,9 @@ export default {
     rgba(103, 95, 242, 0.3),
     rgba(219, 61, 207, 0.3)
   ) !important;
-  font-size: 1.2rem;
   font-weight: bold;
-  padding: 1rem;
+  font-size: clamp(0.9rem, 3.5vw, 1.2rem);
+  padding: clamp(0.5rem, 2vh, 1rem);
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   transform: scale(1.02);
@@ -350,8 +353,8 @@ export default {
 
 .spin-button {
   position: relative;
-  padding: 1rem 3rem;
-  font-size: 1.3rem;
+  padding: clamp(0.5rem, 3vh, 1rem) clamp(1.5rem, 5vw, 3rem);
+  font-size: clamp(1rem, 3vw, 1.3rem);
   font-weight: bold;
   background: none;
   border: 2px solid #675FF2;
@@ -360,7 +363,8 @@ export default {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s ease;
-  margin: 1rem 0;
+  margin: 0.5rem 0;
+  flex-shrink: 0;
 }
 
 .button-glow {
@@ -410,8 +414,18 @@ export default {
 }
 
 @media (max-width: 768px) {
+  movie-roulette-page {
+    padding-top: 60px; /* Smaller navbar on mobile */
+  }
+
   .roulette-container {
-    padding: 0.5rem;
+    height: calc(100% - 60px);
+    gap: 0.25rem;
+  }
+
+  .movies-display::before,
+  .movies-display::after {
+    height: 100px; /* Smaller gradient overlays */
   }
 
   .neon-text{
@@ -436,6 +450,34 @@ export default {
   .spin-button {
     padding: 1rem 2.5rem;
     font-size: 1.1rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .movie-roulette-page {
+    padding-top: 50px;
+  }
+
+  .roulette-container {
+    height: calc(100% - 50px);
+    gap: 0.2rem;
+  }
+
+  .neon-text {
+    margin-bottom: 0.25rem;
+  }
+
+  .selected-movie {
+    padding: 0.25rem;
+  }
+
+  .movies-display {
+    margin: 0.25rem auto;
+  }
+
+  .movies-display::before,
+  .movies-display::after {
+    height: 60px;
   }
 }
 </style>
