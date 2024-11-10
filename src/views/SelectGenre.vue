@@ -1,64 +1,68 @@
+```vue
 <template>
   <div class="main-content">
+    <!-- Add navbar at the top -->
     <NavBar />
-    <div class="theater-container">
-      <TheatricalBackground />
+  <div class="theater-container">
+    <TheatricalBackground />
+    
+    <!-- Hero Section -->
+    <div class="hero-section">
+      <!-- <h1 class="main-title">REELMATES</h1> -->
       
-      <!-- Hero Section -->
-      <div class="hero-section">
-        <!-- Neon Sign -->
-        <div class="neon-sign">
-          <span class="neon-text">Find Your Perfect Movie Match</span>
-        </div>
-      </div>
-
-      <!-- Genre Selection -->
-      <div class="floating-genres">
-        <div class="genres-title">SELECT YOUR GENRES</div>
-        <div class="genres-container">
-          <div 
-            v-for="(genre, index) in genres" 
-            :key="genre.id"
-            class="genre-button"
-            :class="{ 'selected': selectedGenres.includes(genre.id) }"
-            :style="{ animationDelay: `${index * 0.1}s` }"
-            @click="toggleGenre(genre.id)"
-          >
-            <div class="neon-border"></div>
-            <component :is="genre.icon" class="w-8 h-8 text-current" />
-            <span class="genre-name">{{ genre.name }}</span>
-            <div class="neon-glow"></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA Section -->
-      <div class="cta-section">
-        <button 
-          class="start-button"
-          :class="{ 'active': canSwipe }"
-          :disabled="!canSwipe"
-          @click="startSwiping"
-        >
-          <span class="button-text">Start Matching</span>
-          <div class="button-glow"></div>
-          <div class="light-beam"></div>
-        </button>
-
-        <button 
-          class="random-button"
-          @click="selectRandom"
-        >
-          <span class="button-text">SURPRISE ME</span>
-          <div class="neon-flicker"></div>
-        </button>
+      <!-- Neon Sign -->
+      <div class="neon-sign">
+        <span class="neon-text">Find Your Perfect Movie Match</span>
       </div>
     </div>
+
+    <!-- Genre Selection -->
+    <div class="floating-genres">
+      <div class="genres-title">SELECT YOUR GENRES</div>
+      <div class="genres-container">
+        <div 
+          v-for="(genre, index) in genres" 
+          :key="genre.id"
+          class="genre-button"
+          :class="{ 'selected': selectedGenres.includes(genre.id) }"
+          :style="{ animationDelay: `${index * 0.1}s` }"
+          @click="toggleGenre(genre.id)"
+        >
+          <div class="neon-border"></div>
+          <component :is="genre.icon" class="w-8 h-8 text-current" />
+          <span class="genre-name">{{ genre.name }}</span>
+          <div class="neon-glow"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA Section -->
+    <div class="cta-section">
+      <button 
+        class="start-button"
+        :class="{ 'active': canSwipe }"
+        :disabled="!canSwipe"
+        @click="startSwiping"
+      >
+        <span class="button-text">SWIPE NOW</span>
+        <div class="button-glow"></div>
+        <div class="light-beam"></div>
+      </button>
+
+      <!-- <button 
+        class="random-button"
+        @click="selectRandom"
+      >
+        <span class="button-text">SURPRISE ME</span>
+        <div class="neon-flicker"></div>
+      </button> -->
+    </div>
+  </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import TheatricalBackground from '../components/Backgrounds/TheatricalBackground.vue'
 import NavBar from '../components/ui/NavBar.vue'
@@ -76,7 +80,6 @@ import {
 } from 'lucide-vue-next'
 
 const router = useRouter()
-const isOverflowing = ref(false)
 
 const genres = [
   { id: 'action', name: 'Action', icon: Flame },
@@ -89,7 +92,7 @@ const genres = [
   { id: 'romance', name: 'Romance', icon: Heart },
   { id: 'crime', name: 'Crime', icon: Fingerprint },
   { id: 'animation', name: 'Animation', icon: Palette }
-]
+];
 
 const selectedGenres = ref([])
 const canSwipe = computed(() => selectedGenres.value.length > 0)
@@ -103,13 +106,10 @@ const toggleGenre = (genreId) => {
   }
 }
 
-const selectRandom = () => {
-  selectedGenres.value = ['popular']
-  router.push({
-    path: '/swipe',
-    query: { genres: 'popular' }
-  })
-}
+// const selectRandom = () => {
+//   selectedGenres.value = ['random']
+//   startSwiping()
+// }
 
 const startSwiping = () => {
   if (selectedGenres.value.length > 0) {
@@ -119,47 +119,57 @@ const startSwiping = () => {
     })
   }
 }
-
-onMounted(() => {
-  const container = document.querySelector('.genres-container')
-  if (container) {
-    isOverflowing.value = container.scrollHeight > container.clientHeight
-  }
-})
 </script>
 
 <style scoped>
 .main-content {
   min-height: 100vh;
   background: #0A0A1F;
-  padding-top: 70px;
-  display: flex;
-  flex-direction: column;
 }
 
 .theater-container {
+  padding-top: 70px;
+  min-height: calc(100vh - 70px);
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  min-height: calc(100vh - 70px);
-  width: 100%;
-  padding: 2rem 1rem;
+  padding: 2rem;
   color: #D0CCE3;
   z-index: 1;
 }
 
 .hero-section {
   text-align: center;
-  width: 100%;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
+  margin-bottom: 4rem;
   animation: fadeIn 1s ease-out;
 }
 
+.genre-button .icon {
+  width: 3rem;  
+  height: 3rem;
+  color: currentColor;
+}
+
+.main-title {
+  font-size: 5rem;
+  font-weight: 900;
+  letter-spacing: 8px;
+  margin-bottom: 1rem;
+  background: linear-gradient(45deg, #675FF2, #DB3DCF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(103, 95, 242, 0.5));
+}
+
+.tagline {
+  font-size: 1.8rem;
+  color: #D0CCE3;
+  text-shadow: 0 0 10px rgba(208, 204, 227, 0.5);
+}
+
 .neon-sign {
-  margin: 0;
+  margin-top: 5rem;
 }
 
 .neon-text {
@@ -170,18 +180,12 @@ onMounted(() => {
     0 0 10px #DB3DCF,
     0 0 20px #DB3DCF;
   animation: neonFlicker 2s infinite;
-  word-wrap: break-word;
-  padding: 0 1rem;
 }
 
 .floating-genres {
   width: 100%;
   max-width: 1200px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  padding: 0 1rem;
-  margin: 1rem 0;
+  margin-bottom: 4rem;
   z-index: 2;
 }
 
@@ -196,17 +200,14 @@ onMounted(() => {
 
 .genres-container {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
   padding: 1rem;
-  overflow-y: auto;
-  max-width: 1200px;
-  margin: 0 auto;
 }
 
 .genre-button {
   position: relative;
-  padding: 1rem;
+  padding: 1.5rem;
   background: rgba(60, 57, 126, 0.2);
   border-radius: 12px;
   cursor: pointer;
@@ -217,12 +218,6 @@ onMounted(() => {
   overflow: hidden;
   animation: float 0.5s ease-out forwards;
   opacity: 0;
-  min-height: 120px;
-}
-
-.genre-button .w-8 {
-  width: 2rem;
-  height: 2rem;
 }
 
 .neon-border {
@@ -235,10 +230,14 @@ onMounted(() => {
   transition: all 0.3s ease;
 }
 
+.genre-icon {
+  font-size: 2.5rem;
+  transition: transform 0.3s ease;
+}
+
 .genre-name {
   font-size: 1rem;
   font-weight: 500;
-  text-align: center;
 }
 
 .genre-button:hover {
@@ -262,9 +261,8 @@ onMounted(() => {
 .cta-section {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
   align-items: center;
-  margin-top: 2rem;
 }
 
 .start-button {
@@ -322,7 +320,6 @@ onMounted(() => {
   cursor: pointer;
   opacity: 0.8;
   transition: all 0.3s ease;
-  padding: 0.5rem 1rem;
 }
 
 .random-button:hover {
@@ -348,128 +345,17 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .main-content {
-    padding-top: 60px;
+  .main-title {
+    font-size: 3rem;
   }
-
-  .theater-container {
-    min-height: calc(100vh - 60px);
-    padding: 1rem;
-  }
-
-  .hero-section {
-    margin-top: 0.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .neon-text {
-    font-size: 1.8rem;
-  }
-
-  .genres-title {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-  }
-
-  .genres-container {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
-  }
-
-  .genre-button {
-    padding: 0.8rem;
-    min-height: 100px;
-  }
-
-  .genre-button .w-8 {
-    width: 1.5rem;
-    height: 1.5rem;
-  }
-
-  .genre-name {
-    font-size: 0.9rem;
-  }
-
-  .start-button {
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-  }
-
-  .random-button {
-    font-size: 1rem;
-  }
-}
-
-@media (max-height: 700px) {
-  .hero-section {
-    margin-top: 0.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .neon-text {
-    font-size: 1.6rem;
-  }
-
-  .genres-title {
-    margin-bottom: 1rem;
-  }
-
-  .genres-container {
-    gap: 0.8rem;
-  }
-
-  .genre-button {
-    padding: 0.6rem;
-    min-height: 90px;
-  }
-
-  .cta-section {
-    gap: 0.8rem;
-    margin-top: 1rem;
-  }
-
-  .start-button {
-    padding: 0.8rem 1.5rem;
-  }
-}
-
-@media (max-height: 600px) {
-  .main-content {
-    padding-top: 50px;
-  }
-
-  .theater-container {
-    min-height: calc(100vh - 50px);
-    padding: 0.5rem;
-  }
-
-  .genres-container {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.8rem;
-  }
-
-  .hero-section {
-    margin-top: 0.25rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .neon-text {
+  
+  .tagline {
     font-size: 1.4rem;
   }
-
-  .genre-button {
-    min-height: 80px;
-  }
-
-  .start-button {
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-  }
-}
-
-@media (max-width: 400px) {
+  
   .genres-container {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   }
 }
 </style>
+```

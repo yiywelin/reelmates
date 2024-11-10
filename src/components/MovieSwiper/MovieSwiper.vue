@@ -3,7 +3,7 @@
     <!-- Back Button -->
     <div class="absolute top-4 left-4 z-50">
       <button 
-        @click="$router.push('/select-genre')"
+        @click="$router.push('/home')"
         class="relative w-12 h-12 flex items-center justify-center"
       >
         <!-- Outer glow ring - corrected to match your X button style -->
@@ -63,7 +63,6 @@
     
     <!-- Content -->
     <template v-else>
-      <SwipeInstructions />
       <div class="flex flex-col items-center justify-center flex-grow pointer-events-none" style="z-index: 1;">
         <div class="card-stack-container pointer-events-auto">
           <div class="card-stack">
@@ -74,7 +73,6 @@
               :index="index"
               :exit-direction="exitDirection"
               @swipe="handleSwipe"
-              @dragging="handleDragging"
             />
           </div>
         </div>
@@ -83,14 +81,14 @@
           <div v-if="currentIndex < movies.length" class="button-container">
             <button
               @click="handleManualSwipe('left')"
-              :class="passButtonClasses"
+              class="action-button pass-button"
               aria-label="Pass"
             >
               <div class="icon">✕</div>
             </button>
             <button
               @click="handleManualSwipe('right')"
-              :class="likeButtonClasses"
+              class="action-button like-button"
               aria-label="Like"
             >
               <div class="icon">♥</div>
@@ -104,12 +102,6 @@
           :matches="matchedUsers"
           @close="closeMatchOverlay"
         />
-
-        <FeatureReminderOverlay
-          v-if="showFeatureReminder"
-          @close="closeFeatureReminder"
-          @navigate="handleFeatureNavigation"
-        />
       </div>
     </template>
   </div>
@@ -118,12 +110,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
-import { doc, updateDoc, arrayUnion, getDoc, setDoc, increment } from 'firebase/firestore'
+import { doc, updateDoc, arrayUnion, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { useRoute } from 'vue-router'
 import MovieCard from './MovieCard.vue'
-import SwipeInstructions from './SwipeInstructions.vue'
-import FeatureReminderOverlay from './FeatureReminderOverlay.vue'
 import SciFiBackground from './backgrounds/SciFiBackground.vue'
 import RomanceBackground from './backgrounds/RomanceBackground.vue'
 import ActionBackground from './backgrounds/ActionBackground.vue'
@@ -164,9 +154,6 @@ const route = useRoute()
 const swipedMovieIds = ref(new Set())
 const showMatchOverlay = ref(false)
 const matchedUsers = ref([])
-const currentSwipeDirection = ref(null)
-const swipeCount = ref(0)
-const showFeatureReminder = ref(false)
 
 const BACKGROUND_MAP = {
     action: ActionBackground,
@@ -219,13 +206,11 @@ const getBackgroundComponent = computed(() => {
   return BACKGROUND_MAP[firstMatchingGenre] || CinematicBackground;
 })
 
-// computed property for next background
-const getNextBackgroundComponent = computed(() => {
-  // Check if next movie exists
-  const nextMovie = displayedMovies.value?.[1]
-  if (!nextMovie || !nextMovie.genre_ids) return CinematicBackground
+  // computed property for next background
+  const getNextBackgroundComponent = computed(() => {
+  if (!displayedMovies.value?.[1]) return null
   
-  // Now safely access genre_ids
+  const nextMovie = displayedMovies.value[1]
   const nextGenres = nextMovie.genre_ids
     .map(id => GENRE_MAP[id])
     .filter(Boolean)
@@ -237,9 +222,6 @@ const getNextBackgroundComponent = computed(() => {
 // Get genres from route query
 const selectedGenres = computed(() => {
   const genresParam = route?.query?.genres
-  if (genresParam === 'popular') {
-    return ['popular']
-  }
   return genresParam ? genresParam.split(',') : []
 })
 
@@ -247,19 +229,6 @@ const selectedGenres = computed(() => {
 const displayedMovies = computed(() => {
   return movies.value.slice(currentIndex.value, currentIndex.value + 3)
 })
-
-// computed properties for pass and like indicators
-const passButtonClasses = computed(() => ({
-  'action-button': true,
-  'pass-button': true,
-  'button-active': currentSwipeDirection.value === 'left'
-}))
-
-const likeButtonClasses = computed(() => ({
-  'action-button': true,
-  'like-button': true,
-  'button-active': currentSwipeDirection.value === 'right'
-}))
 
 // Load movies from TMDB
 const loadMovies = async (page = 1) => {
@@ -270,14 +239,7 @@ const loadMovies = async (page = 1) => {
     await loadUserMovieHistory()
     console.log('Loaded swiped movies before fetching:', Array.from(swipedMovieIds.value))
     
-    let fetchedMovies
-    if (selectedGenres.value[0] === 'popular') {
-      // Use getPopularMovies when 'popular' is selected
-      fetchedMovies = await tmdbService.getPopularMovies(page)
-    } else {
-      // Use existing genre-based fetch for other cases
-      fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
-    }
+    const fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
     console.log('Fetched movies:', fetchedMovies);
 
     const swipedIds = new Set(Array.from(swipedMovieIds.value).map(String))
@@ -393,6 +355,19 @@ const checkMovieMatches = async (movieId) => {
   }
 }
 
+// get all movie matches for the current user
+// const getMatches = async () => {
+//   if (!auth.currentUser) return []
+  
+//   try {
+//     const matchesSnapshot = await getDocs(collection(db, 'users', auth.currentUser.uid, 'matches'))
+//     return matchesSnapshot.docs.map(doc => doc.data())
+//   } catch (error) {
+//     console.error('Error getting matches:', error)
+//     return []
+//   }
+// }
+
 // Record swipe in Firestore
 const recordSwipe = async (movie, isLike) => {
   if (!auth.currentUser) return
@@ -412,7 +387,6 @@ const recordSwipe = async (movie, isLike) => {
     console.log('Updated swiped movies set:', Array.from(swipedMovieIds.value))
 
     await updateDoc(userRef, {
-      totalSwipes: increment(1),
       swipedMovies: arrayUnion({
         ...swipeData,
         isLike
@@ -461,7 +435,6 @@ const closeMatchOverlay = () => {
 
 const handleSwipe = async (direction) => {
   exitDirection.value = direction
-  currentSwipeDirection.value = null 
   const currentMovie = movies.value[currentIndex.value]
   
   if (direction === 'right') {
@@ -480,21 +453,6 @@ const handleSwipe = async (direction) => {
   } else {
     await recordSwipe(currentMovie, false)
   }
-
-  // Increment swipe count and check if we should show reminder
-  swipeCount.value++
-
-  // Get current user data to check if they've seen the reminder
-  const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
-  const hasSeenReminder = userDoc.data()?.hasSeenFeatureReminder || false
-  
-  if (swipeCount.value === 10 && !hasSeenReminder) {
-    showFeatureReminder.value = true
-    // Mark that user has seen the reminder
-    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-      hasSeenFeatureReminder: true
-    })
-  }
   
   setTimeout(() => {
     currentIndex.value++
@@ -503,55 +461,14 @@ const handleSwipe = async (direction) => {
   }, 300)
 }
 
-const closeFeatureReminder = () => {
-  showFeatureReminder.value = false
-}
-
-const handleFeatureNavigation = (path) => {
-  closeFeatureReminder()
-  route.push(path)
-}
-
 const handleManualSwipe = (direction) => {
-  currentSwipeDirection.value = direction
   handleSwipe(direction)
-}
-
-const handleDragging = (dragAmount) => {
-  const threshold = 50 // Adjust this value to control sensitivity
-  if (dragAmount > threshold) {
-    currentSwipeDirection.value = 'right'
-  } else if (dragAmount < -threshold) {
-    currentSwipeDirection.value = 'left'
-  } else {
-    currentSwipeDirection.value = null
-  }
-}
-
-const loadUserData = async () => {
-  if (!auth.currentUser) return
-  
-  try {
-    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
-    if (userDoc.exists()) {
-      const userData = userDoc.data()
-      swipeCount.value = userData.totalSwipes || 0
-      
-      // If user has already seen the reminder, ensure we don't show it again
-      if (userData.hasSeenFeatureReminder) {
-        showFeatureReminder.value = false
-      }
-    }
-  } catch (err) {
-    console.error('Error loading user data:', err)
-  }
 }
 
 // Watch for changes in currentIndex to load more movies
 watch(currentIndex, () => {
   checkAndLoadMore()
 })
-
 watch(selectedGenres, async (newGenres) => {
   if (newGenres.length > 0) {
     currentIndex.value = 0
@@ -563,7 +480,6 @@ watch(selectedGenres, async (newGenres) => {
 onMounted(async () => {
   try {
     await Promise.all([
-      loadUserData(),
       loadUserMovieHistory(),
       loadMovies()
     ])
@@ -667,9 +583,9 @@ onMounted(async () => {
 }
 
 .pass-button {
-  border-color: #DB3DCF;
-  color: #DB3DCF;
-  box-shadow: 0 0 10px rgba(219, 61, 207, 0.3);
+  border-color: #DB3DCF; /* Pink neon border */
+  color: #DB3DCF; /* Pink neon icon */
+  box-shadow: 0 0 10px rgba(219, 61, 207, 0.3); /* Subtle neon glow */
 }
 
 .pass-button:hover {
@@ -679,9 +595,9 @@ onMounted(async () => {
 }
 
 .like-button {
-  border-color: #675FF2;
-  color: #675FF2;
-  box-shadow: 0 0 10px rgba(103, 95, 242, 0.3);
+  border-color: #675FF2; /* Purple neon border */
+  color: #675FF2; /* Purple neon icon */
+  box-shadow: 0 0 10px rgba(103, 95, 242, 0.3); /* Subtle neon glow */
 }
 
 .like-button:hover {
@@ -689,19 +605,6 @@ onMounted(async () => {
   box-shadow: 0 0 20px rgba(103, 95, 242, 0.5);
   transform: scale(1.1);
 }
-
-.pass-button.button-active {
-  background: rgba(219, 61, 207, 0.3);
-  box-shadow: 0 0 20px rgba(219, 61, 207, 0.8);
-  transform: scale(1.1);
-}
-
-.like-button.button-active {
-  background: rgba(103, 95, 242, 0.3);
-  box-shadow: 0 0 20px rgba(103, 95, 242, 0.8);
-  transform: scale(1.1);
-}
-
 
 
 /* Keep your existing animation keyframes */

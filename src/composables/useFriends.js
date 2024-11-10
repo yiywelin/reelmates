@@ -1,72 +1,76 @@
-// src/composables/useFriends.js
+import { ref } from 'vue';
+import { getAuth } from 'firebase/auth';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { db } from '@/firebaseConfig';
 
-import { ref, computed } from 'vue'
-import { getAuth } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/firebaseConfig'
-
-export function useFriends() {
-  const friends = ref([])
-  const isFetchingFriends = ref(false)
-  const friendsError = ref(null)
+export const useFriends = () => {
+  const friends = ref([]);
+  const isFetchingFriends = ref(false);
+  const friendsError = ref(null);
 
   const fetchFriends = async () => {
-    isFetchingFriends.value = true
-    friendsError.value = null
+    console.log('Fetching friends...');
+    const auth = getAuth();
+    if (!auth.currentUser) {
+      console.error('No authenticated user');
+      friendsError.value = 'You must be logged in to fetch friends.';
+      return [];
+    }
+
+    isFetchingFriends.value = true;
+    friendsError.value = null;
+    friends.value = []; // Reset friends array
 
     try {
-      const auth = getAuth()
-      if (!auth.currentUser) {
-        throw new Error('No authenticated user')
-      }
-
-      // Get current user's document directly using doc()
-      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+      console.log('Current user UID:', auth.currentUser.uid);
+      const userRef = doc(db, 'users', auth.currentUser.uid);
+      const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
-        console.log('User document not found')
-        friends.value = []
-        return
+        console.error('User document not found for UID:', auth.currentUser.uid);
+        friendsError.value = 'User data not found. Please try again later.';
+        return [];
       }
 
-      const userData = userDoc.data()
-      const friendIds = userData.friends || []
+      console.log('User document found:', userDoc.id);
+      const userData = userDoc.data();
+      const friendIds = userData.friends || [];
+      console.log('Friend IDs:', friendIds);
 
-      // Fetch each friend's data individually using doc()
-      const friendsData = await Promise.all(
-        friendIds.map(async (friendId) => {
-          const friendDoc = await getDoc(doc(db, 'users', friendId))
-          if (friendDoc.exists()) {
-            const data = friendDoc.data()
-            return {
-              id: friendId,
-              name: data.displayName || data.email || 'Unknown User',
-              email: data.email || '',
-              avatar: data.photoURL || null
-            }
-          }
-          return null
-        })
-      )
+      if (friendIds.length === 0) {
+        console.log('No friends found');
+        return [];
+      }
 
-      friends.value = friendsData.filter(friend => friend !== null)
-    } catch (error) {
-      console.error('Error fetching friends:', error)
-      friendsError.value = 'Failed to fetch friends. Please try again.'
+      const usersRef = collection(db, 'users');
+      const friendsQuery = query(usersRef, where('uid', 'in', friendIds));
+      const friendsSnapshot = await getDocs(friendsQuery);
+
+      const fetchedFriends = friendsSnapshot.docs.map(doc => {
+        const friendData = doc.data();
+        return {
+          id: doc.id,
+          name: friendData.username || friendData.email,
+          avatar: friendData.avatar || null
+        };
+      });
+
+      console.log('Fetched friends:', fetchedFriends);
+      friends.value = fetchedFriends;
+      return fetchedFriends;
+    } catch (err) {
+      console.error('Error fetching friends:', err);
+      friendsError.value = 'Failed to fetch friends. Please try again later.';
+      return [];
     } finally {
-      isFetchingFriends.value = false
+      isFetchingFriends.value = false;
     }
-  }
-
-  const filteredFriends = computed(() => {
-    return friends.value || []
-  })
+  };
 
   return {
     friends,
     isFetchingFriends,
     friendsError,
-    fetchFriends,
-    filteredFriends
-  }
-}
+    fetchFriends
+  };
+};
