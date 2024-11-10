@@ -44,8 +44,6 @@
           <!-- Dropdown Menu -->
           <div v-if="isMenuOpen" class="dropdown-menu">
             <router-link to="/profile" class="menu-item" @click="closeAllMenus">Profile</router-link>
-            <router-link to="/friends" class="menu-item" @click="closeAllMenus">Friends</router-link>
-            <router-link to="/meet-the-team" class="menu-item" @click="closeAllMenus">About us</router-link>
             <button @click="handleSignOut" class="menu-item logout">
               Sign Out
             </button>
@@ -76,9 +74,10 @@ const isMobileMenuOpen = ref(false);
 const navLinks = [
   { name: 'Home', path: '/home' },
   { name: 'Swipe Movies', path: '/select-genre' },
-  { name: 'Recommendations', path: '/recommendations' },
+  { name: 'Watch with Friends', path: '/friends' },
+  { name: 'About Us', path: '/meet-the-team' },
   { name: 'Movie Roulette', path: '/movie-roulette' },
-  { name: 'Watch Party', path: '/watch-party' },
+  { name: 'Recommendations', path: '/recommendations' },
 ];
 
 onMounted(() => {
