@@ -69,18 +69,24 @@ class TMDBService {
         }
     }
 
+    // In TMDBService.js
     async getPopularMovies(page = 1) {
         try {
         const response = await fetch(
-            `${BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&page=${page}`
+            // Add language parameter and make sure adult content is filtered
+            `${BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=${page}&include_adult=false`
         )
         const data = await response.json()
-
+    
+        console.log('Raw API Response:', data.results[0]) // Debug log to see raw data
+    
         if (data.status_code === 7) {
             throw new Error('Invalid API key: You must be granted a valid key')
         }
         
-        return data.results.map(movie => ({
+        return data.results.map(movie => {
+            console.log(`Genre IDs for ${movie.title}:`, movie.genre_ids) // Debug log
+            return {
             id: movie.id,
             title: movie.title,
             overview: movie.overview,
@@ -88,8 +94,9 @@ class TMDBService {
             backdropPath: movie.backdrop_path ? `${IMAGE_BASE_URL}${movie.backdrop_path}` : null,
             rating: movie.vote_average,
             releaseDate: movie.release_date,
-            genreIds: movie.genre_ids
-        }))
+            genre_ids: movie.genre_ids // The TMDB API returns this as genre_ids
+            }
+        })
         } catch (error) {
         console.error('Error fetching popular movies:', error)
         throw error
@@ -116,29 +123,6 @@ class TMDBService {
         }
         } catch (error) {
         console.error('Error fetching movie details:', error)
-        throw error
-        }
-    }
-
-    async getMoviesByGenre(genreId, page = 1) {
-        try {
-        const response = await fetch(
-            `${BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&with_genres=${genreId}&page=${page}`
-        )
-        const data = await response.json()
-        
-        return data.results.map(movie => ({
-            id: movie.id,
-            title: movie.title,
-            overview: movie.overview,
-            posterPath: movie.poster_path ? `${IMAGE_BASE_URL}${movie.poster_path}` : null,
-            backdropPath: movie.backdrop_path ? `${IMAGE_BASE_URL}${movie.backdrop_path}` : null,
-            rating: movie.vote_average,
-            releaseDate: movie.release_date,
-            genreIds: movie.genre_ids
-        }))
-        } catch (error) {
-        console.error('Error fetching movies by genre:', error)
         throw error
         }
     }

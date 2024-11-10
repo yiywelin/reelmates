@@ -219,11 +219,13 @@ const getBackgroundComponent = computed(() => {
   return BACKGROUND_MAP[firstMatchingGenre] || CinematicBackground;
 })
 
-  // computed property for next background
-  const getNextBackgroundComponent = computed(() => {
-  if (!displayedMovies.value?.[1]) return null
+// computed property for next background
+const getNextBackgroundComponent = computed(() => {
+  // Check if next movie exists
+  const nextMovie = displayedMovies.value?.[1]
+  if (!nextMovie || !nextMovie.genre_ids) return CinematicBackground
   
-  const nextMovie = displayedMovies.value[1]
+  // Now safely access genre_ids
   const nextGenres = nextMovie.genre_ids
     .map(id => GENRE_MAP[id])
     .filter(Boolean)
@@ -235,6 +237,9 @@ const getBackgroundComponent = computed(() => {
 // Get genres from route query
 const selectedGenres = computed(() => {
   const genresParam = route?.query?.genres
+  if (genresParam === 'popular') {
+    return ['popular']
+  }
   return genresParam ? genresParam.split(',') : []
 })
 
@@ -265,7 +270,14 @@ const loadMovies = async (page = 1) => {
     await loadUserMovieHistory()
     console.log('Loaded swiped movies before fetching:', Array.from(swipedMovieIds.value))
     
-    const fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
+    let fetchedMovies
+    if (selectedGenres.value[0] === 'popular') {
+      // Use getPopularMovies when 'popular' is selected
+      fetchedMovies = await tmdbService.getPopularMovies(page)
+    } else {
+      // Use existing genre-based fetch for other cases
+      fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
+    }
     console.log('Fetched movies:', fetchedMovies);
 
     const swipedIds = new Set(Array.from(swipedMovieIds.value).map(String))

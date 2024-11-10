@@ -229,7 +229,12 @@ const genres = {
   37: 'Western'
 }
 
-const getGenreName = (genreId) => genres[genreId] || 'Unknown'
+const getGenreName = (genreId) => {
+  console.log('Getting genre name for ID:', genreId)  // Debug log
+  const name = genres[genreId] || 'Unknown'
+  console.log('Genre name:', name)  // Debug log
+  return name
+}
 
 const toggleOverview = () => {
   showOverview.value = !showOverview.value
