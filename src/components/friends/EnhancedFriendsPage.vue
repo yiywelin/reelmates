@@ -24,6 +24,7 @@
             </button>
           </div>
           <div class="flex items-center space-x-2 w-full sm:w-auto">
+            <!-- add friend button -->
             <div class="relative group" v-if="activeTab === 'friends'">
               <button
               @click="showAddFriendModal = true"
@@ -48,6 +49,19 @@
               </button>
               <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 Create Group
+              </span>
+            </div>
+
+            <!-- Plan Movie Night Button -->
+            <div class="relative group">
+              <button
+                @click="showPlanningModal = true"
+                class="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+              >
+                <CalendarIcon class="w-6 h-6" />
+              </button>
+              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Plan Movie Night
               </span>
             </div>
           
@@ -204,11 +218,11 @@
 
       <div v-if="selectedItems.length > 0" class="fixed bottom-8 left-1/2 transform -translate-x-1/2">
         <button 
-          @click="openPlanMovieNightDialog"
+          @click="handleWatchpartyClick"
           class="bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-sm hover:from-blue-700/80 hover:to-purple-700/80 text-white px-8 py-4 rounded-full text-xl font-bold shadow-[0_0_20px_rgba(88,80,236,0.5)] hover:shadow-[0_0_25px_rgba(88,80,236,0.7)] transition-all duration-300"
         >
           <span class="mr-2">📅</span>
-          Plan Movie Night ({{ selectedItems.length }} selected)
+          Create Watchparty ({{ selectedItems.length }} selected {{ activeTab === 'friends' ? 'friend' : 'group' }}{{ selectedItems.length > 1 ? 's' : '' }})
         </button>
       </div>
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
@@ -224,20 +238,31 @@
 import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
-// import { UserPlusIcon } from 'lucide-vue-next'; // Add this import
-import { UserPlusIcon, UserGroupIcon } from '@heroicons/vue/24/solid';
-import MovieNightPlanningModal from '@/components/Friends/CreateWatchPartyModal.vue';
+// import { UserPlusIcon } from 'luci@/components/Friends/PlanWatchPartyModal.vue
+import { UserPlusIcon, UserGroupIcon , CalendarIcon} from '@heroicons/vue/24/solid';
+import MovieNightPlanningModal from '@/components/Friends/PlanWatchPartyModal.vue';
 import { getAuth } from 'firebase/auth'
 // import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { collection, getDocs, query, where, getDoc, doc } from 'firebase/firestore';
 import AddFriendModal from '@/components/Friends/AddFriendModal.vue';
 import CreateGroupModal from '@/components/Friends/CreateGroupModal.vue';
+import { handleCreateWatchparty } from '@/utils/watchpartyUtils';
+import { useRouter } from 'vue-router';
 
+const router = useRouter()
 
-
-
-
+const handleWatchpartyClick = async () => {
+  try {
+    const { groupId, chatId } = await handleCreateWatchparty(selectedItems.value, activeTab.value)
+    router.push({
+      name: 'watchparty',
+      params: { groupId, chatId }
+    })
+  } catch (error) {
+    console.error('Failed to create watchparty:', error)
+  }
+}
 
 // Initialize auth
 const auth = getAuth()
@@ -487,10 +512,6 @@ const getShootingStarStyle = () => {
   };
 };
 
-const openPlanMovieNightDialog = () => {
-  showPlanningModal.value = true;
-};
-
 const formatDate = (timestamp) => {
   if (!timestamp) return 'N/A';
   return new Date(timestamp.seconds * 1000).toLocaleString();
@@ -595,5 +616,25 @@ onMounted(async () => {
 
 .pulse-button {
   animation: pulse-attention 2s infinite;
+}
+
+.attention-text {
+  position: absolute;
+  right: -120px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #60A5FA;
+  font-size: 0.9em;
+  animation: bounce 1s infinite;
+  white-space: nowrap;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-50%) translateX(0);
+  }
+  50% {
+    transform: translateY(-50%) translateX(-10px);
+  }
 }
 </style>
