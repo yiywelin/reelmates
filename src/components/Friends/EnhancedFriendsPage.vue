@@ -128,12 +128,36 @@
             ]"
           >
             <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <img
-              :src="defaultAvatar"
-              :alt="item.name"
-              class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10"
-            />
+              <!-- Add edit button here with absolute positioning -->
+            <button 
+              v-if="activeTab === 'groups'"
+              @click.stop="editingGroup = item"
+              class="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-700/50 transition-colors duration-200 z-20"
+              title="Edit group name"
+            >
+              <PencilIcon class="h-4 w-4 text-gray-400 hover:text-white" />
+            </button>
+            <!-- group photo -->
+            <div class="relative" @click.stop>
+              <img
+                :src="item.photoURL || defaultAvatar"
+                :alt="item.name"
+                class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10 cursor-pointer group"
+                @click.stop="handleImageClick(item)"
+              />
+              <!-- Add a hover effect to indicate clickable -->
+              <div v-if="activeTab === 'groups'" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">Change Photo</span>
+              </div>
+            </div>
             <span class="font-semibold text-sm text-center relative z-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{{ item.name }}</span>
+                <!-- <button 
+                @click="editingGroup = group"
+                class="p-1 rounded-full hover:bg-gray-700/50 transition-colors duration-200"
+                title="Edit group name"
+              >
+                <PencilIcon class="h-4 w-4 text-gray-400 hover:text-white" />
+              </button> -->
             <div v-if="activeTab === 'friends'" class="absolute bottom-2 left-2 z-10">
               {{ getSnackEmoji(item.snackPreference) }}
             </div>
@@ -228,6 +252,8 @@
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
       <AddFriendModal :is-open="showAddFriendModal" @close="showAddFriendModal = false" @friendAdded="handleFriendAdded" />
       <CreateGroupModal :is-open="showCreateGroupModal" @close="showCreateGroupModal = false" @groupCreated="handleGroupCreated" />
+      <EditGroupNameModal v-if="editingGroup" :group="editingGroup" @close="editingGroup = null" @updated="handleGroupNameUpdated"
+  />
 
     </div>
   </div>
@@ -239,7 +265,7 @@ import { ref, computed, onMounted } from 'vue';
 import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 // import { UserPlusIcon } from 'luci@/components/Friends/PlanWatchPartyModal.vue
-import { UserPlusIcon, UserGroupIcon , CalendarIcon} from '@heroicons/vue/24/solid';
+import { UserPlusIcon, UserGroupIcon , CalendarIcon , PencilIcon} from '@heroicons/vue/24/solid';
 import MovieNightPlanningModal from '@/components/Friends/PlanWatchPartyModal.vue';
 import { getAuth } from 'firebase/auth'
 // import { collection, getDocs, query, where } from 'firebase/firestore'
@@ -249,6 +275,10 @@ import AddFriendModal from '@/components/Friends/AddFriendModal.vue';
 import CreateGroupModal from '@/components/Friends/CreateGroupModal.vue';
 import { handleCreateWatchparty } from '@/utils/watchpartyUtils';
 import { useRouter } from 'vue-router';
+import EditGroupNameModal from '@/components/Friends/EditGroupNameModal.vue'
+import { uploadGroupPhoto } from '@/utils/imageUtils'
+
+
 
 const router = useRouter()
 
@@ -282,6 +312,10 @@ const hideDetailsTimeout = ref(null);
 const showPlanningModal = ref(false);
 const showAddFriendModal = ref(false);
 const showCreateGroupModal = ref(false);
+const editingGroup = ref(null)
+// const fileInput = ref(null)
+
+
 
 
 const friends = ref([]);
@@ -549,11 +583,57 @@ const getLikedMovies = (item) => {
     .map(movie => typeof movie === 'string' ? movie : (movie?.name || movie?.title || 'Unknown Movie'));
 };
 
+
+const handleGroupNameUpdated = (newName) => {
+  if (editingGroup.value) {
+    const group = groups.value.find(g => g.id === editingGroup.value.id)
+    if (group) {
+      group.name = newName
+    }
+  }
+  editingGroup.value = null
+}
+
 onMounted(async () => {
   await loadFriends()
     await loadGroups()
 
 })
+
+const handlePhotoUpload = async (event, item) => {
+  try {
+    const file = event.target.files[0]
+    if (!file) return
+    
+    // Optional: Add loading state
+    item.isUploading = true
+    
+    const photoURL = await uploadGroupPhoto(file, item.id)
+    
+    // Update local state
+    item.photoURL = photoURL
+    
+  } catch (error) {
+    console.error('Failed to upload photo:', error)
+  } finally {
+    item.isUploading = false
+    // Clear the input
+    event.target.value = ''
+  }
+}
+
+const handleImageClick = (item) => {
+  if (activeTab.value === 'groups') {
+    // Create a temporary file input
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.onchange = (e) => handlePhotoUpload(e, item)
+    input.click()
+  }
+}
+
+
 </script>
 
 <style scoped>
