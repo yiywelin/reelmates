@@ -1,33 +1,6 @@
 <template>
   <div class="movie-roulette-page">
     <NavBar />
-
-    <div class="fixed top-20 left-4 z-[100]">
-      <button 
-        @click="router.back()"
-        class="relative w-12 h-12 flex items-center justify-center"
-      >
-        <!-- Outer glow ring - corrected to match your X button style -->
-        <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
-        
-        <!-- Arrow icon -->
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          class="w-6 h-6 text-[#DB3DCF]" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path 
-            stroke-linecap="round" 
-            stroke-linejoin="round" 
-            stroke-width="2" 
-            d="M15 19l-7-7 7-7" 
-          />
-        </svg>
-      </button>
-    </div>
-
     
     <div class="roulette-container">
       <!-- Title -->
@@ -47,7 +20,7 @@
       <template v-else>
         <!-- Selected Movie Display -->
         <div class="selected-movie">
-          {{ selectedMovie || 'Spin to select a movie' }}
+          {{ selectedMovie?.title || 'Spin to select a movie' }}
         </div>
 
         <!-- Movies Display -->
@@ -61,7 +34,7 @@
               'movie-item-selected': index === 3,
             }"
           >
-            {{ movie }}
+            {{ movie.title }}
           </div>
         </div>
 
@@ -81,10 +54,37 @@
           <div class="button-glow"></div>
           <div class="light-beam"></div>
           <span class="button-text">
-            {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
+            {{ isSpinning ? 'SPINNING...' : 'START THE ROULETTE' }}
           </span>
         </button>
       </template>
+    </div>
+
+    <!-- Movie Poster Modal -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <button class="close-button" @click="closeModal">×</button>
+        <div class="poster-container">
+          <img 
+            v-if="selectedMovie?.posterPath" 
+            :src="selectedMovie.posterPath" 
+            :alt="selectedMovie.title"
+            class="movie-poster"
+          />
+          <div v-else class="no-poster">
+            No poster available
+          </div>
+          <div class="poster-overlay">
+            <div class="overlay-title">{{ selectedMovie?.title }}</div>
+            <div class="overlay-description">{{ selectedMovie?.overview }}</div>
+          </div>
+        </div>
+        <div class="movie-details">
+          <button class="watch-party-button" @click="startWatchParty">
+            Start Watch Party
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -94,16 +94,9 @@ import NavBar from '@/components/ui/NavBar.vue'
 import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
-import { useRouter } from 'vue-router'
 
 export default {
   name: 'MovieRoulette',
-  setup() {
-    const router = useRouter()
-    return {
-      router
-    }
-  },
   components: {
     NavBar
   },
@@ -111,16 +104,16 @@ export default {
     return {
       movies: [],
       spinSpeed: 8,
-      selectedMovie: "",
+      selectedMovie: null,
       isSpinning: false,
       visibleMovies: [],
       spinInterval: null,
       loading: true,
-      error: null
+      error: null,
+      showModal: false
     }
   },
   created() {
-    // Initialize visible movies
     console.log('Component created, fetching movies...')
     this.fetchLikedMovies()
   },
@@ -140,10 +133,8 @@ export default {
           const likedMovies = userData.likedMovies || []
           console.log("Liked movies: " + likedMovies)
           
-          // Map liked movies to just their titles
-          this.movies = likedMovies.map(movie => movie.title)
+          this.movies = likedMovies
           
-          // Initialize visible movies only if we have movies
           if (this.movies.length > 0) {
             this.resetVisibleMovies()
           } else {
@@ -163,7 +154,6 @@ export default {
         return
       }
       
-      // If we have less than 7 movies, duplicate them to fill the display
       if (this.movies.length < 7) {
         this.visibleMovies = [
           ...this.movies,
@@ -175,43 +165,40 @@ export default {
       }
     },
     handleRouletteButton() {
-      if (this.isSpinning) {
-        this.stopRoulette()
-      } else {
+      if (!this.isSpinning) {
         this.startRoulette()
       }
     },
-
     startRoulette() {
       if (this.isSpinning || this.movies.length === 0) return
       this.isSpinning = true
       
-      // Calculate spin interval based on speed
-      const spinInterval = 100 / (this.spinSpeed / 8) // Adjust timing as needed
+      const spinInterval = 100 / (this.spinSpeed / 8)
       
-      // Start continuous spinning
       this.spinInterval = setInterval(() => {
-        // Rotate the visible movies randomly
         this.visibleMovies = [
           ...this.movies.slice(-3),
           ...this.movies.slice(0, 4)
         ].sort(() => Math.random() - 0.5)
       }, spinInterval)
-    },
 
+      // Add automatic stop after 7 seconds
+      setTimeout(() => {
+        if (this.isSpinning) {
+          this.stopRoulette()
+        }
+      }, 7000)
+    },
     async stopRoulette() {
       if (!this.isSpinning) return
 
-      // Clear the spinning interval
       if (this.spinInterval) {
         clearInterval(this.spinInterval)
         this.spinInterval = null
       }
       
-      // Select final movie
       const finalMovie = this.movies[Math.floor(Math.random() * this.movies.length)]
       
-      // Add a brief slowdown animation
       const slowdownFrames = 10
       const slowdownInterval = 100
       
@@ -223,19 +210,30 @@ export default {
         ].sort(() => Math.random() - 0.5)
       }
       
-      // Show final result
-      this.selectedMovie = finalMovie
-      this.visibleMovies = [
-        ...this.movies.slice(this.movies.indexOf(finalMovie) - 3),
-        finalMovie,
-        ...this.movies.slice(this.movies.indexOf(finalMovie) + 1, this.movies.indexOf(finalMovie) + 3)
-      ].slice(0, 7)
+      try {
+        this.selectedMovie = finalMovie
+        this.showModal = true
+        
+        this.visibleMovies = [
+          ...this.movies.slice(this.movies.indexOf(finalMovie) - 3),
+          finalMovie,
+          ...this.movies.slice(this.movies.indexOf(finalMovie) + 1, this.movies.indexOf(finalMovie) + 3)
+        ].slice(0, 7)
+        
+      } catch (error) {
+        console.error('Error setting selected movie:', error)
+        this.selectedMovie = finalMovie
+      }
       
       this.isSpinning = false
+    },
+    closeModal() {
+      this.showModal = false
+    },
+    startWatchParty() {
+      console.log('Starting watch party for:', this.selectedMovie.title)
     }
   },
-
-  // Clean up interval when component is destroyed
   beforeUnmount() {
     if (this.spinInterval) {
       clearInterval(this.spinInterval)
@@ -248,7 +246,7 @@ export default {
 .movie-roulette-page {
   height: 100vh;
   height: 100dvh;
-  padding-top: 70px; /* Reduced from 90px */
+  padding-top: 70px;
   background: #0a0a1f;
   color: white;
   display: flex;
@@ -316,7 +314,7 @@ export default {
   margin: 0.5rem auto;
   padding: 0.5rem 0;
   flex: 1;
-  min-height: 0; /* Important for flex container */
+  min-height: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -387,7 +385,7 @@ export default {
 
 .spin-button {
   position: relative;
-  display: inline-flex; /* Change to inline-flex */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 1rem 3rem;
@@ -400,9 +398,9 @@ export default {
   cursor: pointer;
   overflow: hidden;
   transition: all 0.3s ease;
-  margin: 1rem auto; /* Center the button */
-  min-width: fit-content; /* Fit to content */
-  max-width: max-content; /* Don't expand beyond content */
+  margin: 1rem auto;
+  min-width: fit-content;
+  max-width: max-content;
 }
 
 .button-glow {
@@ -442,6 +440,149 @@ export default {
   background: linear-gradient(45deg, #ff4444, #ff6b6b);
 }
 
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 31, 0.9);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modal-content {
+  background: #13132b;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border: 1px solid #675FF2;
+  box-shadow: 
+    0 0 30px rgba(103, 95, 242, 0.3),
+    0 0 60px rgba(219, 61, 207, 0.3);
+}
+
+.close-button {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: #D0CCE3;
+  font-size: 1.5rem;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.poster-container {
+  width: 100%;
+  height: 450px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  background: #0a0a1f;
+}
+
+.movie-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #0a0a1f;
+  transition: transform 0.3s ease;
+}
+
+.poster-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 10, 31, 0.9);
+  padding: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-y: auto;
+  color: #D0CCE3;
+}
+
+.poster-container:hover .poster-overlay {
+  opacity: 1;
+}
+
+.poster-container:hover .movie-poster {
+  transform: scale(1.05);
+}
+
+.overlay-title {
+  color: #DB3DCF;
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.overlay-description {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.movie-details {
+  padding: 1rem;
+}
+
+.watch-party-button {
+  background: linear-gradient(45deg, #675FF2, #DB3DCF);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.watch-party-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(219, 61, 207, 0.3);
+}
+
+.no-poster {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #D0CCE3;
+  font-size: 1rem;
+  background: #0a0a1f;
+}
+
+/* Custom scrollbar for overlay */
+.poster-overlay::-webkit-scrollbar {
+  width: 4px;
+}
+
+.poster-overlay::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.poster-overlay::-webkit-scrollbar-thumb {
+  background: #675FF2;
+  border-radius: 4px;
+}
+
 @keyframes beam {
   0% {
     transform: translateX(-100%);
@@ -451,9 +592,10 @@ export default {
   }
 }
 
+/* Mobile Styles */
 @media (max-width: 768px) {
-  movie-roulette-page {
-    padding-top: 60px; /* Smaller navbar on mobile */
+  .movie-roulette-page {
+    padding-top: 60px;
   }
 
   .roulette-container {
@@ -463,10 +605,10 @@ export default {
 
   .movies-display::before,
   .movies-display::after {
-    height: 100px; /* Smaller gradient overlays */
+    height: 100px;
   }
 
-  .neon-text{
+  .neon-text {
     font-size: 1.8rem;
   }
   
@@ -489,9 +631,26 @@ export default {
     padding: 1rem 2.5rem;
     font-size: 1.1rem;
   }
+
+  .modal-content {
+    width: 95%;
+  }
+
+  .poster-container {
+    height: 350px;
+  }
+
+  .overlay-title {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .overlay-description {
+    font-size: 0.85rem;
+  }
 }
 
-@media (max-height: 600px) {
+@media (max-width: 380px) {
   .movie-roulette-page {
     padding-top: 50px;
   }
@@ -516,6 +675,10 @@ export default {
   .movies-display::before,
   .movies-display::after {
     height: 60px;
+  }
+
+  .poster-container {
+    height: 300px;
   }
 }
 </style>
