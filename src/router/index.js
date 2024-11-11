@@ -65,7 +65,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/movie-roulette',
+    path: '/movie-roulette/:groupId/:chatId',
     name: 'MovieRoulette',
     component: MovieRoulette,
     meta: { requiresAuth: true }
