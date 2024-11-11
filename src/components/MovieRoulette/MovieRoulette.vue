@@ -80,7 +80,7 @@
           <div class="button-glow"></div>
           <div class="light-beam"></div>
           <span class="button-text">
-            {{ isSpinning ? 'SPINNING...' : 'START THE ROULETTE' }}
+            {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
           </span>
         </button>
       </template>
@@ -143,7 +143,8 @@ export default {
       spinInterval: null,
       loading: true,
       error: null,
-      showModal: false
+      showModal: false,
+      autoStopTimeout: null,
     }
   },
   created() {
@@ -198,8 +199,10 @@ export default {
       }
     },
     handleRouletteButton() {
-      if (!this.isSpinning) {
-        this.startRoulette()
+    if (this.isSpinning) {
+      this.stopRoulette()
+    } else {
+      this.startRoulette()
       }
     },
     startRoulette() {
@@ -215,8 +218,8 @@ export default {
         ].sort(() => Math.random() - 0.5)
       }, spinInterval)
 
-      // Add automatic stop after 7 seconds
-      setTimeout(() => {
+      // Store timeout ID so we can clear it if manual stop happens
+      this.autoStopTimeout = setTimeout(() => {
         if (this.isSpinning) {
           this.stopRoulette()
         }
@@ -228,6 +231,11 @@ export default {
       if (this.spinInterval) {
         clearInterval(this.spinInterval)
         this.spinInterval = null
+      }
+
+      if (this.autoStopTimeout) {
+        clearTimeout(this.autoStopTimeout)
+        this.autoStopTimeout = null
       }
       
       const finalMovie = this.movies[Math.floor(Math.random() * this.movies.length)]
@@ -270,6 +278,9 @@ export default {
   beforeUnmount() {
     if (this.spinInterval) {
       clearInterval(this.spinInterval)
+    }
+    if (this.autoStopTimeout) {
+      clearTimeout(this.autoStopTimeout)
     }
   }
 }
