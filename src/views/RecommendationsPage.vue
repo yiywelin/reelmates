@@ -10,10 +10,21 @@
         
         <!-- Header -->
         <div class="text-center mb-8 animate-fadeIn">
-          <span class="neon-text">
-            {{ 'Your Recommended Movies' }}
+          <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
+          [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            {{ 'Recommended Movies' }}
           </span>
         </div>
+
+        <div class="text-center mb-8 animate-fadeIn">
+          <button 
+            @click="handleRoulettePage"
+            class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#D0CCE3] animate-neonFlicker 
+              [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            I am feeling lucky
+          </button>
+        </div>
+
 
         <!-- Loading State -->
         <div v-if="loading" class="flex-1 flex items-center justify-center">
@@ -76,7 +87,7 @@
                 <div 
                   class="h-full relative rounded-2xl cursor-pointer overflow-hidden
                     transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
-                  @click="navigateToMovie(movie)"
+                  @click="navigateToWatchParty(movie)"
                   @mouseenter="loadTrailer(movie)"
                   @mouseleave="closeTrailer"
                 >
@@ -89,7 +100,6 @@
                     class="absolute inset-0 w-full h-full object-cover rounded-2xl
                       transition-all duration-300 group-hover:scale-135"
                   />
-                  
                   <!-- Trailer Overlay -->
                   <div 
                     v-if="currentTrailer && currentTrailer.id === movie.id" 
@@ -118,6 +128,9 @@
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-yellow-400">★</span>
                       <span class="text-white">{{ movie.voteAverage?.toFixed(1) + '/10' || 'N/A' }}</span>
+                      <span v-if="movie.basedOn" class="text-sm font-semibold text-gray-400">
+                        (Similar to {{ movie.basedOn }})
+                      </span>
                     </div>
                     <div class="mt-3 opacity-0 translate-y-5 transition-all duration-300 
                       group-hover:opacity-100 group-hover:translate-y-0">
@@ -164,18 +177,18 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter,useRoute } from 'vue-router'
 import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 import TheatricalBackground from '../components/Backgrounds/TheatricalBackground.vue'
 import NavBar from '../components/ui/NavBar.vue'
-
 const TMDB_API_KEY = "1d349c13bf966a4e71a6e01cbb3bbe78"
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 
 // State
 const router = useRouter()
+const route = useRoute()
 const auth = getAuth()
 const movies = ref([])
 const loading = ref(true)
@@ -187,12 +200,14 @@ const touchEnd = ref(null)
 const carouselRef = ref(null)
 const visibleMovies = ref(3)
 const currentTrailer = ref(null)
+const groupId = route.params.groupId
+const chatId = route.params.chatId
 
 // Carousel functionality
 const updateVisibleMovies = () => {
   if (!carouselRef.value) return
   
-  const width = window.innerWidth
+  const width = window.screen.width
   
   if (width < 640) {
     visibleMovies.value = 1
@@ -259,6 +274,18 @@ const handleKeydown = (e) => {
 }
 
 
+const handleRoulettePage = async () => {
+  try {
+    router.push({
+      name: 'MovieRoulette',
+      params: { groupId, chatId }
+    })
+  } catch (error) {
+    console.error('Failed to go to MovieRoulette', error)
+  }
+}
+
+
 const tmdbService = {
   async fetchFromTMDB(endpoint) {
     const response = await fetch(`${TMDB_BASE_URL}${endpoint}&api_key=${TMDB_API_KEY}`)
@@ -298,7 +325,18 @@ const tmdbService = {
     return data.results.find(video => video.type === 'Trailer')
   }
 }
-
+async function fetchDocumentByKey(collectionName, documentKey) {
+  try {  
+    const docRef = doc(db, collectionName, documentKey);
+    const docSnap = await getDoc(docRef);
+    const userData = docSnap.data();
+    console.log("fetched data:", userData);
+    return userData;
+  } catch (err) {
+    console.error('Error fetching document:', err);
+    return null;
+  }
+}
 
 
 const shuffleArray = (array) => {
@@ -309,62 +347,77 @@ const shuffleArray = (array) => {
   return array
 }
 
-
 const loadMovies = async () => {
   try {
-    loading.value = true
-    error.value = null
-    currentIndex.value = 0 
-    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
-    const likedMovieslst = userDoc.data().likedMovies
-    const likedMovies = []
-    likedMovieslst.forEach(movieobj =>
-      likedMovies.push(movieobj.movieId)
-    )
-    console.log(userDoc)
-    console.log(userDoc.data())
-    console.log(likedMovieslst)
-    console.log("Likedmovies:"+likedMovies)
-    if (likedMovies.length === 0) {
-      const popularMovies = await tmdbService.getPopularMovies()
-      movies.value = popularMovies
-      return
+    loading.value = true;
+    error.value = null;
+    currentIndex.value = 0;
+    const groupMembersMovieslst = [];
+
+    // Fetch current user's liked movies
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+    console.log("userDoc:", userDoc.data());
+    let userLikedMovieslst = userDoc.data().likedMovies || [];
+    
+    // Process current user's liked movies
+    let userLikedMoviesIdlst = userLikedMovieslst.map(movieobj => movieobj.movieId);
+    if (userLikedMoviesIdlst.length > 0) {
+      let userShuffledLikedMovies = shuffleArray([...userLikedMoviesIdlst]);
+      let userNumberOfSources = Math.min(8, userShuffledLikedMovies.length);
+      let userSelectedMovies = userShuffledLikedMovies.slice(0, userNumberOfSources);
+      groupMembersMovieslst.push(...userSelectedMovies);
     }
 
-    const shuffledLikedMovies = shuffleArray([...likedMovies])
-    const numberOfSources = Math.min(8, shuffledLikedMovies.length)
-    const selectedMovies = shuffledLikedMovies.slice(0, numberOfSources)
-    console.log(numberOfSources)
-    console.log(selectedMovies)
+    // Fetch group data
+    const groupdb = await getDoc(doc(db, 'groups', groupId));
+    const groupMembersId = groupdb.data().members || [];
+    
+    // Fetch all members' data in parallel
+    const membersData = await Promise.all(
+      groupMembersId.map(memberId => fetchDocumentByKey("users", memberId))
+    );
+    
+    // Process each member's liked movies
+    membersData.forEach(memberObj => {
+      if (memberObj.likedMovies.length > 0) {
+        const likedMoviesIdlst = memberObj.likedMovies.map(movieobj => movieobj.movieId);
+        const shuffledLikedMovies = shuffleArray([...likedMoviesIdlst]);
+        const numberOfSources = Math.min(4, shuffledLikedMovies.length);
+        const selectedMovies = shuffledLikedMovies.slice(0, numberOfSources);
+        groupMembersMovieslst.push(...selectedMovies);
+      }
+    });
+
+    // Handle case when no liked movies are found
+    if (groupMembersMovieslst.length === 0) {
+      const popularMovies = await tmdbService.getPopularMovies();
+      movies.value = popularMovies;
+      return;
+    }
+
+    // Process recommendations
+    const shuffledLikedMovies = shuffleArray([...groupMembersMovieslst]);
+    const numberOfSources = Math.min(8, shuffledLikedMovies.length);
+    const selectedMovies = shuffledLikedMovies.slice(0, numberOfSources);
+    console.log("Selected movies for recommendations:", numberOfSources, selectedMovies);
+
     const recommendationsPromises = selectedMovies.map(movieId => 
       tmdbService.getRecommendations(movieId)
-    )
+    );
     
-    const recommendationsArrays = await Promise.all(recommendationsPromises)
-    console.log(recommendationsArrays)
-    let allRecommendations = recommendationsArrays.flat()
+    const recommendationsArrays = await Promise.all(recommendationsPromises);
+    console.log("Recommendations arrays:", recommendationsArrays);
     
-    const seenIds = new Set(likedMovies)
-    allRecommendations = allRecommendations.filter(movie => {
-      if (seenIds.has(movie.id)) return false
-      seenIds.add(movie.id)
-      return true
-    })
-    
-    movies.value = shuffleArray(allRecommendations).slice(0, 12)
-  } catch (err) {
-    console.error('Error loading movies:', err)
-    error.value = 'Failed to load movies. Please try again.'
-  } finally {
-    loading.value = false
-  }
-    if (!auth.currentUser) {
-      const popularMovies = await tmdbService.getPopularMovies()
-      movies.value = popularMovies
-      return
-    }
-}
+    let allRecommendations = recommendationsArrays.flat();    
+    movies.value = shuffleArray(allRecommendations).slice(0, 12);
 
+  } catch (err) {
+    console.error('Error loading movies:', err);
+    error.value = 'Failed to load movies. Please try again.';
+  } finally {
+    loading.value = false;
+  }
+};
 
 const loadTrailer = async (movie) => {
   try {
@@ -387,11 +440,15 @@ const closeTrailer = () => {
   currentTrailer.value = null
 }
 
-const navigateToMovie = (movie) => {
+const navigateToWatchParty = (movie) => {
+
+  try {
   router.push({
-    path: `/movies/${movie.id}`,
-    query: { title: movie.title }
+    path: `/watch-party/${groupId}/${chatId}/${movie.id}`,
   })
+} catch (error) {
+    console.error('Failed to go to WatchParty', error)
+  }
 }
 
 const debounce = (fn, delay) => {
@@ -416,16 +473,6 @@ onUnmounted(() => {
 </script>
 
 <style>
-.neon-text {
-  font-size: 2.5rem;
-  color: #DB3DCF;
-  text-shadow: 
-    0 0 5px #DB3DCF,
-    0 0 10px #DB3DCF,
-    0 0 20px #DB3DCF;
-  animation: neonFlicker 2s infinite;
-}
-
 @keyframes neonFlicker {
   0%, 100% { opacity: 1; }
   90% { opacity: 1; }
