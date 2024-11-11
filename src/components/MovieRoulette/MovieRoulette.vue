@@ -272,7 +272,19 @@ export default {
       this.showModal = false
     },
     startWatchParty() {
-      console.log('Starting watch party for:', this.selectedMovie.title)
+      if (this.selectedMovie) {
+      try {
+        // Get current route params
+        // const route = this.$route
+        
+        // Navigate to watch party page with required params
+        this.router.push({
+          path: `/watch-party`,
+        })
+      } catch (error) {
+        console.error('Failed to navigate to watch party:', error)
+      }
+    }
     }
   },
   beforeUnmount() {
