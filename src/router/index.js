@@ -2,17 +2,22 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { auth } from '../firebaseConfig';
 import HomePage from '../views/HomePage.vue';
+import SelectGenre from '../views/SelectGenre.vue';
 import RegisterForm from '../components/UserLogin/RegisterForm.vue';
 import LoginForm from '../components/UserLogin/LoginForm.vue';
 import MovieSwiper from '../components/MovieSwiper/MovieSwiper.vue';
+import UserProfile from '../views/UserProfile.vue';
+import EnhancedFriendsPage from '@/components/Friends/EnhancedFriendsPage.vue';
 import WatchParty from '../components/WatchParty/WatchParty.vue';
 import MovieRoulette from '@/components/MovieRoulette/MovieRoulette.vue';
 import MeetTheTeam from '@/views/MeetTheTeam.vue';
+import RecommendationsPage from '../views/RecommendationsPage.vue';
+
 
 const routes = [
   {
     path: '/',
-    redirect: '/home'  // Updated to redirect to home instead of register
+    redirect: '/home'
   },
   {
     path: '/register',
@@ -31,9 +36,27 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/swipe',  // Updated from /movie-swiper to /swipe
+    path: '/select-genre',
+    name: 'SelectGenre',
+    component: SelectGenre,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/swipe',
     name: 'MovieSwiper',
     component: MovieSwiper,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/recommendations/:groupId/:chatId',
+    name: 'recommendations',
+    component: RecommendationsPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/friends',
+    name: 'Friends',
+    component: EnhancedFriendsPage,
     meta: { requiresAuth: true }
   },
   {
@@ -43,7 +66,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/movie-roulette',
+    path: '/movie-roulette/:groupId/:chatId',
     name: 'MovieRoulette',
     component: MovieRoulette,
     meta: { requiresAuth: true }
@@ -52,6 +75,12 @@ const routes = [
     path: '/meet-the-team',
     name: 'MeetTheTeam',
     component: MeetTheTeam,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/profile',
+    name: 'UserProfile',
+    component: UserProfile,
     meta: { requiresAuth: true }
   },
 ];

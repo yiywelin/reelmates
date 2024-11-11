@@ -1,7 +1,53 @@
 <template>
   <div class="swiper-container">
-    <SciFiBackground />
-    
+    <!-- Back Button -->
+    <div class="absolute top-4 left-4 z-50">
+      <button 
+        @click="$router.push('/select-genre')"
+        class="relative w-12 h-12 flex items-center justify-center"
+      >
+        <!-- Outer glow ring - corrected to match your X button style -->
+        <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
+        
+        <!-- Arrow icon -->
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          class="w-6 h-6 text-[#DB3DCF]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M15 19l-7-7 7-7" 
+          />
+        </svg>
+      </button>
+    </div>
+
+    <div class="background-container">
+      <!-- Current background -->
+      <transition name="fade">
+        <component 
+          :is="getBackgroundComponent"
+          v-if="getBackgroundComponent"
+          :key="displayedMovies[0]?.id"
+          class="background-element"
+        />
+      </transition>
+
+      <!-- Preload next background (hidden) -->
+      <div style="display: none;">
+        <component 
+          :is="getNextBackgroundComponent"
+          v-if="getNextBackgroundComponent"
+          :key="'next-' + (displayedMovies[1]?.id || '')"
+        />
+      </div>
+    </div>
+
     <!-- Loading State -->
     <div v-if="loading" class="text-white text-xl">
       Loading movies...
@@ -17,8 +63,9 @@
     
     <!-- Content -->
     <template v-else>
-      <div class="flex flex-col items-center justify-center flex-grow">
-        <div class="card-stack-container">
+      <SwipeInstructions />
+      <div class="flex flex-col items-center justify-center flex-grow pointer-events-none" style="z-index: 1;">
+        <div class="card-stack-container pointer-events-auto">
           <div class="card-stack">
             <MovieCard
               v-for="(movie, index) in displayedMovies"
@@ -27,35 +74,42 @@
               :index="index"
               :exit-direction="exitDirection"
               @swipe="handleSwipe"
+              @dragging="handleDragging"
             />
           </div>
         </div>
 
-        <div class="controls-container">
-          <div class="text-center">
-            <p v-if="currentIndex >= movies.length" class="text-xl text-white">
-              {{ isLoadingMore ? 'Loading more movies...' : 'No more movies to swipe!' }}
-            </p>
-            <p v-else class="text-xl text-white">
-              {{ swipeMessage }}
-            </p>
-          </div>
-
-          <div v-if="currentIndex < movies.length" class="flex gap-4 justify-center mt-4">
+        <div class="controls-container pointer-events-auto">
+          <div v-if="currentIndex < movies.length" class="button-container">
             <button
               @click="handleManualSwipe('left')"
-              class="px-6 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              :class="passButtonClasses"
+              aria-label="Pass"
             >
-              Pass
+              <div class="icon">✕</div>
             </button>
             <button
               @click="handleManualSwipe('right')"
-              class="px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+              :class="likeButtonClasses"
+              aria-label="Like"
             >
-              Like
+              <div class="icon">♥</div>
             </button>
           </div>
         </div>
+
+        <!-- Add the Match Overlay -->
+        <MatchOverlay
+          v-if="showMatchOverlay"
+          :matches="matchedUsers"
+          @close="closeMatchOverlay"
+        />
+
+        <FeatureReminderOverlay
+          v-if="showFeatureReminder"
+          @close="closeFeatureReminder"
+          @navigate="handleFeatureNavigation"
+        />
       </div>
     </template>
   </div>
@@ -64,11 +118,38 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
-import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, arrayUnion, getDoc, setDoc, increment } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
+import { useRouter } from 'vue-router'
 import MovieCard from './MovieCard.vue'
+import SwipeInstructions from './SwipeInstructions.vue'
+import FeatureReminderOverlay from './FeatureReminderOverlay.vue'
 import SciFiBackground from './backgrounds/SciFiBackground.vue'
+import RomanceBackground from './backgrounds/RomanceBackground.vue'
+import ActionBackground from './backgrounds/ActionBackground.vue'
+import ThrillerBackground from './backgrounds/ThrillerBackground.vue'
+import DramaBackground from './backgrounds/DramaBackground.vue'
+import AnimationBackground from './backgrounds/AnimationBackground.vue'
+import ComedyBackground from './backgrounds/ComedyBackground.vue'
+import AdventureBackground from './backgrounds/AdventureBackground.vue'
+import FantasyBackground from './backgrounds/FantasyBackground.vue'
+import CrimeBackground from './backgrounds/CrimeBackground.vue'
+import CinematicBackground from '../Backgrounds/CinematicBackground.vue'
 import tmdbService from '../../services/tmdbService'
+import MatchOverlay from './MatchOverlay.vue'
+
+const GENRE_MAP = {
+  28: 'action',      // Action
+  35: 'comedy',      // Comedy
+  18: 'drama',       // Drama
+  12: 'adventure',   // Adventure
+  878: 'scifi',      // Science Fiction
+  14: 'fantasy',     // Fantasy
+  53: 'thriller',    // Thriller
+  10749: 'romance',  // Romance
+  80: 'crime',       // Crime
+  16: 'animation'    // Animation
+}
 
 const auth = getAuth()
 const currentIndex = ref(0)
@@ -79,31 +160,160 @@ const error = ref(null)
 const loading = ref(true)
 const currentPage = ref(1)
 const isLoadingMore = ref(false)
+const route = useRouter()
+const swipedMovieIds = ref(new Set())
+const showMatchOverlay = ref(false)
+const matchedUsers = ref([])
+const currentSwipeDirection = ref(null)
+const swipeCount = ref(0)
+const showFeatureReminder = ref(false)
+
+const BACKGROUND_MAP = {
+    action: ActionBackground,
+    comedy: ComedyBackground,
+    drama: DramaBackground,
+    adventure: AdventureBackground,
+    scifi: SciFiBackground,
+    fantasy: FantasyBackground,
+    thriller: ThrillerBackground,
+    romance: RomanceBackground,
+    crime: CrimeBackground,
+    animation: AnimationBackground
+}
+
+// Determine which background to show based on genres
+// Update getBackgroundComponent with null checks and debugging
+const getBackgroundComponent = computed(() => {
+  // Check if we have movies to display
+  if (!displayedMovies.value?.length) {
+    console.log('No movies to display, using default background');
+    return CinematicBackground;
+  }
+
+  const currentMovie = displayedMovies.value[0];
+  if (!currentMovie) {
+    console.log('No current movie, using default background');
+    return CinematicBackground;
+  }
+
+  console.log('Current movie:', currentMovie.title);
+  console.log('Full movie object:', currentMovie);
+
+  // Check if genre_ids exists
+  if (!currentMovie.genre_ids || !Array.isArray(currentMovie.genre_ids)) {
+    console.log('No genre_ids found for movie:', currentMovie);
+    return CinematicBackground;
+  }
+
+  // Convert genre_ids to genre names
+  const movieGenres = currentMovie.genre_ids
+    .map(id => GENRE_MAP[id])
+    .filter(Boolean); // Remove any undefined genres
+  
+  console.log('Movie genres in order:', movieGenres);
+
+  // Find first genre with a matching background
+  const firstMatchingGenre = movieGenres.find(genre => BACKGROUND_MAP[genre]);
+  console.log('Selected background genre:', firstMatchingGenre);
+
+  return BACKGROUND_MAP[firstMatchingGenre] || CinematicBackground;
+})
+
+// computed property for next background
+const getNextBackgroundComponent = computed(() => {
+  // Check if next movie exists
+  const nextMovie = displayedMovies.value?.[1]
+  if (!nextMovie || !nextMovie.genre_ids) return CinematicBackground
+  
+  // Now safely access genre_ids
+  const nextGenres = nextMovie.genre_ids
+    .map(id => GENRE_MAP[id])
+    .filter(Boolean)
+  
+  const nextGenre = nextGenres.find(genre => BACKGROUND_MAP[genre])
+  return BACKGROUND_MAP[nextGenre] || CinematicBackground
+})
+
+// Get genres from route query
+const selectedGenres = computed(() => {
+  const genresParam = route?.query?.genres
+  if (genresParam === 'popular') {
+    return ['popular']
+  }
+  return genresParam ? genresParam.split(',') : []
+})
 
 // Show 3 cards at a time
 const displayedMovies = computed(() => {
   return movies.value.slice(currentIndex.value, currentIndex.value + 3)
 })
 
-const swipeMessage = computed(() => {
-  return "Swipe right to like, left to pass"
-})
+// computed properties for pass and like indicators
+const passButtonClasses = computed(() => ({
+  'action-button': true,
+  'pass-button': true,
+  'button-active': currentSwipeDirection.value === 'left'
+}))
+
+const likeButtonClasses = computed(() => ({
+  'action-button': true,
+  'like-button': true,
+  'button-active': currentSwipeDirection.value === 'right'
+}))
 
 // Load movies from TMDB
 const loadMovies = async (page = 1) => {
   try {
     loading.value = true
     error.value = null
-    const fetchedMovies = await tmdbService.getPopularMovies(page)
+
+    await loadUserMovieHistory()
+    console.log('Loaded swiped movies before fetching:', Array.from(swipedMovieIds.value))
+    
+    let fetchedMovies
+    if (selectedGenres.value[0] === 'popular') {
+      // Use getPopularMovies when 'popular' is selected
+      fetchedMovies = await tmdbService.getPopularMovies(page)
+    } else {
+      // Use existing genre-based fetch for other cases
+      fetchedMovies = await tmdbService.getMoviesByGenres(selectedGenres.value, page)
+    }
+    console.log('Fetched movies:', fetchedMovies);
+
+    const swipedIds = new Set(Array.from(swipedMovieIds.value).map(String))
+    
+    // Filter out movies that have already been swiped
+    const newMovies = fetchedMovies.filter(movie => {
+      const movieId = String(movie.id)
+      const isSwiped = swipedIds.has(movieId)
+      return !isSwiped
+    })
+    
+    console.log('Movies after filtering:', newMovies.map(m => ({id: m.id, title: m.title})))
+    
+    // If we filtered out too many movies, fetch more
+    if (newMovies.length < 10 && fetchedMovies.length > 0) {
+      const nextPageMovies = await loadMovies(page + 1)
+      newMovies.push(...nextPageMovies)
+    }
+    
+    if (newMovies.length === 0) {
+      if (page === 1) {
+        error.value = 'No new movies found for selected genres. Try different genres!'
+        movies.value = []
+      }
+      return []
+    }  
     
     if (page === 1) {
-      movies.value = fetchedMovies
+      movies.value = newMovies
     } else {
-      movies.value = [...movies.value, ...fetchedMovies]
+      movies.value = [...movies.value, ...newMovies]
     }
+    return newMovies
   } catch (err) {
-    error.value = 'Failed to load movies. Please try again.'
     console.error('Error loading movies:', err)
+    error.value = 'Failed to load movies. Please try again.'
   } finally {
     loading.value = false
   }
@@ -121,8 +331,8 @@ const checkAndLoadMore = async () => {
   }
 }
 
-// Load user's liked movies from Firestore
-const loadLikedMovies = async () => {
+// Load user's swiped movies from Firestore
+const loadUserMovieHistory = async () => {
   if (!auth.currentUser) return
   
   try {
@@ -130,10 +340,56 @@ const loadLikedMovies = async () => {
     if (userDoc.exists()) {
       const userData = userDoc.data()
       likedMovies.value = userData.likedMovies || []
+      
+      // Get all swiped movie IDs (both likes and passes)
+      const swipedMovies = userData.swipedMovies || []
+      swipedMovieIds.value = new Set(swipedMovies.map(movie => movie.movieId))
     }
   } catch (err) {
-    console.error('Error loading liked movies:', err)
-    error.value = 'Failed to load liked movies'
+    console.error('Error loading movie history:', err)
+    error.value = 'Failed to load movie history'
+  }
+}
+
+// Check movie matches with friends
+const checkMovieMatches = async (movieId) => {
+  if (!auth.currentUser) return []
+  
+  try {
+    // Get current user's friends
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+    const userData = userDoc.data()
+    const friendIds = userData.friends || []
+    
+    // Get all friends' liked movies
+    const matches = []
+    
+    // Check each friend's liked movies
+    await Promise.all(friendIds.map(async (friendId) => {
+      const friendDoc = await getDoc(doc(db, 'users', friendId))
+      if (friendDoc.exists()) {
+        const friendData = friendDoc.data()
+        const friendLikedMovies = friendData.likedMovies || []
+        
+        // Check if friend liked this movie
+        const matchedMovie = friendLikedMovies.find(movie => String(movie.movieId) === String(movieId))
+        
+        if (matchedMovie) {
+          matches.push({
+            friendId,
+            friendEmail: friendData.email,
+            movieId,
+            movieTitle: matchedMovie.title,
+            matchedAt: new Date().toISOString()
+          })
+        }
+      }
+    }))
+    
+    return matches
+  } catch (error) {
+    console.error('Error checking movie matches:', error)
+    return []
   }
 }
 
@@ -142,6 +398,7 @@ const recordSwipe = async (movie, isLike) => {
   if (!auth.currentUser) return
   
   try {
+    console.log(`Recording swipe for movie ${movie.id} (${movie.title})`, isLike ? 'like' : 'pass')
     const userRef = doc(db, 'users', auth.currentUser.uid)
     const swipeData = {
       movieId: movie.id,
@@ -151,7 +408,11 @@ const recordSwipe = async (movie, isLike) => {
       swipedAt: new Date().toISOString()
     }
 
+    swipedMovieIds.value.add(movie.id)
+    console.log('Updated swiped movies set:', Array.from(swipedMovieIds.value))
+
     await updateDoc(userRef, {
+      totalSwipes: increment(1),
       swipedMovies: arrayUnion({
         ...swipeData,
         isLike
@@ -162,6 +423,30 @@ const recordSwipe = async (movie, isLike) => {
       await updateDoc(userRef, {
         likedMovies: arrayUnion(swipeData)
       })
+
+      // Check for matches when liking a movie
+      const matches = await checkMovieMatches(movie.id)
+      
+      if (matches.length > 0) {
+        // Store matches in Firestore
+        await Promise.all(matches.map(async (match) => {
+          // Create a matches collection for the current user
+          const matchRef = doc(db, 'users', auth.currentUser.uid, 'matches', `${match.friendId}-${match.movieId}`)
+          await setDoc(matchRef, match)
+          
+          // Create a matches collection for the friend
+          const friendMatchRef = doc(db, 'users', match.friendId, 'matches', `${auth.currentUser.uid}-${match.movieId}`)
+          await setDoc(friendMatchRef, {
+            ...match,
+            friendId: auth.currentUser.uid,
+            friendEmail: auth.currentUser.email
+          })
+          
+          // Show match notification
+          // You can implement this based on your UI needs
+          console.log(`Matched with ${match.friendEmail} on ${match.movieTitle}!`)
+        }))
+      }
     }
   } catch (err) {
     console.error('Error recording swipe:', err)
@@ -169,15 +454,46 @@ const recordSwipe = async (movie, isLike) => {
   }
 }
 
+const closeMatchOverlay = () => {
+  showMatchOverlay.value = false
+  matchedUsers.value = []
+}
+
 const handleSwipe = async (direction) => {
   exitDirection.value = direction
+  currentSwipeDirection.value = null 
   const currentMovie = movies.value[currentIndex.value]
   
   if (direction === 'right') {
     likedMovies.value.push(currentMovie)
     await recordSwipe(currentMovie, true)
+
+    // Check for matches
+    const matches = await checkMovieMatches(currentMovie.id)
+    if (matches.length > 0) {
+      matchedUsers.value = matches.map(match => ({
+        friendEmail: match.friendEmail,
+        movieTitle: currentMovie.title
+      }))
+      showMatchOverlay.value = true
+    }
   } else {
     await recordSwipe(currentMovie, false)
+  }
+
+  // Increment swipe count and check if we should show reminder
+  swipeCount.value++
+
+  // Get current user data to check if they've seen the reminder
+  const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+  const hasSeenReminder = userDoc.data()?.hasSeenFeatureReminder || false
+  
+  if (swipeCount.value === 10 && !hasSeenReminder) {
+    showFeatureReminder.value = true
+    // Mark that user has seen the reminder
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      hasSeenFeatureReminder: true
+    })
   }
   
   setTimeout(() => {
@@ -187,8 +503,48 @@ const handleSwipe = async (direction) => {
   }, 300)
 }
 
+const closeFeatureReminder = () => {
+  showFeatureReminder.value = false
+}
+
+const handleFeatureNavigation = (path) => {
+  closeFeatureReminder()
+  route.push(path)
+}
+
 const handleManualSwipe = (direction) => {
+  currentSwipeDirection.value = direction
   handleSwipe(direction)
+}
+
+const handleDragging = (dragAmount) => {
+  const threshold = 50 // Adjust this value to control sensitivity
+  if (dragAmount > threshold) {
+    currentSwipeDirection.value = 'right'
+  } else if (dragAmount < -threshold) {
+    currentSwipeDirection.value = 'left'
+  } else {
+    currentSwipeDirection.value = null
+  }
+}
+
+const loadUserData = async () => {
+  if (!auth.currentUser) return
+  
+  try {
+    const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
+    if (userDoc.exists()) {
+      const userData = userDoc.data()
+      swipeCount.value = userData.totalSwipes || 0
+      
+      // If user has already seen the reminder, ensure we don't show it again
+      if (userData.hasSeenFeatureReminder) {
+        showFeatureReminder.value = false
+      }
+    }
+  } catch (err) {
+    console.error('Error loading user data:', err)
+  }
 }
 
 // Watch for changes in currentIndex to load more movies
@@ -196,48 +552,157 @@ watch(currentIndex, () => {
   checkAndLoadMore()
 })
 
-// Load initial data when component mounts
+watch(selectedGenres, async (newGenres) => {
+  if (newGenres.length > 0) {
+    currentIndex.value = 0
+    currentPage.value = 1
+    await loadMovies()
+  }
+})
+
 onMounted(async () => {
-  await Promise.all([
-    loadMovies(),
-    loadLikedMovies()
-  ])
+  try {
+    await Promise.all([
+      loadUserData(),
+      loadUserMovieHistory(),
+      loadMovies()
+    ])
+  } catch (err) {
+    console.error('Error loading initial data:', err)
+    error.value = 'Failed to load initial data. Please try again.'
+  }
 })
 </script>
 
 <style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.background-element {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
 .swiper-container {
   position: relative;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
   width: 100%;
+  background: #0a0a1f;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* Center vertically */
+  justify-content: center;
   align-items: center;
-  padding: 2rem;
+}
+
+.background-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: auto;
 }
 
 .card-stack-container {
-  /* Remove flex: 1 as it's causing the container to stretch */
   position: relative;
   width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 2rem; /* Add space between card and controls */
+  margin-bottom: 2rem;
+  z-index: 2;
 }
 
 .card-stack {
   position: relative;
   width: 340px;
   height: 500px;
+  z-index: 2;
 }
 
 .controls-container {
   width: 100%;
   max-width: 2xl;
   text-align: center;
+  margin-bottom: 2rem;
+  z-index: 2;
 }
+
+.text-white,
+.text-red-500 {
+  position: relative;
+  z-index: 2;
+}
+
+.button-container {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  background: rgba(10, 10, 31, 0.8); /* Dark background matching app theme */
+}
+
+.icon-size {
+  width: 24px;
+  height: 24px;
+}
+
+.pass-button {
+  border-color: #DB3DCF;
+  color: #DB3DCF;
+  box-shadow: 0 0 10px rgba(219, 61, 207, 0.3);
+}
+
+.pass-button:hover {
+  background: rgba(219, 61, 207, 0.2);
+  box-shadow: 0 0 20px rgba(219, 61, 207, 0.5);
+  transform: scale(1.1);
+}
+
+.like-button {
+  border-color: #675FF2;
+  color: #675FF2;
+  box-shadow: 0 0 10px rgba(103, 95, 242, 0.3);
+}
+
+.like-button:hover {
+  background: rgba(103, 95, 242, 0.2);
+  box-shadow: 0 0 20px rgba(103, 95, 242, 0.5);
+  transform: scale(1.1);
+}
+
+.pass-button.button-active {
+  background: rgba(219, 61, 207, 0.3);
+  box-shadow: 0 0 20px rgba(219, 61, 207, 0.8);
+  transform: scale(1.1);
+}
+
+.like-button.button-active {
+  background: rgba(103, 95, 242, 0.3);
+  box-shadow: 0 0 20px rgba(103, 95, 242, 0.8);
+  transform: scale(1.1);
+}
+
+
 
 /* Keep your existing animation keyframes */
 @keyframes exitLeft {
