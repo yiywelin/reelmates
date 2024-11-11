@@ -8,6 +8,32 @@
       <div class="h-full flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
         <TheatricalBackground />
         
+        <div class="absolute top-2 sm:top-4 left-2 sm:left-4 z-50">
+          <button 
+            @click="$router.back()"
+            class="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"
+          >
+            <!-- Outer glow ring - corrected to match your X button style -->
+            <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
+            
+            <!-- Arrow icon -->
+            <svg 
+              xmlns="http://www.w3.org/2000/svg" 
+              class="w-6 h-6 text-[#DB3DCF]" 
+              fill="none" 
+              viewBox="0 0 24 24" 
+              stroke="currentColor"
+            >
+              <path 
+                stroke-linecap="round" 
+                stroke-linejoin="round" 
+                stroke-width="2" 
+                d="M15 19l-7-7 7-7" 
+              />
+            </svg>
+          </button>
+        </div>
+        
         <!-- Header -->
         <div class="text-center mb-8 animate-fadeIn">
           <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 

@@ -1,6 +1,33 @@
 <template>
   <div class="movie-roulette-page">
     <NavBar />
+
+    <div class="fixed top-20 left-4 z-[100]">
+      <button 
+        @click="router.back()"
+        class="relative w-12 h-12 flex items-center justify-center"
+      >
+        <!-- Outer glow ring - corrected to match your X button style -->
+        <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
+        
+        <!-- Arrow icon -->
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          class="w-6 h-6 text-[#DB3DCF]" 
+          fill="none" 
+          viewBox="0 0 24 24" 
+          stroke="currentColor"
+        >
+          <path 
+            stroke-linecap="round" 
+            stroke-linejoin="round" 
+            stroke-width="2" 
+            d="M15 19l-7-7 7-7" 
+          />
+        </svg>
+      </button>
+    </div>
+
     
     <div class="roulette-container">
       <!-- Title -->
@@ -67,9 +94,16 @@ import NavBar from '@/components/ui/NavBar.vue'
 import { getAuth } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'MovieRoulette',
+  setup() {
+    const router = useRouter()
+    return {
+      router
+    }
+  },
   components: {
     NavBar
   },
