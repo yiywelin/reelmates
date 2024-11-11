@@ -5,7 +5,7 @@
     </div>
     
     <div class="flex-1 relative overflow-hidden">
-      <div class="h-full flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
+      <div class="h-full flex flex-col items-center p-2 sm:p-4 md:p-8 text-[#D0CCE3] z-10">
         <TheatricalBackground />
         
         <div class="absolute top-2 sm:top-4 left-2 sm:left-4 z-50">
@@ -33,24 +33,24 @@
             </svg>
           </button>
         </div>
-        
+
         <!-- Header -->
-        <div class="text-center mb-8 animate-fadeIn">
-          <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
-          [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+        <div class="text-center mb-4 sm:mb-8 animate-fadeIn">
+          <span class="text-2xl sm:text-[2rem] lg:text-[2.5rem] mb-2 text-[#DB3DCF] 
+            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
+            animate-neonFlicker">
             {{ 'Recommended Movies' }}
           </span>
         </div>
 
-        <div class="text-center mb-8 animate-fadeIn">
+        <div class="text-center mb-4 sm:mb-8 animate-fadeIn">
           <button 
             @click="handleRoulettePage"
-            class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#D0CCE3] animate-neonFlicker 
+            class="text-lg sm:text-xl md:text-3xl lg:text-4xl font-semibold text-[#D0CCE3] animate-neonFlicker 
               [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
-            I am feeling lucky
+            I'm feeling lucky
           </button>
         </div>
-
 
         <!-- Loading State -->
         <div v-if="loading" class="flex-1 flex items-center justify-center">
@@ -72,7 +72,7 @@
         <div v-else-if="movies.length" class="flex-1 w-full max-w-[1600px] relative flex items-center">
           <!-- Previous Button -->
           <button 
-            class="absolute left-2 md:left-8 z-10 w-12 md:w-16 h-12 md:h-16 rounded-full
+            class="absolute left-0 sm:left-2 md:left-8 z-10 w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 rounded-full
               bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
               duration-300 disabled:opacity-0 disabled:cursor-default
               hover:bg-[rgba(103,95,242,0.2)] hover:scale-110 group"
@@ -90,7 +90,7 @@
 
           <!-- Movie Cards Container -->
           <div 
-            class="h-full w-full overflow-hidden px-4 md:px-16"
+            class="h-full w-full overflow-hidden px-2 sm:px-4 md:px-16"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
@@ -108,12 +108,13 @@
                 v-for="movie in movies" 
                 :key="movie.id"
                 :style="{ flex: `0 0 ${100 / visibleMovies}%` }"
-                class="h-[85%] px-4 md:px-6 lg:px-8"
+                class="h-[85%] px-2 sm:px-4 md:px-6 lg:px-8"
               >
+                <!-- Movie Card Content -->
                 <div 
                   class="h-full relative rounded-2xl cursor-pointer overflow-hidden
                     transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
-                  @click="navigateToWatchParty(movie)"
+                  @click="navigateToWatchParty()"
                   @mouseenter="loadTrailer(movie)"
                   @mouseleave="closeTrailer"
                 >
@@ -143,11 +144,11 @@
                   </div>
 
                   <!-- Movie Info Overlay -->
-                  <div class="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t 
-                    from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent 
-                    rounded-b-2xl translate-y-full transition-transform duration-300 
-                    group-hover:translate-y-0">
-                    <h3 class="text-lg md:text-xl font-semibold text-white 
+                  <div class="absolute inset-x-0 bottom-0 p-3 sm:p-6 bg-gradient-to-t 
+                  from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent 
+                  rounded-b-2xl translate-y-full transition-transform duration-300 
+                  group-hover:translate-y-0">
+                    <h3 class="text-base sm:text-lg md:text-xl font-semibold text-white 
                       [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
                       {{ movie.title }}
                     </h3>
@@ -158,13 +159,15 @@
                         (Similar to {{ movie.basedOn }})
                       </span>
                     </div>
-                    <div class="mt-3 opacity-0 translate-y-5 transition-all duration-300 
-                      group-hover:opacity-100 group-hover:translate-y-0">
-                      <span class="inline-block px-4 py-2 bg-[#675FF2] text-white 
-                        rounded-lg text-sm font-medium transition-all duration-300 
-                        hover:bg-[#7B74FF] hover:-translate-y-0.5">
+                    <div class="mt-2 sm:mt-3 opacity-0 translate-y-5 transition-all duration-300 
+                    group-hover:opacity-100 group-hover:translate-y-0">
+                      <button 
+                        @click.stop="navigateToWatchParty()"
+                        class="inline-block px-3 sm:px-4 py-1 sm:py-2 bg-[#675FF2] text-white 
+                          rounded-lg text-xs sm:text-sm font-medium transition-all duration-300 
+                          hover:bg-[#7B74FF] hover:-translate-y-0.5">
                         Start watch party
-                      </span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -174,7 +177,7 @@
 
           <!-- Next Button -->
           <button 
-            class="absolute right-2 md:right-8 z-10 w-12 md:w-16 h-12 md:h-16 rounded-full
+            class="absolute right-0 sm:right-2 md:right-8 z-10 w-8 sm:w-12 md:w-16 h-8 sm:h-12 md:h-16 rounded-full
               bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
               duration-300 disabled:opacity-0 disabled:cursor-default
               hover:bg-[rgba(103,95,242,0.2)] hover:scale-110 group"
@@ -233,9 +236,11 @@ const chatId = route.params.chatId
 const updateVisibleMovies = () => {
   if (!carouselRef.value) return
   
-  const width = window.screen.width
+  const width = window.innerWidth
   
-  if (width < 640) {
+  if (width < 480) {
+    visibleMovies.value = 1
+  } else if (width < 768) {
     visibleMovies.value = 1
   } else if (width < 1024) {
     visibleMovies.value = 2
@@ -466,11 +471,11 @@ const closeTrailer = () => {
   currentTrailer.value = null
 }
 
-const navigateToWatchParty = (movie) => {
+const navigateToWatchParty = () => {
 
   try {
   router.push({
-    path: `/watch-party/${groupId}/${chatId}/${movie.id}`,
+    path: `/watch-party`,
   })
 } catch (error) {
     console.error('Failed to go to WatchParty', error)
