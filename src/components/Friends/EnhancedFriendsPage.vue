@@ -128,11 +128,20 @@
             ]"
           >
             <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            <img
-              :src="defaultAvatar"
-              :alt="item.name"
-              class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10"
-            />
+            <template v-if="activeTab === 'friends'">
+              <div class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 bg-gradient-to-r from-purple-500 to-pink-500">
+                <span class="text-2xl font-bold text-white">
+                  {{ getInitials(item.name) }}
+                </span>
+              </div>
+            </template>
+            <template v-else>
+              <img
+                :src="defaultAvatar"
+                :alt="item.name"
+                class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10"
+              />
+            </template>
             <span class="font-semibold text-sm text-center relative z-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{{ item.name }}</span>
             <div v-if="activeTab === 'friends'" class="absolute bottom-2 left-2 z-10">
               {{ getSnackEmoji(item.snackPreference) }}
@@ -304,6 +313,16 @@ const catGifs = [
 const randomCatGif = computed(() => {
   return catGifs[Math.floor(Math.random() * catGifs.length)];
 });
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
 
 const loadFriends = async () => {
   try {
