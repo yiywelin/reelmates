@@ -20,8 +20,7 @@
             </div>
             <hr class="custom-hr w-full mt-4" />
             <div class="friends-info flex items-center gap-2">
-              <h2 class="friends-title font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] -mt-3 -mb-8">Friends</h2>
+              <h2 class="friends-title font-semibold text-[#DB3DCF] -mt-3 -mb-8">Friends</h2>
               <div v-if="friendsData && friendsData.length > 0">
                 <div v-for="friend in friendsData.slice(0, 2)" :key="friend.id" class="friend-item -mt-5">
                   <div
@@ -40,8 +39,7 @@
               </div>
 
               <hr class="custom-hr w-full mt-4" />
-              <h2 class="friends-title font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] -mt-3 -mb-8">Groups</h2>
+              <h2 class="friends-title font-semibold text-[#DB3DCF] -mt-3 -mb-8">Groups</h2>
               <div v-if="groups && groups.length > 0">
                 <div v-for="group of groups.slice(0)" :key="group.id" class="friend-item -mt-5">
                   <a :href="group.avatar" target="_blank" rel="noopener noreferrer">
@@ -73,8 +71,9 @@
         <div>
 
           <div class="text-center mb-16 animate-fadeIn mt-1">
-            <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            <span class="text-[1.5rem] md:text-[2rem] lg:text-[2.5rem] mb-2 text-[#DB3DCF] 
+            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
+            animate-neonFlicker">
               {{ 'Trending Movies' }}
             </span>
           </div>
@@ -126,8 +125,9 @@
 
           <!-- For You Section -->
           <div class="text-center mb-16 animate-fadeIn mt-2">
-            <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
-  [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            <span class="text-[1.5rem] md:text-[2rem] lg:text-[2.5rem] mb-2 text-[#DB3DCF] 
+            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
+            animate-neonFlicker">
               {{ 'For You' }}
             </span>
           </div>
