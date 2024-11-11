@@ -442,7 +442,7 @@ const navigateToWatchParty = (movie) => {
 
   try {
   router.push({
-    path: `/watch-party/:groupId/:chatId/${movie.id}`,
+    path: `/watch-party/${groupId}/${chatId}/${movie.id}`,
   })
 } catch (error) {
     console.error('Failed to go to WatchParty', error)
