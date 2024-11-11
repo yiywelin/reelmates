@@ -5,60 +5,70 @@
     <div class="flex flex-col md:flex-row w-full h-full text-white z-10 relative mt-16">
 
       <!-- Left Panel - hidden on mobile -->
-      <div class="hidden md:block full-height bg-[#3f2763]">
-        <div class="left-panel flex-shrink-0 text-white flex flex-col items-center p-4">
-          <div v-if="currentUser">
-            <div class="user-info flex items-center gap-2">
-              <div class="flex items-center">
-                <span
-                  class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl animate-glow">
+      <div class="hidden md:block full-height bg-[#2E2A4F]">
+        <div class="left-panel flex-shrink-0 text-white flex flex-col p-4">
+          <!-- Profile Section -->
+          <div v-if="currentUser" class="flex flex-col space-y-6">
+            <div class="profile-section hover:bg-[#3B365F] rounded-lg p-2 transition-colors cursor-pointer">
+              <div class="flex items-center space-x-3">
+                <span class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
                   {{ currentUser.email[0].toUpperCase() }}
                 </span>
-                <span class="user-name font-bold ml-2">{{ currentUser.email.split('@')[0].charAt(0).toUpperCase() +
+                <span class="font-medium">{{ currentUser.email.split('@')[0].charAt(0).toUpperCase() + 
                   currentUser.email.split('@')[0].slice(1) }}</span>
               </div>
             </div>
-            <hr class="custom-hr w-full mt-4" />
-            <div class="friends-info flex items-center gap-2">
-              <h2 class="friends-title font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] -mt-3 -mb-8">Friends</h2>
-              <div v-if="friendsData && friendsData.length > 0">
-                <div v-for="friend in friendsData.slice(0, 2)" :key="friend.id" class="friend-item -mt-5">
-                  <div
-                    class="w-10 h-10 mr-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl animate-glow">
-                    {{ friend.email[0].toUpperCase() }}
-                  </div>
-                  <span class="friend-name">{{ friend.name.split('@')[0].charAt(0).toUpperCase() +
-                    friend.name.split('@')[0].slice(1) }}</span>
-                </div>
-                <div v-if="friendsData.length > 2" class="text-sm text-right">
-                  And more...
-                </div>
-              </div>
-              <div v-else>
-                No friends
+
+            <!-- Friends Section -->
+            <div class="friends-section">
+              <div class="flex items-center mb-3 px-2">
+                <h2 class="text-pink-500 font-medium flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                  </svg>
+                  Friends
+                </h2>
               </div>
 
-              <hr class="custom-hr w-full mt-4" />
-              <h2 class="friends-title font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] -mt-3 -mb-8">Groups</h2>
-              <div v-if="groups && groups.length > 0">
-                <div v-for="group of groups.slice(0)" :key="group.id" class="friend-item -mt-5">
-                  <a :href="group.avatar" target="_blank" rel="noopener noreferrer">
-                    <img :src="defaultAvatar" alt="Group Avatar"
-                      class="w-10 h-10 mr-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl animate-glow">
-                  </a>
-                  <span class="friend-name">{{ group.name }}</span>
+              <div class="space-y-2">
+                <div v-for="friend in friendsData.slice(0, 2)" :key="friend.id" 
+                    class="flex items-center space-x-3 p-2 hover:bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
+                  <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                    <span class="text-white text-sm">{{ friend.email[0].toUpperCase() }}</span>
+                  </div>
+                  <span class="text-sm">{{ friend.name }}</span>
                 </div>
-              </div>
-              <div v-else>
-                No groups
-              </div>
-              <div class="text-right mt-2">
-                <router-link to="/friends">
-                  <button class="button-friends bg-gradient-to-r from-purple-500 to-pink-500 font-bold">View more!
-                    &gt;</button>
+
+                <router-link 
+                  to="/friends" 
+                  class="block text-sm text-pink-400 hover:text-pink-300 mt-2 px-2"
+                >
+                  See all friends
                 </router-link>
+              </div>
+            </div>
+
+            <!-- Groups Section -->
+            <div class="groups-section mt-4">
+              <div class="flex items-center mb-3 px-2">
+                <h2 class="text-pink-500 font-medium flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h-2v-2h2zm-3 0v2H8v-2h4zm-5 0v2H5v-2h2zm-3-3h2v2H4v-2zm3 0h4v2H7v-2zm5 0h2v2h-2v-2zm3-3h2v2h-2V7zm-3 0h2v2h-2V7zm-5 0h4v2H7V7zm-3 0h2v2H4V7z" clip-rule="evenodd" />
+                  </svg>
+                  Groups
+                </h2>
+              </div>
+
+              <div class="space-y-2">
+                <div v-for="group in groups" :key="group.id"
+                    class="flex items-center space-x-3 p-2 hover:bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
+                  <img 
+                    :src="defaultAvatar" 
+                    :alt="group.name"
+                    class="w-8 h-8 rounded-full object-cover"
+                  />
+                  <span class="text-sm">{{ group.name }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -70,8 +80,9 @@
         <div>
 
           <div class="text-center mb-12 animate-fadeIn mt-12">
-            <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            <span class="text-[1.5rem] md:text-[2rem] lg:text-[2.5rem] mb-2 text-[#DB3DCF] 
+            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
+            animate-neonFlicker">
               {{ 'Recently Liked Movies' }}
             </span>
           </div>
