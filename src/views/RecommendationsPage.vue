@@ -100,7 +100,6 @@
                     class="absolute inset-0 w-full h-full object-cover rounded-2xl
                       transition-all duration-300 group-hover:scale-135"
                   />
-                  
                   <!-- Trailer Overlay -->
                   <div 
                     v-if="currentTrailer && currentTrailer.id === movie.id" 
@@ -129,6 +128,9 @@
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-yellow-400">★</span>
                       <span class="text-white">{{ movie.voteAverage?.toFixed(1) + '/10' || 'N/A' }}</span>
+                      <span v-if="movie.basedOn" class="text-sm font-semibold text-gray-400">
+                        (Similar to {{ movie.basedOn }})
+                      </span>
                     </div>
                     <div class="mt-3 opacity-0 translate-y-5 transition-all duration-300 
                       group-hover:opacity-100 group-hover:translate-y-0">
