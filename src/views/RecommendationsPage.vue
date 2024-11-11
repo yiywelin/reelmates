@@ -7,15 +7,7 @@
     <div class="flex-grow relative">
       <div class="relative flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
         <TheatricalBackground />
-<<<<<<< Updated upstream
-        <!-- Header -->
-        <div class="text-center mb-16 animate-fadeIn mt-12">
-          <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
-            [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
-            {{ 'Your Recommended Movies' }}
-          </span>
-        </div>
-=======
+    
         
     <!-- Header -->
     <div class="text-center mb-8 animate-fadeIn flex flex-col items-center gap-4">
@@ -30,7 +22,6 @@
         I'm Feeling Lucky
       </button>
     </div>
->>>>>>> Stashed changes
 
         <div v-if="loading" class="flex items-center justify-center w-full py-12">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6961]"></div>
@@ -89,9 +80,6 @@
                 @mouseenter="loadTrailer(movie)"
                 @mouseleave="closeTrailer"
               >
-<<<<<<< Updated upstream
-                <div class="relative pb-[150%]">
-=======
                 <div 
                   class="h-full relative rounded-2xl cursor-pointer overflow-hidden
                     transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
@@ -100,7 +88,6 @@
                   @mouseleave="closeTrailer"
                 >
                   <!-- Movie Poster and Content -->
->>>>>>> Stashed changes
                   <img 
                     :src="movie.posterPath 
                       ? `https://image.tmdb.org/t/p/w500${movie.posterPath}`
