@@ -1,33 +1,38 @@
 <template>
-  <div class="min-h-screen bg-[#0A0A1F] flex flex-col">
+  <div class="h-screen bg-[#0A0A1F] flex flex-col overflow-hidden">
     <div class="h-[70px] flex-shrink-0">
       <NavBar />
     </div>
     
-    <div class="flex-grow relative">
-      <div class="relative flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
+    <div class="flex-1 relative overflow-hidden">
+      <div class="h-full flex flex-col items-center p-4 md:p-8 text-[#D0CCE3] z-10">
         <TheatricalBackground />
-    
         
-    <!-- Header -->
-    <div class="text-center mb-8 animate-fadeIn flex flex-col items-center gap-4">
-      <span class="neon-text text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl">
-        {{ 'Recommended Movies' }}
-      </span>
-      <button 
-        @click="handleRoulettePage"
-        class="px-6 py-3 bg-[#675FF2] text-white rounded-lg hover:bg-[#7B74FF] 
-          transition-all duration-300 hover:-translate-y-0.5 text-sm md:text-base"
-      >
-        I'm Feeling Lucky
-      </button>
-    </div>
+        <!-- Header -->
+        <div class="text-center mb-8 animate-fadeIn">
+          <span class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#FF6961] animate-neonFlicker 
+          [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            {{ 'Recommended Movies' }}
+          </span>
+        </div>
 
-        <div v-if="loading" class="flex items-center justify-center w-full py-12">
+        <div class="text-center mb-8 animate-fadeIn">
+          <button 
+            @click="handleRoulettePage"
+            class="text-xl md:text-3xl lg:text-4xl font-semibold text-[#D0CCE3] animate-neonFlicker 
+              [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF]">
+            I am feeling lucky
+          </button>
+        </div>
+
+
+        <!-- Loading State -->
+        <div v-if="loading" class="flex-1 flex items-center justify-center">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6961]"></div>
         </div>
 
-        <div v-else-if="error" class="w-full max-w-[1600px] mx-auto px-4 text-center py-12">
+        <!-- Error State -->
+        <div v-else-if="error" class="flex-1 flex flex-col items-center justify-center">
           <div class="text-[#FF6961] text-lg mb-4">{{ error }}</div>
           <button 
             @click="loadMovies"
@@ -38,11 +43,12 @@
         </div>
 
         <!-- Movie Carousel -->
-        <div v-else-if="movies.length" class="relative w-full max-w-[1600px] mx-auto px-4 md:px-16 lg:px-20">
+        <div v-else-if="movies.length" class="flex-1 w-full max-w-[1600px] relative flex items-center">
+          <!-- Previous Button -->
           <button 
-            class="absolute top-1/2 -translate-y-1/2 w-12 md:w-16 h-12 md:h-16 rounded-full
+            class="absolute left-2 md:left-8 z-10 w-12 md:w-16 h-12 md:h-16 rounded-full
               bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
-              duration-300 z-10 left-2 md:left-8 disabled:opacity-0 disabled:cursor-default
+              duration-300 disabled:opacity-0 disabled:cursor-default
               hover:bg-[rgba(103,95,242,0.2)] hover:scale-110 group"
             @click="prev"
             :disabled="currentIndex === 0"
@@ -56,29 +62,27 @@
             </div>
           </button>
 
+          <!-- Movie Cards Container -->
           <div 
-            class="overflow-hidden -mx-4 md:-mx-6 lg:-mx-8"
+            class="h-full w-full overflow-hidden px-4 md:px-16"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
             ref="carouselRef"
           >
             <div 
-              class="flex"
+              class="h-full flex items-center"
               :style="{ 
                 transform: `translateX(-${currentIndex * (100 / visibleMovies)}%)`,
                 transition: isAnimating ? 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
               }"
             >
+              <!-- Movie Cards -->
               <div 
                 v-for="movie in movies" 
                 :key="movie.id"
                 :style="{ flex: `0 0 ${100 / visibleMovies}%` }"
-                class="px-4 md:px-6 lg:px-8 relative rounded-2xl cursor-pointer overflow-hidden
-                  transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
-                @click="navigateToMovie(movie)"
-                @mouseenter="loadTrailer(movie)"
-                @mouseleave="closeTrailer"
+                class="h-[85%] px-4 md:px-6 lg:px-8"
               >
                 <div 
                   class="h-full relative rounded-2xl cursor-pointer overflow-hidden
@@ -94,46 +98,43 @@
                       : '/placeholder-movie.jpg'"
                     :alt="movie.title"
                     class="absolute inset-0 w-full h-full object-cover rounded-2xl
-                      transition-all duration-300 group-hover:scale-135 group-hover:shadow-2xl"
+                      transition-all duration-300 group-hover:scale-135"
                   />
+                  
+                  <!-- Trailer Overlay -->
                   <div 
                     v-if="currentTrailer && currentTrailer.id === movie.id" 
                     class="absolute inset-0 bg-black bg-opacity-75 rounded-2xl overflow-hidden"
                   >
                     <div class="absolute inset-0 flex items-center justify-center">
-                      <div class="relative w-full h-0 pb-[56.25%]">
-                        <iframe 
-                          :src="`https://www.youtube.com/embed/${currentTrailer.key}?autoplay=1`" 
-                          frameborder="0" 
-                          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
-                          allowfullscreen
-                          class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[95%] h-auto aspect-video"
-                          style="min-height: 60%;"
-                        ></iframe>
-                      </div>
+                      <iframe 
+                        :src="`https://www.youtube.com/embed/${currentTrailer.key}?autoplay=1`" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen
+                        class="w-[95%] aspect-video"
+                      ></iframe>
                     </div>
                   </div>
-                  <div class="absolute inset-x-0 bottom-0 p-6 md:p-8 lg:p-10 bg-gradient-to-t 
+
+                  <!-- Movie Info Overlay -->
+                  <div class="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t 
                     from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent 
                     rounded-b-2xl translate-y-full transition-transform duration-300 
                     group-hover:translate-y-0">
-                    <h3 class="text-lg md:text-xl lg:text-2xl font-semibold text-white m-0 
+                    <h3 class="text-lg md:text-xl font-semibold text-white 
                       [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
                       {{ movie.title }}
                     </h3>
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-yellow-400">★</span>
                       <span class="text-white">{{ movie.voteAverage?.toFixed(1) + '/10' || 'N/A' }}</span>
-                      <span v-if="movie.basedOn" class="text-sm text-gray-400">
-                        (Similar to {{ movie.basedOn }})
-                      </span>
                     </div>
-                    <div class="mt-3 md:mt-5 opacity-0 translate-y-5 transition-all duration-300 
+                    <div class="mt-3 opacity-0 translate-y-5 transition-all duration-300 
                       group-hover:opacity-100 group-hover:translate-y-0">
-                      <span class="inline-block px-4 py-2 md:px-6 md:py-3 bg-[#675FF2] text-white 
-                        rounded-lg text-sm md:text-base font-medium transition-all duration-300 
-                        hover:bg-[#7B74FF] hover:-translate-y-0.5
-                        hover:shadow-[0_4px_12px_rgba(103,95,242,0.3)]">
+                      <span class="inline-block px-4 py-2 bg-[#675FF2] text-white 
+                        rounded-lg text-sm font-medium transition-all duration-300 
+                        hover:bg-[#7B74FF] hover:-translate-y-0.5">
                         Start watch party
                       </span>
                     </div>
@@ -143,10 +144,11 @@
             </div>
           </div>
 
+          <!-- Next Button -->
           <button 
-            class="absolute top-1/2 -translate-y-1/2 w-12 md:w-16 h-12 md:h-16 rounded-full
+            class="absolute right-2 md:right-8 z-10 w-12 md:w-16 h-12 md:h-16 rounded-full
               bg-[rgba(103,95,242,0.1)] backdrop-blur-md text-white cursor-pointer transition-all
-              duration-300 z-10 right-2 md:right-8 disabled:opacity-0 disabled:cursor-default
+              duration-300 disabled:opacity-0 disabled:cursor-default
               hover:bg-[rgba(103,95,242,0.2)] hover:scale-110 group"
             @click="next"
             :disabled="currentIndex >= movies.length - visibleMovies"
@@ -161,7 +163,8 @@
           </button>
         </div>
 
-        <div v-else class="text-center py-12">
+        <!-- No Movies State -->
+        <div v-else class="flex-1 flex items-center justify-center">
           <p class="text-lg text-[#D0CCE3]">No movies found. Try refreshing the page.</p>
         </div>
       </div>
@@ -178,7 +181,6 @@ import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 import TheatricalBackground from '../components/Backgrounds/TheatricalBackground.vue'
 import NavBar from '../components/ui/NavBar.vue'
-
 const TMDB_API_KEY = "1d349c13bf966a4e71a6e01cbb3bbe78"
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3'
 
@@ -231,8 +233,6 @@ const prev = () => {
     currentIndex.value--
   }
 }
-
-
 
 const handleTouchStart = (e) => {
   touchStart.value = e.touches[0].clientX
@@ -377,7 +377,7 @@ const loadMovies = async () => {
     
     // Process each member's liked movies
     membersData.forEach(memberObj => {
-      if (memberObj && memberObj.likedMovies && memberObj.likedMovies.length > 0) {
+      if (memberObj.likedMovies.length > 0) {
         const likedMoviesIdlst = memberObj.likedMovies.map(movieobj => movieobj.movieId);
         const shuffledLikedMovies = shuffleArray([...likedMoviesIdlst]);
         const numberOfSources = Math.min(4, shuffledLikedMovies.length);
