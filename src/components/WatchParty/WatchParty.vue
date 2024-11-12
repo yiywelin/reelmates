@@ -1,13 +1,16 @@
 <template>
   <div class="h-screen bg-[#0A0A1F] text-[#D0CCE3] overflow-hidden relative">
-    <div class="h-[0px] flex-shrink-0">  <!-- Added NavBar container with fixed height -->
+    <div class="h-[0px] flex-shrink-0">
       <NavBar />
     </div>
     <div class="absolute inset-0 pt-[70px] bg-gradient-to-b from-[#0A0A1F] via-[#13132b] to-[#0A0A1F] animate-gradient"></div>
 
     <div class="fixed top-4 right-4 z-50 space-y-2" ref="notifications"></div>
 
-    <div class="relative z-10 flex flex-col h-[calc(100vh-70px)] pt-[70px]"> <!-- Adjusted height and added padding top -->
+    <!-- End Screen Component -->
+    <WatchPartyEndScreen :show="showEndScreen" />
+
+    <div class="relative z-10 flex flex-col h-[calc(100vh-70px)] pt-[70px]">
       <!-- Header with Movie Info and Progress Bar -->
       <div class="absolute top-[70px] left-0 right-0 h-20 bg-[#13132b]/90 backdrop-blur-sm border-b border-[#DB3DCF] 
         flex items-center justify-between px-6">
@@ -18,7 +21,6 @@
             <div class="flex items-center gap-3">
               <span class="text-sm">{{ currentTime }}</span>
               <div class="relative w-48 h-1 bg-[#1a1a35] rounded overflow-hidden">
-                <!-- Movie Progress Bar -->
                 <div class="absolute top-0 left-0 h-full bg-[#675FF2] rounded animate-pulse" 
                   :style="{ width: progressBarWidth + '%' }"></div>
               </div>
@@ -32,6 +34,11 @@
             class="flex items-center gap-2 px-3 py-1 rounded bg-[#1a1a35] hover:bg-[#675FF2] transition-colors">
             <span>👥</span>
             <span>{{ userCount }} watching</span>
+          </button>
+          <!-- End Watch Party Button -->
+          <button @click="endWatchParty" 
+            class="px-4 py-2 bg-[#DB3DCF] rounded hover:bg-[#675FF2] transition-colors">
+            End Watch Party
           </button>
         </div>
       </div>
@@ -118,121 +125,126 @@
   </div>
 </template>
   
-  <script>
-  import NavBar from '@/components/ui/NavBar.vue'
-  export default {
-    components: {
-    NavBar
+<script>
+import NavBar from '@/components/ui/NavBar.vue'
+import WatchPartyEndScreen from './WatchPartyEndScreen.vue'
+
+export default {
+  components: {
+    NavBar,
+    WatchPartyEndScreen
+  },
+  data() {
+    return {
+      showEndScreen: false,
+      notifications: [],
+      messages: [
+        { user: 'MovieBuff', text: 'This scene is incredible!', timestamp: new Date() },
+        { user: 'CinemaFan', text: 'Wait for what comes next!', timestamp: new Date() },
+        { user: 'FilmGeek', text: 'The cinematography here is amazing', timestamp: new Date() }
+      ],
+      avatars: Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        emoji: '👤',
+        username: `User${i + 1}`,
+        status: Math.random() > 0.3 ? 'active' : 'idle'
+      })),
+      messageInput: '',
+      showUserList: false,
+      reactions: [
+        { emoji: '👏', label: 'Clap' },
+        { emoji: '❤️', label: 'Love' },
+        { emoji: '😮', label: 'Wow' },
+        { emoji: '😂', label: 'Laugh' },
+        { emoji: '🔥', label: 'Fire' }
+      ],
+      activeReactions: [],
+      currentTime: "1:05:30",
+      movieDuration: "2:16:00",
+      progressBarWidth: 50
+    };
+  },
+  computed: {
+    userCount() {
+      return this.avatars.length;
+    }
+  },
+  methods: {
+    toggleUserList() {
+      this.showUserList = !this.showUserList;
     },
-    data() {
-      return {
-        notifications: [],
-        messages: [
-          { user: 'MovieBuff', text: 'This scene is incredible!', timestamp: new Date() },
-          { user: 'CinemaFan', text: 'Wait for what comes next!', timestamp: new Date() },
-          { user: 'FilmGeek', text: 'The cinematography here is amazing', timestamp: new Date() }
-        ],
-        avatars: Array.from({ length: 15 }, (_, i) => ({
-          id: i,
-          emoji: '👤',
-          username: `User${i + 1}`,
-          status: Math.random() > 0.3 ? 'active' : 'idle'
-        })),
-        messageInput: '',
-        showUserList: false,
-        reactions: [
-          { emoji: '👏', label: 'Clap' },
-          { emoji: '❤️', label: 'Love' },
-          { emoji: '😮', label: 'Wow' },
-          { emoji: '😂', label: 'Laugh' },
-          { emoji: '🔥', label: 'Fire' }
-        ],
-        activeReactions: [], // For temporarily displaying floating emojis
-        currentTime: "1:05:30",
-        movieDuration: "2:16:00",
-        progressBarWidth: 50
-      };
-    },
-    computed: {
-      userCount() {
-        return this.avatars.length;
+    sendMessage() {
+      if (this.messageInput.trim()) {
+        this.messages.push({ user: 'You', text: this.messageInput, timestamp: new Date() });
+        this.messageInput = '';
       }
     },
-    methods: {
-      toggleUserList() {
-        this.showUserList = !this.showUserList;
-      },
-      sendMessage() {
-        if (this.messageInput.trim()) {
-          this.messages.push({ user: 'You', text: this.messageInput, timestamp: new Date() });
-          this.messageInput = '';
-        }
-      },
-      handleReaction(emoji) {
-        // Add the emoji to activeReactions for floating effect
-        this.activeReactions.push(emoji);
-        setTimeout(() => {
-          this.activeReactions.shift(); // Remove emoji after 1 second
-        }, 1000);
-      }
+    handleReaction(emoji) {
+      this.activeReactions.push(emoji);
+      setTimeout(() => {
+        this.activeReactions.shift();
+      }, 1000);
+    },
+    endWatchParty() {
+      this.showEndScreen = true;
     }
-  };
-  </script>
+  }
+};
+</script>
   
-  <style scoped>
-  @keyframes slideIn {
-    from {
-      opacity: 0;
-      transform: translateX(100%);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-  .animate-slideIn {
-    animation: slideIn 0.3s forwards;
-  }
-  @keyframes gradient {
-    0% {
-      background-position: 0% 50%;
-    }
-    100% {
-      background-position: 100% 50%;
-    }
-  }
-  .animate-gradient {
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
-  }
-  
-  /* Floating animation for emojis */
-  @keyframes floatUp {
-    0% {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    100% {
-      opacity: 0;
-      transform: translateY(-200px);
-    }
-  }
-  
-  /* Style for floating emojis */
-  .floating-emoji {
-    position: absolute;
-    bottom: 80px; /* Position above the emoji bar */
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px;
-    animation: floatUp 1s ease-out forwards;
-  }
-  
-  .fade-enter-active, .fade-leave-active {
-    transition: opacity 0.5s;
-  }
-  .fade-enter, .fade-leave-to /* .fade-leave-active in <2.1.8 */ {
+<style scoped>
+@keyframes slideIn {
+  from {
     opacity: 0;
+    transform: translateX(100%);
   }
-  </style>
-  
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.animate-slideIn {
+  animation: slideIn 0.3s forwards;
+}
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+.animate-gradient {
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+/* Floating animation for emojis */
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-200px);
+  }
+}
+
+/* Style for floating emojis */
+.floating-emoji {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  animation: floatUp 1s ease-out forwards;
+}
+
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter, .fade-leave-to {
+  opacity: 0;
+}
+</style>
