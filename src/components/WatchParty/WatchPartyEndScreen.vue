@@ -5,10 +5,36 @@
     </div>
     <div class="absolute inset-0 pt-[70px] bg-gradient-to-b from-[#0A0A1F] via-[#13132b] to-[#0A0A1F] animate-gradient"></div>
 
-    <div class="fixed top-4 right-4 z-50 space-y-2" ref="notifications"></div>
+    <!-- End Screen / Curtains -->
+    <div class="curtain fixed inset-0 z-50" v-if="showEndScreen">
+      <div class="curtain__wrapper">
+        <!-- Left Curtain/Button -->
+        <button @click="$router.push('/home')" 
+          class="curtain__panel curtain__panel--left hover:bg-[#1d1d42] transition-colors duration-300">
+          <div class="flex flex-col items-center gap-4">
+            <span class="text-4xl">🏠</span>
+            <span class="text-2xl font-bold text-[#D0CCE3]">Return Home</span>
+          </div>
+        </button>
+        
+        <div class="curtain__content bg-[#0A0A1F]">
+          <div class="space-y-8 text-center">
+            <h2 class="text-3xl font-bold text-[#DB3DCF] mb-8">Watch Party Ended!</h2>
+          </div>
+        </div>
+        
+        <!-- Right Curtain/Button -->
+        <button @click="$router.push('/friends')" 
+          class="curtain__panel curtain__panel--right hover:bg-[#1d1d42] transition-colors duration-300">
+          <div class="flex flex-col items-center gap-4">
+            <span class="text-4xl">👥</span>
+            <span class="text-2xl font-bold text-[#D0CCE3]">New Watch Party</span>
+          </div>
+        </button>
+      </div>
+    </div>
 
-    <!-- End Screen Component -->
-    <WatchPartyEndScreen :show="showEndScreen" />
+    <div class="fixed top-4 right-4 z-40 space-y-2" ref="notifications"></div>
 
     <div class="relative z-10 flex flex-col h-[calc(100vh-70px)] pt-[70px]">
       <!-- Header with Movie Info and Progress Bar -->
@@ -35,7 +61,6 @@
             <span>👥</span>
             <span>{{ userCount }} watching</span>
           </button>
-          <!-- End Watch Party Button -->
           <button @click="endWatchParty" 
             class="px-4 py-2 bg-[#DB3DCF] rounded hover:bg-[#675FF2] transition-colors">
             End Watch Party
@@ -124,15 +149,13 @@
     </div>
   </div>
 </template>
-  
+
 <script>
 import NavBar from '@/components/ui/NavBar.vue'
-import WatchPartyEndScreen from './WatchPartyEndScreen.vue'
 
 export default {
   components: {
-    NavBar,
-    WatchPartyEndScreen
+    NavBar
   },
   data() {
     return {
@@ -191,8 +214,78 @@ export default {
   }
 };
 </script>
-  
+
 <style scoped>
+.curtain {
+  margin: 0 auto;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.curtain__wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.curtain__panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #13132b;
+  float: left;
+  position: relative;
+  width: 50%;
+  height: 100vh;
+  transition: all 1s ease-out;
+  z-index: 2;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.curtain__panel--left {
+  animation: slideInLeft 1s forwards;
+  border-right: 2px solid #DB3DCF;
+}
+
+.curtain__panel--right {
+  animation: slideInRight 1s forwards;
+  border-left: 2px solid #DB3DCF;
+}
+
+.curtain__content {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  justify-content: center;
+  padding: 1rem 0;
+  position: absolute;
+  text-align: center;
+  z-index: 1;
+  width: 100%;
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;
@@ -203,9 +296,11 @@ export default {
     transform: translateX(0);
   }
 }
+
 .animate-slideIn {
   animation: slideIn 0.3s forwards;
 }
+
 @keyframes gradient {
   0% {
     background-position: 0% 50%;
@@ -214,12 +309,12 @@ export default {
     background-position: 100% 50%;
   }
 }
+
 .animate-gradient {
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
 }
 
-/* Floating animation for emojis */
 @keyframes floatUp {
   0% {
     opacity: 1;
@@ -231,7 +326,6 @@ export default {
   }
 }
 
-/* Style for floating emojis */
 .floating-emoji {
   position: absolute;
   bottom: 80px;
@@ -244,6 +338,7 @@ export default {
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.5s;
 }
+
 .fade-enter, .fade-leave-to {
   opacity: 0;
 }

@@ -81,6 +81,7 @@
           <div class="light-beam"></div>
           <span class="button-text">
             {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
+            {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
           </span>
         </button>
       </template>
@@ -318,7 +319,7 @@ export default {
   text-align: center;
   display: flex;
   flex-direction: column;
-  height: calc(100% - 70px);
+  min-height: calc(100% - 70px);
   gap: 0.5rem;
 }
 
@@ -370,16 +371,18 @@ export default {
   margin: 0.5rem auto;
   padding: 0.5rem 0;
   flex: 1;
-  min-height: 0;
+  min-height: min(400px, 50vh);
+  max-height: 70vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 0.25rem;
+  overflow-y: auto;
 }
 
 .movie-item {
-  padding: clamp(0.4rem, 2vh, 0.8rem);
-  font-size: clamp(0.8rem, 3vw, 1.1rem);
+  padding: min(0.8rem, 2vh);
+  font-size: 1.1rem;
   text-transform: uppercase;
   letter-spacing: 1px;
   background: #13132b;
@@ -397,8 +400,8 @@ export default {
     rgba(219, 61, 207, 0.3)
   ) !important;
   font-weight: bold;
-  font-size: clamp(0.9rem, 3.5vw, 1.2rem);
-  padding: clamp(0.5rem, 2vh, 1rem);
+  padding: min(1rem, 2.5vh);
+  font-size: 1.2rem;
   letter-spacing: 2px;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
   transform: scale(1.02);
@@ -416,7 +419,7 @@ export default {
   position: absolute;
   left: 0;
   right: 0;
-  height: 150px;
+  height: min(150px, 20vh);
   z-index: 1;
   pointer-events: none;
 }
@@ -625,15 +628,18 @@ export default {
   background: #0a0a1f;
 }
 
-/* Custom scrollbar for overlay */
+/* Scrollbar styles for movies-display and poster-overlay */
+.movies-display::-webkit-scrollbar,
 .poster-overlay::-webkit-scrollbar {
   width: 4px;
 }
 
+.movies-display::-webkit-scrollbar-track,
 .poster-overlay::-webkit-scrollbar-track {
   background: transparent;
 }
 
+.movies-display::-webkit-scrollbar-thumb,
 .poster-overlay::-webkit-scrollbar-thumb {
   background: #675FF2;
   border-radius: 4px;
@@ -648,7 +654,6 @@ export default {
   }
 }
 
-/* Mobile Styles */
 @media (max-width: 768px) {
   .movie-roulette-page {
     padding-top: 60px;
@@ -659,9 +664,14 @@ export default {
     gap: 0.25rem;
   }
 
+  .movies-display {
+    max-height: 60vh;
+    min-height: min(300px, 45vh);
+  }
+
   .movies-display::before,
   .movies-display::after {
-    height: 100px;
+    height: min(100px, 15vh);
   }
 
   .neon-text {
@@ -675,12 +685,12 @@ export default {
 
   .movie-item {
     font-size: 0.9rem;
-    padding: 0.8rem;
+    padding: min(0.8rem, 2vh);
   }
 
   .movie-item-selected {
     font-size: 1rem;
-    padding: 1rem;
+    padding: min(1rem, 2.5vh);
   }
 
   .spin-button {
@@ -716,21 +726,23 @@ export default {
     gap: 0.2rem;
   }
 
+  .movies-display {
+    max-height: 55vh;
+    min-height: min(250px, 40vh);
+    margin: 0.25rem auto;
+  }
+
+  .movies-display::before,
+  .movies-display::after {
+    height: min(60px, 12vh);
+  }
+
   .neon-text {
     margin-bottom: 0.25rem;
   }
 
   .selected-movie {
     padding: 0.25rem;
-  }
-
-  .movies-display {
-    margin: 0.25rem auto;
-  }
-
-  .movies-display::before,
-  .movies-display::after {
-    height: 60px;
   }
 
   .poster-container {
