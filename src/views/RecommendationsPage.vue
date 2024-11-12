@@ -2,7 +2,7 @@
   <div class="h-screen bg-[#0A0A1F] flex flex-col overflow-hidden">
     <div class="h-[70px] flex-shrink-0">
       <NavBar />
-    </div>
+    </div> 
     
     <div class="flex-1 relative overflow-hidden">
       <div class="h-full flex flex-col items-center p-2 sm:p-4 md:p-8 text-[#D0CCE3] z-10">
