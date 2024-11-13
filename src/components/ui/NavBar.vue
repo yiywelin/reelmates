@@ -75,7 +75,8 @@ const navLinks = [
   { name: 'Home', path: '/home' },
   { name: 'Swipe Movies', path: '/select-genre' },
   { name: 'Watch with Friends', path: '/friends' },
-  { name: 'About Us', path: '/meet-the-team' },
+  { name: 'Active WatchParty', path: '/watch-party' },
+  { name: 'About Us', path: '/meet-the-team' }
 ];
 
 onMounted(() => {
