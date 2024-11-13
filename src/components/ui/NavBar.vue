@@ -75,7 +75,7 @@ const navLinks = [
   { name: 'Home', path: '/home' },
   { name: 'Swipe Movies', path: '/select-genre' },
   { name: 'Watch with Friends', path: '/friends' },
-  { name: 'Active WatchParty', path: '/watch-party' },
+  { name: 'Active Watch Party', path: '/watch-party' },
   { name: 'About Us', path: '/meet-the-team' }
 ];
 
@@ -133,12 +133,12 @@ const closeAllMenus = () => {
 
 .nav-content {
   max-width: 1200px;
-  height: 100%;
+  height: 70px;
   margin: 0 auto;
   padding: 0 2rem;
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Creates 3 equal columns */
   align-items: center;
-  justify-content: space-between;
 }
 
 /* Logo Styles */
@@ -319,8 +319,13 @@ const closeAllMenus = () => {
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-.nav-content {
+  .nav-content {
     padding: 0 1rem;
+  }
+
+  .logo-section {
+    grid-column: 1;
+    justify-self: start;
   }
 
   .mobile-menu-button {
@@ -387,9 +392,16 @@ const closeAllMenus = () => {
     height: 32px;
   }
 
-  /* Close button style */
   .mobile-menu-button {
-    z-index: 100;
+    grid-column: 2;
+    justify-self: center; /* Center the hamburger menu */
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    height: 70px;
+    padding: 0;
   }
 
   .mobile-menu-button .hamburger-icon span {
@@ -398,11 +410,9 @@ const closeAllMenus = () => {
     border-radius: 2px;
   }
 
-  /* Logo and user section adjustment */
-  .logo-section,
   .user-section {
-    position: relative;
-    z-index: 100;
+    grid-column: 3;
+    justify-self: end;
   }
 }
 
