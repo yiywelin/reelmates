@@ -5,75 +5,75 @@
     <div class="flex flex-col md:flex-row w-full h-full text-white z-10 relative mt-16">
 
       <!-- Left Panel - hidden on mobile -->
-      <div class="hidden md:block full-height bg-[#2E2A4F]">
-        <div class="left-panel flex-shrink-0 text-white flex flex-col p-4">
+      <div class="hidden md:block bg-[#2E2A4F] p-3 rounded-r-xl shadow-lg">
+        <div class="flex flex-col space-y-4">
           <!-- Profile Section -->
-          <div v-if="currentUser" class="flex flex-col space-y-6">
-            <div class="profile-section hover:bg-[#3B365F] rounded-lg p-2 transition-colors cursor-pointer">
-              <div class="flex items-center space-x-3">
-                <span class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
-                  {{ currentUser.email[0].toUpperCase() }}
-                </span>
-                <span class="font-medium">{{ currentUser.email.split('@')[0].charAt(0).toUpperCase() + 
-                  currentUser.email.split('@')[0].slice(1) }}</span>
-              </div>
+          <div v-if="currentUser" class="profile-section bg-[#3B365F] rounded-lg p-3 transition-colors cursor-pointer">
+            <div class="flex items-center space-x-3">
+              <span
+                class="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl">
+                {{ currentUser.email[0].toUpperCase() }}
+              </span>
+              <span class="font-medium">{{ currentUser.email.split('@')[0].charAt(0).toUpperCase() +
+                currentUser.email.split('@')[0].slice(1) }}</span>
+            </div>
+          </div>
+
+          <!-- Friends Section -->
+          <div class="friends-section">
+            <div class="flex items-center mb-2">
+              <h2 class="text-pink-500 font-medium flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path
+                    d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
+                </svg>
+                Friends
+              </h2>
             </div>
 
-            <!-- Friends Section -->
-            <div class="friends-section">
-              <div class="flex items-center mb-3 px-2">
-                <h2 class="text-pink-500 font-medium flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                  </svg>
-                  Friends
-                </h2>
-              </div>
-
-              <div class="space-y-2">
-                <div v-for="friend in friendsData.slice(0, 2)" :key="friend.id" 
-                    class="flex items-center space-x-3 p-2 hover:bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
-                  <div class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                    <span class="text-white text-sm">{{ friend.email[0].toUpperCase() }}</span>
-                  </div>
-                  <span class="text-sm">{{ friend.name }}</span>
+            <div class="space-y-2">
+              <div v-for="friend in friendsData.slice(0, 2)" :key="friend.id"
+                class="flex items-center space-x-3 p-2 bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
+                <div
+                  class="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                  <span class="text-white text-sm">{{ friend.email[0].toUpperCase() }}</span>
                 </div>
-
-                <router-link 
-                  to="/friends" 
-                  class="block text-sm text-pink-400 hover:text-pink-300 mt-2 px-2"
-                >
-                  See all friends
-                </router-link>
+                <span class="text-sm">{{ friend.name }}</span>
               </div>
+
+              <router-link to="/friends" class="block text-sm text-pink-400 hover:text-pink-300 mt-2">
+                See all friends
+              </router-link>
+            </div>
+          </div>
+
+          <!-- Groups Section -->
+          <div class="groups-section">
+            <div class="flex items-center mb-2">
+              <h2 class="text-pink-500 font-medium flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h-2v-2h2zm-3 0v2H8v-2h4zm-5 0v2H5v-2h2zm-3-3h2v2H4v-2zm3 0h4v2H7v-2zm5 0h2v2h-2v-2zm3-3h2v2h-2V7zm-3 0h4v2h-4V7z"
+                    clip-rule="evenodd" />
+                </svg>
+                Groups
+              </h2>
             </div>
 
-            <!-- Groups Section -->
-            <div class="groups-section mt-4">
-              <div class="flex items-center mb-3 px-2">
-                <h2 class="text-pink-500 font-medium flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm3 2h6v4H7V5zm8 8v2h-2v-2h2zm-3 0v2H8v-2h4zm-5 0v2H5v-2h2zm-3-3h2v2H4v-2zm3 0h4v2H7v-2zm5 0h2v2h-2v-2zm3-3h2v2h-2V7zm-3 0h2v2h-2V7zm-5 0h4v2H7V7zm-3 0h2v2H4V7z" clip-rule="evenodd" />
-                  </svg>
-                  Groups
-                </h2>
+            <div class="space-y-2">
+              <div v-for="group in groups.slice(0,2)" :key="group.id"
+                class="flex items-center space-x-3 p-2 bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
+                <img :src="defaultAvatar" :alt="group.name" class="w-8 h-8 rounded-full object-cover" />
+                <span class="text-sm">{{ group.name }}</span>
               </div>
-
-              <div class="space-y-2">
-                <div v-for="group in groups" :key="group.id"
-                    class="flex items-center space-x-3 p-2 hover:bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
-                  <img 
-                    :src="defaultAvatar" 
-                    :alt="group.name"
-                    class="w-8 h-8 rounded-full object-cover"
-                  />
-                  <span class="text-sm">{{ group.name }}</span>
-                </div>
+              <div v-if="groups.length>2" class="block text-sm text-grey-400 mt-2">
+                And more...
               </div>
             </div>
           </div>
         </div>
       </div>
+
 
       <!-- Right Panel - full width on mobile -->
       <div class="right-panel flex-grow px-4 md:px-5 md:ml-60 w-full md:w-auto">
@@ -311,7 +311,7 @@ const loadGroups = async () => {
       };
     });
 
-    groups.value = await Promise.all(groupPromises);
+    groups.value = (await Promise.all(groupPromises));
   } catch (err) {
     console.error('Error loading groups:', err);
     error.value = 'Failed to load groups. Please try again.';
@@ -487,18 +487,18 @@ onBeforeUnmount(() => {
   position: fixed;
   top: 0;
   left: 0;
-  width: 16.67%;
-  max-width: 220px;
-  min-width: 120px;
+  width: 180px; /* Reduced width */
+  min-width: 180px;
   height: 100%;
   transition: width 0.3s;
-  padding: 16px;
+  padding: 12px; /* Reduced padding */
   background-color: rgba(103, 95, 242, 0.5);
   z-index: 10;
+  margin-top: 64px; /* Add top margin to account for navbar */
 }
 
 .right-panel {
-  width: 83.33%;
+  width: calc(100% - 240px); /* Adjusted to account for fixed left panel width */
   height: auto;
   max-height: calc(100vh - 16px);
   overflow-y: auto;
@@ -506,6 +506,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  margin-left: 0px; /* Fixed margin to match left panel width */
 }
 
 .friend-item {
