@@ -115,7 +115,8 @@
           >
             <template v-if="activeTab === 'friends'">
               <div 
-                class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 transition-transform duration-700 hover:rotate-[360deg]"
+                :data-avatar-id="item.id"
+                class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 avatar-container"
                 :style="{
                   backgroundColor: item.randomColor || generateRandomColor()
                 }"
@@ -147,8 +148,7 @@
                   </template>
                   <template v-else>
                     <GroupAnimations 
-                      :seed="item.id.charCodeAt(0) / 255"
-                      :forcedAnimation="item.animationType"
+                      :seed="item.id.charCodeAt(0) / 255" 
                       class="w-full h-full"
                     />
                   </template>
@@ -715,5 +715,32 @@ const handleImageClick = (item) => {
   50% {
     transform: translateY(-50%) translateX(-10px);
   }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes expand {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.wiggle-animation {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.expand-animation {
+  animation: expand 0.5s ease-in-out;
+}
+
+.avatar-container {
+  transition: all 0.3s ease;
+}
+
+.avatar-container:active {
+  transform: scale(0.95);
 }
 </style>
