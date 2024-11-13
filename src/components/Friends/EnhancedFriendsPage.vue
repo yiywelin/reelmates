@@ -145,7 +145,8 @@
           >
             <template v-if="activeTab === 'friends'">
               <div 
-                class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 transition-transform duration-700 hover:rotate-[360deg]"
+                :data-avatar-id="item.id"
+                class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 avatar-container"
                 :style="{
                   backgroundColor: item.randomColor || generateRandomColor()
                 }"
@@ -163,16 +164,26 @@
               >
                 <PencilIcon class="h-4 w-4 text-gray-400 hover:text-white" />
               </button>
-              <div class="relative">
-                <div class="relative" @click.stop>
-                  <img
-                    :src="item.photoURL || defaultAvatar"
-                    :alt="item.name"
-                    class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10 cursor-pointer group"
-                    @click.stop="handleImageClick(item)"
-                  />
-                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">Change Photo</span>
+              <div class="relative" @click.stop>
+                <div 
+                  class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10 cursor-pointer group overflow-hidden"
+                  @click.stop="handleImageClick(item)"
+                >
+                  <template v-if="item.photoURL">
+                    <img
+                      :src="item.photoURL"
+                      :alt="item.name"
+                      class="w-full h-full object-cover"
+                    />
+                  </template>
+                  <template v-else>
+                    <GroupAnimations 
+                      :seed="item.id.charCodeAt(0) / 255" 
+                      class="w-full h-full"
+                    />
+                  </template>
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50">
+                    <span class="text-xs text-white px-2 py-1 rounded">Change Photo</span>
                   </div>
                 </div>
               </div>
@@ -273,7 +284,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed} from 'vue'
 import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
 import { UserPlusIcon, UserGroupIcon , CalendarIcon , PencilIcon} from '@heroicons/vue/24/solid';
@@ -288,6 +299,7 @@ import { useRouter } from 'vue-router';
 import EditGroupNameModal from '@/components/Friends/EditGroupNameModal.vue'
 import { uploadGroupPhoto } from '@/utils/imageUtils'
 import FriendsBackground from '@/components/Backgrounds/FriendsBackground.vue'
+import GroupAnimations from '@/components/Friends/GroupAnimations.vue'
 
 const router = useRouter()
 
@@ -734,5 +746,32 @@ const handleImageClick = (item) => {
   50% {
     transform: translateY(-50%) translateX(-10px);
   }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes expand {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.wiggle-animation {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.expand-animation {
+  animation: expand 0.5s ease-in-out;
+}
+
+.avatar-container {
+  transition: all 0.3s ease;
+}
+
+.avatar-container:active {
+  transform: scale(0.95);
 }
 </style>
