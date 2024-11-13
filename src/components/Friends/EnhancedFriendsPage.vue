@@ -271,7 +271,7 @@
           class="w-full sm:w-auto bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-sm hover:from-blue-700/80 hover:to-purple-700/80 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-xl font-bold shadow-[0_0_20px_rgba(88,80,236,0.5)] hover:shadow-[0_0_25px_rgba(88,80,236,0.7)] transition-all duration-300"
         >
           <span class="mr-2">📅</span>
-          Create Watchparty ({{ selectedItems.length }})
+          Create Watch Party ({{ selectedItems.length }})
         </button>
       </div>
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
@@ -311,7 +311,7 @@ const handleWatchpartyClick = async () => {
       params: { groupId, chatId }
     })
   } catch (error) {
-    console.error('Failed to create watchparty:', error)
+    console.error('Failed to create watch party:', error)
   }
 }
 
