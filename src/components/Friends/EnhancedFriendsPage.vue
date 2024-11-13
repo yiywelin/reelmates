@@ -10,47 +10,59 @@
       <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-6 mb-4 sm:mb-0">
         <!-- Tab buttons with improved mobile layout -->
-          <div class="grid grid-cols-2 gap-2 w-full sm:w-auto">
-            <button
-              @click="setActiveTab('friends')"
-              :class="['px-3 sm:px-4 py-2 rounded-md text-sm font-medium flex-1 sm:flex-none', 
-                activeTab === 'friends' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300']"
-            >
-              Friends
-            </button>
-            <button
-              @click="setActiveTab('groups')"
-              :class="['px-3 sm:px-4 py-2 rounded-md text-sm font-medium flex-1 sm:flex-none',
-                activeTab === 'groups' ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300']"
-            >
-              Groups
-            </button>
-          </div>
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
-            <div class="flex space-x-2">
-              <!-- Action buttons wrapper -->
-              <div class="flex space-x-2">
+        <div class="w-full rounded-xl overflow-hidden bg-gray-800/50">
+        <div class="flex w-full">
+          <button
+            @click="setActiveTab('friends')"
+            :class="[
+              'w-1/2 py-3 text-base font-medium flex items-center justify-center transition-colors duration-200', 
+              activeTab === 'friends' 
+                ? 'bg-blue-700 text-white' 
+                : 'text-gray-400 hover:text-white'
+            ]"
+          >
+            Friends
+          </button>
+          <button
+            @click="setActiveTab('groups')"
+            :class="[
+              'w-1/2 py-3 text-base font-medium flex items-center justify-center transition-colors duration-200',
+              activeTab === 'groups' 
+                ? 'bg-green-500 text-white' 
+                : 'text-gray-400 hover:text-white'
+            ]"
+          >
+            Groups
+          </button>
+        </div>
+</div>
+          <!-- Control buttons and search section -->
+          <div class="w-full px-2 sm:px-0">
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <!-- Action buttons group -->
+              <div class="flex gap-2 shrink-0">
+                <!-- Add Friend button -->
                 <div class="relative group" v-if="activeTab === 'friends'">
                   <button
                     @click="showAddFriendModal = true"
-                      :class="['p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300', 
-                        friends.length === 0 ? 'pulse-button' : '']"
-                    >
-                    <UserPlusIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                    :class="['p-2.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300', 
+                      friends.length === 0 ? 'pulse-button' : '']"
+                  >
+                    <UserPlusIcon class="w-5 h-5" />
                   </button>
                   <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     Add Friend
                   </span>
                 </div>
 
-                <!-- New Create Group button -->
+                <!-- Create Group button -->
                 <div class="relative group" v-if="activeTab === 'groups'">
                   <button
                     @click="showCreateGroupModal = true"
-                    :class="['p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300',
+                    :class="['p-2.5 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300',
                       groups.length === 0 ? 'pulse-button' : '']"
                   >
-                    <UserGroupIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                    <UserGroupIcon class="w-5 h-5" />
                   </button>
                   <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     Create Group
@@ -61,35 +73,34 @@
                 <div class="relative group">
                   <button
                     @click="showPlanningModal = true"
-                    class="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                    class="p-2.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
                   >
-                    <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                    <CalendarIcon class="w-5 h-5" />
                   </button>
                   <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     Plan Movie Night
                   </span>
                 </div>
-          
-                <!-- Search and filter -->
-                <div class="flex-1 flex gap-2">
-                  <div class="relative flex-1">
-                    <input
-                      v-model="searchQuery"
-                      type="text"
-                      :placeholder="`Search ${activeTab}...`"
-                      class="w-full pl-8 pr-4 py-2 text-sm rounded-md bg-gray-800 text-white border-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <span class="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">🔍</span>
-                  </div>
-                  
-                  <button
-                      @click="toggleGenreFilter"
-                      class="px-4 py-2.5 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300 text-sm whitespace-nowrap"
-                  >
-                    Filter
-                  </button>
-                </div>
               </div>
+
+              <!-- Search input -->
+              <div class="relative flex-1 min-w-[120px]">
+                <input
+                  v-model="searchQuery"
+                  type="text"
+                  :placeholder="`Search ${activeTab}...`"
+                  class="w-full pl-8 pr-4 py-2.5 text-sm rounded-md bg-gray-800 text-white border-none focus:ring-2 focus:ring-blue-500"
+                />
+                <span class="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+              </div>
+              
+              <!-- Filter button -->
+              <button
+                @click="toggleGenreFilter"
+                class="px-4 py-2.5 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300 text-sm whitespace-nowrap shrink-0"
+              >
+                Filter
+              </button>
             </div>
           </div>
         </div>
