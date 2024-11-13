@@ -6,10 +6,11 @@
     <div class="absolute inset-0 overflow-hidden">
       <div v-for="i in 20" :key="i" class="shooting-star" :style="getShootingStarStyle()"></div>
     </div>
-    <div class="container mx-auto px-2 sm:px-4 pt-16 sm:pt-20 pb-8 relative z-10">
-      <div class="mb-4 sm:mb-6">
-        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div class="flex space-x-2">
+    <div class="container mx-auto px-2 sm:px-4 pt-20 sm:pt-24 pb-8 relative z-10">
+      <div class="mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 sm:gap-6 mb-4 sm:mb-0">
+        <!-- Tab buttons with improved mobile layout -->
+          <div class="grid grid-cols-2 gap-2 w-full sm:w-auto">
             <button
               @click="setActiveTab('friends')"
               :class="['px-3 sm:px-4 py-2 rounded-md text-sm font-medium flex-1 sm:flex-none', 
@@ -70,7 +71,7 @@
                 </div>
           
                 <!-- Search and filter -->
-                <div class="flex-1 sm:w-64 flex space-x-2">
+                <div class="flex-1 flex gap-2">
                   <div class="relative flex-1">
                     <input
                       v-model="searchQuery"
@@ -82,8 +83,8 @@
                   </div>
                   
                   <button
-                    @click="toggleGenreFilter"
-                    class="px-3 sm:px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300 text-sm"
+                      @click="toggleGenreFilter"
+                      class="px-4 py-2.5 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300 text-sm whitespace-nowrap"
                   >
                     Filter
                   </button>
