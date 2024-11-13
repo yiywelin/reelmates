@@ -6,93 +6,102 @@
     <div class="absolute inset-0 overflow-hidden">
       <div v-for="i in 20" :key="i" class="shooting-star" :style="getShootingStarStyle()"></div>
     </div>
-    <div class="container mx-auto px-4 pt-20 pb-8 relative z-10">
-      <div class="mb-6">
-        <div class="flex justify-between items-center mb-4">
+    <div class="container mx-auto px-2 sm:px-4 pt-16 sm:pt-20 pb-8 relative z-10">
+      <div class="mb-4 sm:mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div class="flex space-x-2">
             <button
               @click="setActiveTab('friends')"
-              :class="['px-4 py-2 rounded-md text-sm font-medium', activeTab === 'friends' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300']"
+              :class="['px-3 sm:px-4 py-2 rounded-md text-sm font-medium flex-1 sm:flex-none', 
+                activeTab === 'friends' ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-300']"
             >
               Friends
             </button>
             <button
               @click="setActiveTab('groups')"
-              :class="['px-4 py-2 rounded-md text-sm font-medium', activeTab === 'groups' ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300']"
+              :class="['px-3 sm:px-4 py-2 rounded-md text-sm font-medium flex-1 sm:flex-none',
+                activeTab === 'groups' ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-300']"
             >
               Groups
             </button>
           </div>
-          <div class="flex items-center space-x-2 w-full sm:w-auto">
-            <!-- add friend button -->
-            <div class="relative group" v-if="activeTab === 'friends'">
-              <button
-              @click="showAddFriendModal = true"
-                :class="['p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300', 
-                  friends.length === 0 ? 'pulse-button' : '']"
-              >
-                <UserPlusIcon class="w-6 h-6" />
-              </button>
-              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Add Friend
-              </span>
-            </div>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:space-x-2">
+            <div class="flex space-x-2">
+              <!-- Action buttons wrapper -->
+              <div class="flex space-x-2">
+                <div class="relative group" v-if="activeTab === 'friends'">
+                  <button
+                    @click="showAddFriendModal = true"
+                      :class="['p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300', 
+                        friends.length === 0 ? 'pulse-button' : '']"
+                    >
+                    <UserPlusIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Add Friend
+                  </span>
+                </div>
 
-            <!-- New Create Group button -->
-            <div class="relative group" v-if="activeTab === 'groups'">
-              <button
-                @click="showCreateGroupModal = true"
-                :class="['p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300',
-                  groups.length === 0 ? 'pulse-button' : '']"
-              >
-                <UserGroupIcon class="w-6 h-6" />
-              </button>
-              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Create Group
-              </span>
-            </div>
+                <!-- New Create Group button -->
+                <div class="relative group" v-if="activeTab === 'groups'">
+                  <button
+                    @click="showCreateGroupModal = true"
+                    :class="['p-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-300',
+                      groups.length === 0 ? 'pulse-button' : '']"
+                  >
+                    <UserGroupIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Create Group
+                  </span>
+                </div>
 
-            <!-- Plan Movie Night Button -->
-            <div class="relative group">
-              <button
-                @click="showPlanningModal = true"
-                class="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
-              >
-                <CalendarIcon class="w-6 h-6" />
-              </button>
-              <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Plan Movie Night
-              </span>
-            </div>
+                <!-- Plan Movie Night Button -->
+                <div class="relative group">
+                  <button
+                    @click="showPlanningModal = true"
+                    class="p-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+                  >
+                    <CalendarIcon class="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                  <span class="absolute left-1/2 -translate-x-1/2 -bottom-8 bg-gray-800 text-white px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    Plan Movie Night
+                  </span>
+                </div>
           
-            <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
-              <input
-                v-model="searchQuery"
-                type="text"
-                :placeholder="`Search ${activeTab}...`"
-                class="pl-10 pr-4 py-2 w-full rounded-md bg-gray-800 text-white border-none focus:ring-2 focus:ring-blue-500"
-              />
-              <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
+                <!-- Search and filter -->
+                <div class="flex-1 sm:w-64 flex space-x-2">
+                  <div class="relative flex-1">
+                    <input
+                      v-model="searchQuery"
+                      type="text"
+                      :placeholder="`Search ${activeTab}...`"
+                      class="w-full pl-8 pr-4 py-2 text-sm rounded-md bg-gray-800 text-white border-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span class="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+                  </div>
+                  
+                  <button
+                    @click="toggleGenreFilter"
+                    class="px-3 sm:px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300 text-sm"
+                  >
+                    Filter
+                  </button>
+                </div>
+              </div>
             </div>
-            
-            <button
-              @click="toggleGenreFilter"
-              class="px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300"
-            >
-              Filter
-            </button>
-       
           </div>
         </div>
         
-        <div v-if="showGenreFilter" class="mb-4">
+        <!-- Genre filter -->
+        <div v-if="showGenreFilter" class="mt-4">
           <div class="flex flex-wrap gap-2 pb-4 max-h-32 overflow-y-auto">
             <button
               v-for="genre in genres"
               :key="genre"
               @click="toggleGenreSelection(genre)"
               :class="[
-                'px-4 py-2 rounded-full text-sm font-semibold transition-colors duration-300',
+                'px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-300',
                 selectedGenres.includes(genre)
                   ? 'bg-blue-500/50 backdrop-blur-sm text-white shadow-[0_0_10px_rgba(59,130,246,0.5)]'
                   : 'bg-blue-500/20 backdrop-blur-sm text-blue-100 hover:bg-blue-400/30'
@@ -104,13 +113,15 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-        <div v-if="activeTab === 'friends' && friends.length === 0" class="text-center col-span-full">
-          <p class="text-xl mb-4">You have no friends, here's a cute cat for you.</p>
-          <div class="w-80 h-64 mx-auto overflow-hidden rounded-lg shadow-lg">
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-4 mb-8">
+        <!-- Empty state -->
+        <div v-if="activeTab === 'friends' && friends.length === 0" class="text-center col-span-full px-4">
+          <p class="text-lg sm:text-xl mb-4">You have no friends, here's a cute cat for you.</p>
+          <div class="w-full max-w-xs sm:max-w-sm mx-auto overflow-hidden rounded-lg shadow-lg">
             <img :src="randomCatGif" alt="Cute cat" class="w-full h-full object-cover" />
-          </div>        
-      </div>
+          </div>
+        </div>
+
         <div
           v-for="item in paginatedItems"
           :key="item.id"
@@ -158,7 +169,8 @@
             leave-to-class="opacity-0 translate-y-1"
           >
             
-          <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
+          <div v-if="hoveredItem === item" 
+            class="absolute top-full left-0 mt-2 w-64 sm:w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-3 sm:p-4 z-20 border border-gray-700 overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-50"></div>
               <div class="relative z-10">
                 <h3 class="text-lg font-semibold mb-2 text-white">{{ item.name }}</h3>
@@ -205,39 +217,41 @@
       </div>
       
 
+      <!-- Pagination -->
       <div class="flex justify-center items-center space-x-2 mt-4">
         <button
           @click="prevPage"
           :disabled="currentPage === 1"
-          class="bg-blue-500/50 backdrop-blur-sm hover:bg-blue-600/50 shadow-[0_0_10px_rgba(59,130,246,0.3)] px-4 py-2 rounded-md disabled:opacity-50"
+          class="px-3 sm:px-4 py-1.5 sm:py-2 text-sm rounded-md disabled:opacity-50 bg-blue-500/50 backdrop-blur-sm hover:bg-blue-600/50"
         >
           Previous
         </button>
-        <span class="text-gray-300">Page {{ currentPage }} of {{ totalPages }}</span>
+        <span class="text-sm text-gray-300">Page {{ currentPage }} of {{ totalPages }}</span>
         <button
           @click="nextPage"
           :disabled="currentPage === totalPages"
-          class="bg-blue-500/50 backdrop-blur-sm hover:bg-blue-600/50 shadow-[0_0_10px_rgba(59,130,246,0.3)] px-4 py-2 rounded-md disabled:opacity-50"
+          class="px-3 sm:px-4 py-1.5 sm:py-2 text-sm rounded-md disabled:opacity-50 bg-blue-500/50 backdrop-blur-sm hover:bg-blue-600/50"
         >
           Next
         </button>
       </div>
 
-
-
-      <div v-if="selectedItems.length > 0" class="fixed bottom-8 left-1/2 transform -translate-x-1/2">
+      <!-- Bottom action button -->
+      <div v-if="selectedItems.length > 0" class="fixed bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 w-full px-4 sm:w-auto">
         <button 
           @click="handleWatchpartyClick"
-          class="bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-sm hover:from-blue-700/80 hover:to-purple-700/80 text-white px-8 py-4 rounded-full text-xl font-bold shadow-[0_0_20px_rgba(88,80,236,0.5)] hover:shadow-[0_0_25px_rgba(88,80,236,0.7)] transition-all duration-300"
+          class="w-full sm:w-auto bg-gradient-to-r from-blue-600/80 to-purple-600/80 backdrop-blur-sm hover:from-blue-700/80 hover:to-purple-700/80 text-white px-4 sm:px-8 py-3 sm:py-4 rounded-full text-base sm:text-xl font-bold shadow-[0_0_20px_rgba(88,80,236,0.5)] hover:shadow-[0_0_25px_rgba(88,80,236,0.7)] transition-all duration-300"
         >
           <span class="mr-2">📅</span>
-          Create Watchparty ({{ selectedItems.length }} selected {{ activeTab === 'friends' ? 'friend' : 'group' }}{{ selectedItems.length > 1 ? 's' : '' }})
+          Create Watchparty ({{ selectedItems.length }})
         </button>
       </div>
+
+      <!-- Modals -->
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
       <AddFriendModal :is-open="showAddFriendModal" @close="showAddFriendModal = false" @friendAdded="handleFriendAdded" />
       <CreateGroupModal :is-open="showCreateGroupModal" @close="showCreateGroupModal = false" @groupCreated="handleGroupCreated" />
-
+  
     </div>
   </div>
 </template>
