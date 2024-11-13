@@ -2,10 +2,10 @@
   <div class="movie-roulette-page">
     <NavBar />
 
-    <div class="fixed top-20 left-4 z-[100]">
+    <div class="back-button-position z-[100]">
       <button 
         @click="router.back()"
-        class="relative w-12 h-12 flex items-center justify-center"
+        class="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"
       >
         <!-- Outer glow ring - corrected to match your X button style -->
         <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
@@ -80,7 +80,6 @@
           <div class="button-glow"></div>
           <div class="light-beam"></div>
           <span class="button-text">
-            {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
             {{ isSpinning ? 'STOP THE ROULETTE' : 'START THE ROULETTE' }}
           </span>
         </button>
@@ -309,6 +308,7 @@ export default {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
 }
 
 .roulette-container {
@@ -321,6 +321,13 @@ export default {
   flex-direction: column;
   min-height: calc(100% - 70px);
   gap: 0.5rem;
+}
+
+.back-button-position {
+  position: fixed;
+  top: 80px; /* Adjust this value based on your navbar height */
+  left: 16px;
+  z-index: 60; /* Keep it below the navbar z-index */
 }
 
 .loading-state,
@@ -659,6 +666,11 @@ export default {
     padding-top: 60px;
   }
 
+  .back-button-position {
+    top: 92px;
+    left: 12px;
+  }
+
   .roulette-container {
     height: calc(100% - 60px);
     gap: 0.25rem;
@@ -676,6 +688,7 @@ export default {
 
   .neon-text {
     font-size: 1.8rem;
+    margin-top: 20px
   }
   
   .selected-movie {
@@ -719,6 +732,11 @@ export default {
 @media (max-width: 380px) {
   .movie-roulette-page {
     padding-top: 50px;
+  }
+
+  .back-button-position {
+    top: 82px;
+    left: 10px;
   }
 
   .roulette-container {
