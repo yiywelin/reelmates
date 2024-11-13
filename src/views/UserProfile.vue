@@ -40,7 +40,7 @@
                 </div>
                 <span class="text-sm">{{ friend.name }}</span>
               </div>
-
+              <div v-if="groups.length==0">No current friends</div>
               <router-link to="/friends" class="block text-sm text-pink-400 hover:text-pink-300 mt-2">
                 See all friends
               </router-link>
@@ -66,9 +66,10 @@
                 <img :src="defaultAvatar" :alt="group.name" class="w-8 h-8 rounded-full object-cover" />
                 <span class="text-sm">{{ group.name }}</span>
               </div>
-              <div v-if="groups.length>2" class="block text-sm text-grey-400 mt-2">
-                And more...
-              </div>
+              <div v-if="groups.length==0">No current groups</div>
+              <router-link to="/friends" class="block text-sm text-pink-400 hover:text-pink-300 mt-2">
+                See all groups
+              </router-link>
             </div>
           </div>
         </div>
