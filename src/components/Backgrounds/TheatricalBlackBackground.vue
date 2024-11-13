@@ -62,6 +62,14 @@ const getRightLineStyle = (index) => ({
   '--position': `${10 + (index * 5)}%`,
   '--rotation': '35deg'
 })
+
+const getShootingStarStyle = () => ({
+  left: `${Math.random() * 100}%`,
+  top: `${Math.random() * 100}%`,
+  transform: `rotate(${Math.random() * 180}deg)`,
+  animationDelay: `${Math.random() * 15}s`,
+  animationDuration: `${1 + Math.random() * 2}s`
+});
 </script>
 
 <style scoped>
@@ -210,5 +218,63 @@ const getRightLineStyle = (index) => ({
     animation: none;
   }
 }
-</style>
-```
+
+/* Increase star visibility */
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s infinite ease-in-out;
+  opacity: 0.8; /* Increased base opacity */
+}
+
+/* Increase nebula visibility */
+.nebula {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5; /* Increased from 0.3 */
+  filter: blur(40px);
+  transition: transform 0.1s ease-out;
+}
+
+.nebula-layer {
+  position: absolute;
+  inset: -50%;
+  background-size: cover;
+  opacity: 0.7; /* Increased from 0.5 */
+  animation: nebulaFloat 120s infinite alternate;
+}
+
+/* Adjust shooting star animation */
+.shooting-star {
+  position: absolute;
+  width: 150px; /* Increased from 100px */
+  height: 2px;
+  background: linear-gradient(to right, transparent, white, transparent);
+  animation: shootingStar 2s ease-out infinite;
+}
+
+@keyframes shootingStar {
+  0% {
+    transform: translateX(-100%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(200%) translateY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.3; 
+    transform: scale(1); 
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.3); 
+  }
+}
+</style>```

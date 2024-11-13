@@ -12,10 +12,11 @@
       <div v-for="i in 15" :key="`meteor-${i}`" 
         class="meteor"
         :style="{
-          '--delay': `${Math.random() * 10}s`,
-          '--top': `${Math.random() * 30}%`,
-          '--left': `${Math.random() * 30 + 70}%`,
+          '--delay': `${Math.random() * 20}s`,
+          '--top': `${Math.random() * 100}%`,
+          '--left': `${Math.random() * 100}%`,
           '--opacity': Math.random() * 0.8 + 0.2,
+          '--duration': `${10 + Math.random() * 5}s`
         }"
       >
         <div class="meteor-tail"></div>
@@ -65,11 +66,10 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const mousePosition = ref({ x: 0, y: 0 })
 const cursorX = ref(0)
 const cursorY = ref(0)
+
 const cursorTrail = ref([])
 const ripples = ref([])
 const requestRef = ref(null)
-const container = ref(null)
-const particles = ref([])
 
 // Define updateCursorTrail using a function declaration
 const updateCursorTrail = () => {
@@ -123,7 +123,7 @@ onMounted(() => {
   top: var(--top);
   left: var(--left);
   opacity: var(--opacity);
-  animation: meteor 3s linear infinite;
+  animation: meteor var(--duration) linear infinite;
   animation-delay: var(--delay);
   transform: rotate(-45deg);
 }
@@ -148,17 +148,8 @@ onMounted(() => {
     transform: translate(0, 0) rotate(-45deg) scale(1);
     opacity: var(--opacity);
   }
-  20% {
-    opacity: var(--opacity);
-  }
-  60% {
-    opacity: var(--opacity);
-  }
-  80% {
-    opacity: 0;
-  }
   100% {
-    transform: translate(-1000px, 1000px) rotate(-45deg) scale(0.2);
+    transform: translate(-100vw, 100vh) rotate(-45deg) scale(0.2);
     opacity: 0;
   }
 }
