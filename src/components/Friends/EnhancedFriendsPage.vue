@@ -1,16 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white relative overflow-hidden">
-    <NavBar /> <!-- Navbar Component -->
-    <div class="absolute inset-0 bg-gray-900 opacity-20"></div> <!-- Dark overlay for background -->
-    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-900/30 to-pink-900/30 animate-gradient-shift"></div> <!-- Gradient overlay -->
-    <div class="absolute inset-0 overflow-hidden">
-      <!-- Shooting stars for background animation -->
-      <div v-for="i in 20" :key="i" class="shooting-star" :style="getShootingStarStyle()"></div>
-    </div>
+  <div class="min-h-screen relative overflow-hidden">
+    <FriendsBackground />
+    <NavBar />
     <div class="container mx-auto px-4 pt-20 pb-8 relative z-10">
       <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
-          <!-- Tabs for switching between Friends and Groups -->
           <div class="flex space-x-2">
             <button
               @click="setActiveTab('friends')"
@@ -26,7 +20,6 @@
             </button>
           </div>
           <div class="flex items-center space-x-2 w-full sm:w-auto">
-            <!-- Add Friend button, visible when Friends tab is active -->
             <div class="relative group" v-if="activeTab === 'friends'">
               <button
               @click="showAddFriendModal = true"
@@ -39,8 +32,6 @@
                 Add Friend
               </span>
             </div>
-
-            <!-- Create Group button, visible when Groups tab is active -->
             <div class="relative group" v-if="activeTab === 'groups'">
               <button
                 @click="showCreateGroupModal = true"
@@ -53,8 +44,6 @@
                 Create Group
               </span>
             </div>
-
-            <!-- Plan Movie Night Button -->
             <div class="relative group">
               <button
                 @click="showPlanningModal = true"
@@ -66,8 +55,6 @@
                 Plan Movie Night
               </span>
             </div>
-          
-            <!-- Search Bar for Friends/Groups -->
             <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
               <input
                 v-model="searchQuery"
@@ -77,8 +64,6 @@
               />
               <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
             </div>
-            
-            <!-- Genre Filter Button -->
             <button
               @click="toggleGenreFilter"
               class="px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300"
@@ -87,8 +72,6 @@
             </button>
           </div>
         </div>
-        
-        <!-- Genre Filter Panel -->
         <div v-if="showGenreFilter" class="mb-4">
           <div class="flex flex-wrap gap-2 pb-4 max-h-32 overflow-y-auto">
             <button
@@ -107,44 +90,41 @@
           </div>
         </div>
       </div>
-
-      <!-- Display Friends/Groups List -->
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
-        <!-- Placeholder when no friends are found -->
         <div v-if="activeTab === 'friends' && friends.length === 0" class="text-center col-span-full">
           <p class="text-xl mb-4">You have no friends, here's a cute cat for you.</p>
           <div class="w-80 h-64 mx-auto overflow-hidden rounded-lg shadow-lg">
             <img :src="randomCatGif" alt="Cute cat" class="w-full h-full object-cover" />
           </div>        
         </div>
-        <!-- Friend/Group Card -->
         <div
           v-for="item in paginatedItems"
           :key="item.id"
-          class="relative"
+          class="relative group"
           @mouseenter="showDetails(item)"
           @mouseleave="hideDetails"
         >
           <button
             @click="toggleSelection(item)"
+            class="w-full aspect-square rounded-lg transition-all duration-300 flex flex-col items-center justify-center p-4 relative overflow-hidden"
             :class="[
-              'w-full aspect-square rounded-lg transition-all duration-300 flex flex-col items-center justify-center p-2 relative overflow-hidden group',
               isSelected(item)
-                ? 'bg-blue-500/40 backdrop-blur-md border-2 border-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)]'
-                : 'bg-gray-700/30 hover:bg-gray-600/40 backdrop-blur-md border-2 border-gray-500/50 hover:border-blue-400/50'
+                ? 'bg-blue-500/40 backdrop-blur-md border-2 border-blue-400'
+                : 'bg-gray-700/30 hover:bg-gray-600/40 backdrop-blur-md border-2 border-gray-500/50'
             ]"
           >
-            <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-            <!-- Friend Avatar -->
             <template v-if="activeTab === 'friends'">
-              <div class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 bg-gradient-to-r from-purple-500 to-pink-500">
+              <div 
+                class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 transition-transform duration-700 hover:rotate-[360deg]"
+                :style="{
+                  backgroundColor: item.randomColor || generateRandomColor()
+                }"
+              >
                 <span class="text-2xl font-bold text-white">
                   {{ getInitials(item.name) }}
                 </span>
               </div>
             </template>
-            <!-- Group Avatar with Edit Button -->
             <template v-else>
               <button 
                 @click.stop="editingGroup = item"
@@ -154,7 +134,6 @@
                 <PencilIcon class="h-4 w-4 text-gray-400 hover:text-white" />
               </button>
               <div class="relative">
-                <!-- Group Photo -->
                 <div class="relative" @click.stop>
                   <img
                     :src="item.photoURL || defaultAvatar"
@@ -162,27 +141,18 @@
                     class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10 cursor-pointer group"
                     @click.stop="handleImageClick(item)"
                   />
-                  <!-- Hover effect for changing photo -->
                   <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">Change Photo</span>
                   </div>
                 </div>
               </div>
             </template>
-
-            <!-- Friend/Group Name -->
             <span class="font-semibold text-sm text-center relative z-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{{ item.name }}</span>
-
-            <!-- Friend's Snack Preference -->
             <div v-if="activeTab === 'friends'" class="absolute bottom-2 left-2 z-10">
               {{ getSnackEmoji(item.snackPreference) }}
             </div>
-
-            <!-- Group Member Count -->
             <div v-if="activeTab === 'groups'" class="text-xs relative z-10 text-gray-300">{{ item.members.length }} members</div>
           </button>
-
-          <!-- Hover Details for Friend/Group -->
           <transition
             enter-active-class="transition ease-out duration-200"
             enter-from-class="opacity-0 translate-y-1"
@@ -194,7 +164,6 @@
             <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-50"></div>
               <div class="relative z-10">
-                <!-- Friend/Group Details -->
                 <h3 class="text-lg font-semibold mb-2 text-white">{{ item.name }}</h3>
                 <template v-if="activeTab === 'friends'">
                   <p class="text-sm text-gray-300">{{ item.email }}</p>
@@ -237,8 +206,6 @@
           </transition>
         </div>
       </div>
-
-      <!-- Pagination Controls -->
       <div class="flex justify-center items-center space-x-2 mt-4">
         <button
           @click="prevPage"
@@ -256,8 +223,6 @@
           Next
         </button>
       </div>
-
-      <!-- Watchparty Button -->
       <div v-if="selectedItems.length > 0" class="fixed bottom-8 left-1/2 transform -translate-x-1/2">
         <button 
           @click="handleWatchpartyClick"
@@ -267,8 +232,6 @@
           Create Watchparty ({{ selectedItems.length }} selected {{ activeTab === 'friends' ? 'friend' : 'group' }}{{ selectedItems.length > 1 ? 's' : '' }})
         </button>
       </div>
-
-      <!-- Modals -->
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
       <AddFriendModal :is-open="showAddFriendModal" @close="showAddFriendModal = false" @friendAdded="handleFriendAdded" />
       <CreateGroupModal :is-open="showCreateGroupModal" @close="showCreateGroupModal = false" @groupCreated="handleGroupCreated" />
@@ -278,17 +241,13 @@
   </div>
 </template>
 
-
-
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue'
 import NavBar from '@/components/ui/NavBar.vue';
 import defaultAvatar from '@/assets/images/default-avatar.png';
-// import { UserPlusIcon } from 'luci@/components/Friends/PlanWatchPartyModal.vue
 import { UserPlusIcon, UserGroupIcon , CalendarIcon , PencilIcon} from '@heroicons/vue/24/solid';
 import MovieNightPlanningModal from '@/components/Friends/PlanWatchPartyModal.vue';
 import { getAuth } from 'firebase/auth'
-// import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
 import { collection, getDocs, query, where, getDoc, doc } from 'firebase/firestore';
 import AddFriendModal from '@/components/Friends/AddFriendModal.vue';
@@ -297,8 +256,7 @@ import { handleCreateWatchparty } from '@/utils/watchpartyUtils';
 import { useRouter } from 'vue-router';
 import EditGroupNameModal from '@/components/Friends/EditGroupNameModal.vue'
 import { uploadGroupPhoto } from '@/utils/imageUtils'
-
-
+import FriendsBackground from '@/components/Backgrounds/FriendsBackground.vue'
 
 const router = useRouter()
 
@@ -335,15 +293,11 @@ const showCreateGroupModal = ref(false);
 const editingGroup = ref(null)
 // const fileInput = ref(null)
 
-
-
-
 const friends = ref([]);
 const groups = ref([]);
 const genres = ['Action', 'Comedy', 'Drama', 'Sci-Fi', 'Horror', 'Thriller', 'Romance', 'Adventure', 'Fantasy', 'Animation'];
 
 const ITEMS_PER_PAGE = 15
-
 
 const catGifs = [
   'https://media.giphy.com/media/5uv4Cjy3vVX5KUKdOQ/giphy.gif?cid=ecf05e477riobw5yqyoot5y9vn36q8lqb98qwi8qddivvirc&ep=v1_gifs_search&rid=giphy.gif&ct=g',
@@ -485,9 +439,6 @@ const loadData = async () => {
   }
 };
 
-
-
-
 const filteredItems = computed(() => {
   const items = activeTab.value === 'friends' ? friends.value : groups.value;
   return items.filter(item => {
@@ -507,8 +458,6 @@ const paginatedItems = computed(() => {
   return filteredItems.value.slice(startIndex, endIndex);
 });
 
-
-
 const totalPages = computed(() => Math.ceil(filteredItems.value.length / ITEMS_PER_PAGE));
 
 const setActiveTab = (tab) => {
@@ -526,7 +475,6 @@ const toggleSelection = (item) => {
     selectedItems.value.splice(index, 1);
   }
 };
-
 
 const isSelected = (item) => selectedItems.value.some(i => i.id === item.id);
 
@@ -567,14 +515,6 @@ const getSnackEmoji = (snack) => {
   return snackEmojis[snack] || '🍿';
 };
 
-const getShootingStarStyle = () => {
-  return {
-    '--delay': `${Math.random() * 5}s`,
-    '--duration': `${Math.random() * 2 + 1}s`,
-    '--top': `${Math.random() * 100}%`,
-    '--left': `${Math.random() * 100}%`,
-  };
-};
 
 const formatDate = (timestamp) => {
   if (!timestamp) return 'N/A';
@@ -613,7 +553,6 @@ const getLikedMovies = (item) => {
     .map(movie => typeof movie === 'string' ? movie : (movie?.name || movie?.title || 'Unknown Movie'));
 };
 
-
 const handleGroupNameUpdated = (newName) => {
   if (editingGroup.value) {
     const group = groups.value.find(g => g.id === editingGroup.value.id)
@@ -642,7 +581,6 @@ onMounted(() => {
     }
   })
 })
-
 
 onMounted(async () => {
   await loadFriends()
@@ -682,7 +620,6 @@ const handleImageClick = (item) => {
     input.click()
   }
 }
-
 
 </script>
 

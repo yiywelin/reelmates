@@ -9,14 +9,24 @@ import { db } from '../firebaseConfig'
 
 export const uploadGroupPhoto = async (file, groupId) => {
   try {
-    // Create a storage reference
-    const imageRef = storageRef(storage, `group-photos/${groupId}/${file.name}`)
+    // Create a metadata object
+    const metadata = {
+      contentType: file.type,
+      customMetadata: {
+        'Access-Control-Allow-Origin': '*'
+      }
+    }
     
-    // Upload the file
-    await uploadBytes(imageRef, file)
+    // Create a storage reference with a unique path
+    const timestamp = Date.now()
+    const path = `group-photos/${groupId}/${timestamp}_${file.name}`
+    const fileRef = storageRef(storage, path)
     
-    // Get the download URL
-    const photoURL = await getDownloadURL(imageRef)
+    // Upload with metadata
+    const snapshot = await uploadBytes(fileRef, file, metadata)
+    
+    // Get download URL
+    const photoURL = await getDownloadURL(snapshot.ref)
     
     // Update Firestore
     const groupRef = doc(db, 'groups', groupId)
@@ -26,7 +36,7 @@ export const uploadGroupPhoto = async (file, groupId) => {
     
     return photoURL
   } catch (error) {
-    console.error('Error uploading photo:', error)
+    console.error('Upload error:', error)
     throw error
   }
 } 
