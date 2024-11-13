@@ -1,22 +1,21 @@
 <template>
   <div class="h-screen bg-[#0A0A1F] flex flex-col overflow-hidden">
+    <!-- Keeping existing navbar -->
     <div class="h-[70px] flex-shrink-0">
       <NavBar />
-    </div> 
+    </div>
     
     <div class="flex-1 relative overflow-hidden">
       <div class="h-full flex flex-col items-center p-2 sm:p-4 md:p-8 text-[#D0CCE3] z-10">
         <TheatricalBackground />
         
+        <!-- Keeping existing back button -->
         <div class="absolute top-2 sm:top-4 left-2 sm:left-4 z-50">
           <button 
             @click="$router.back()"
             class="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center"
           >
-            <!-- Outer glow ring - corrected to match your X button style -->
             <div class="absolute inset-0 rounded-full border border-[#DB3DCF] hover:border-[#DB3DCF] hover:shadow-[0_0_10px_#DB3DCF] transition-all duration-300"></div>
-            
-            <!-- Arrow icon -->
             <svg 
               xmlns="http://www.w3.org/2000/svg" 
               class="w-6 h-6 text-[#DB3DCF]" 
@@ -34,7 +33,7 @@
           </button>
         </div>
 
-        <!-- Header -->
+        <!-- Keeping existing headers -->
         <div class="text-center mb-4 sm:mb-8 animate-fadeIn">
           <span class="text-2xl sm:text-[2rem] lg:text-[2.5rem] mb-2 text-[#DB3DCF] 
             [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
@@ -52,12 +51,11 @@
           </button>
         </div>
 
-        <!-- Loading State -->
+        <!-- Loading and Error states remain unchanged -->
         <div v-if="loading" class="flex-1 flex items-center justify-center">
           <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF6961]"></div>
         </div>
 
-        <!-- Error State -->
         <div v-else-if="error" class="flex-1 flex flex-col items-center justify-center">
           <div class="text-[#FF6961] text-lg mb-4">{{ error }}</div>
           <button 
@@ -68,7 +66,7 @@
           </button>
         </div>
 
-        <!-- Movie Carousel -->
+        <!-- Updated Movie Carousel -->
         <div v-else-if="movies.length" class="flex-1 w-full max-w-[1600px] relative flex items-center">
           <!-- Previous Button -->
           <button 
@@ -88,46 +86,49 @@
             </div>
           </button>
 
-          <!-- Movie Cards Container -->
+          <!-- Updated Movie Cards Container with new responsive logic -->
           <div 
-            class="h-full w-full overflow-hidden px-2 sm:px-4 md:px-16"
+            class="h-full w-full overflow-hidden px-4 sm:px-8 md:px-12"
             @touchstart="handleTouchStart"
             @touchmove="handleTouchMove"
             @touchend="handleTouchEnd"
             ref="carouselRef"
           >
             <div 
-              class="h-full flex items-center"
+              class="h-full flex items-center transition-transform duration-500 ease-in-out"
               :style="{ 
                 transform: `translateX(-${currentIndex * (100 / visibleMovies)}%)`,
                 transition: isAnimating ? 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)' : 'none'
               }"
             >
-              <!-- Movie Cards -->
+              <!-- Movie Cards with updated responsive classes -->
               <div 
                 v-for="movie in movies" 
                 :key="movie.id"
-                :style="{ flex: `0 0 ${100 / visibleMovies}%` }"
-                class="h-[85%] px-2 sm:px-4 md:px-6 lg:px-8"
+                :style="{ 
+                  flex: `0 0 ${100 / visibleMovies}%`,
+                  maxWidth: `${100 / visibleMovies}%`
+                }"
+                class="h-full px-2 sm:px-3 md:px-4 transition-all duration-300"
               >
-                <!-- Movie Card Content -->
                 <div 
-                  class="h-full relative rounded-2xl cursor-pointer overflow-hidden
+                  class="h-[85%] relative rounded-2xl cursor-pointer overflow-hidden
                     transition-transform duration-300 ease-in-out hover:-translate-y-3 group"
                   @click="navigateToWatchParty()"
                   @mouseenter="loadTrailer(movie)"
                   @mouseleave="closeTrailer"
                 >
-                  <!-- Movie Poster and Content -->
+                  <!-- Movie Poster -->
                   <img 
                     :src="movie.posterPath 
                       ? `https://image.tmdb.org/t/p/w500${movie.posterPath}`
                       : '/placeholder-movie.jpg'"
                     :alt="movie.title"
                     class="absolute inset-0 w-full h-full object-cover rounded-2xl
-                      transition-all duration-300 group-hover:scale-135"
+                      transition-all duration-300 group-hover:scale-105"
                   />
-                  <!-- Trailer Overlay -->
+
+                  <!-- Keeping existing overlay components -->
                   <div 
                     v-if="currentTrailer && currentTrailer.id === movie.id" 
                     class="absolute inset-0 bg-black bg-opacity-75 rounded-2xl overflow-hidden"
@@ -144,10 +145,10 @@
                   </div>
 
                   <!-- Movie Info Overlay -->
-                  <div class="absolute inset-x-0 bottom-0 p-3 sm:p-6 bg-gradient-to-t 
-                  from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent 
-                  rounded-b-2xl translate-y-full transition-transform duration-300 
-                  group-hover:translate-y-0">
+                  <div class="absolute inset-x-0 bottom-0 p-3 sm:p-4 md:p-6 
+                    bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] 
+                    to-transparent rounded-b-2xl translate-y-full transition-transform 
+                    duration-300 group-hover:translate-y-0">
                     <h3 class="text-base sm:text-lg md:text-xl font-semibold text-white 
                       [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]">
                       {{ movie.title }}
@@ -155,12 +156,9 @@
                     <div class="flex items-center gap-2 mt-2">
                       <span class="text-yellow-400">★</span>
                       <span class="text-white">{{ movie.voteAverage?.toFixed(1) + '/10' || 'N/A' }}</span>
-                      <span v-if="movie.basedOn" class="text-sm font-semibold text-gray-400">
-                        (Similar to {{ movie.basedOn }})
-                      </span>
                     </div>
                     <div class="mt-2 sm:mt-3 opacity-0 translate-y-5 transition-all duration-300 
-                    group-hover:opacity-100 group-hover:translate-y-0">
+                      group-hover:opacity-100 group-hover:translate-y-0">
                       <button 
                         @click.stop="navigateToWatchParty()"
                         class="inline-block px-3 sm:px-4 py-1 sm:py-2 bg-[#675FF2] text-white 
@@ -234,20 +232,19 @@ const chatId = route.params.chatId
 
 // Carousel functionality
 const updateVisibleMovies = () => {
-  if (!carouselRef.value) return
-  
   const width = window.innerWidth
   
-  if (width < 480) {
+  if (width < 640) { // Mobile
     visibleMovies.value = 1
-  } else if (width < 768) {
-    visibleMovies.value = 1
-  } else if (width < 1024) {
+  } else if (width < 1024) { // Tablet
     visibleMovies.value = 2
-  } else {
-    visibleMovies.value = 3 
+  } else if (width < 1280) { // Small Desktop
+    visibleMovies.value = 3
+  } else { // Large Desktop
+    visibleMovies.value = 4
   }
-  
+
+  // Ensure current index is valid
   if (currentIndex.value > movies.value.length - visibleMovies.value) {
     currentIndex.value = Math.max(0, movies.value.length - visibleMovies.value)
   }
@@ -490,16 +487,18 @@ const debounce = (fn, delay) => {
   }
 }
 
+const debouncedUpdateVisibleMovies = debounce(updateVisibleMovies, 150)
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown)
-  updateVisibleMovies()
-  window.addEventListener('resize', debounce(updateVisibleMovies, 250))
+  window.addEventListener('resize', debouncedUpdateVisibleMovies)
+  updateVisibleMovies() // Initial update
   loadMovies()
 })
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
-  window.removeEventListener('resize', debounce(updateVisibleMovies, 250))
+  window.removeEventListener('resize', debouncedUpdateVisibleMovies)
 })
 </script>
 
