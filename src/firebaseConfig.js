@@ -5,6 +5,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbJrpGdM6mUDPD-iGTQK97Nz_iMtnQNGQ",
@@ -21,8 +22,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const analytics = getAnalytics(app);
 const db = getFirestore(app);
+const storage = getStorage(app)
 
 // Set persistence to LOCAL (user stays logged in after page refresh)
 setPersistence(auth, browserLocalPersistence);
 
-export { app, auth, analytics, db };
+export { app, auth, analytics, db, storage };
