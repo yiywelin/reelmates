@@ -1,10 +1,12 @@
 // src/firebaseConfig.js
 
 // Import the functions you need from the SDKs you need
+
 import { initializeApp } from "firebase/app";
-import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, getDoc, doc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp } from 'firebase/firestore';
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbJrpGdM6mUDPD-iGTQK97Nz_iMtnQNGQ",
@@ -25,4 +27,4 @@ const db = getFirestore(app);
 // Set persistence to LOCAL (user stays logged in after page refresh)
 setPersistence(auth, browserLocalPersistence);
 
-export { app, auth, analytics, db };
+export { app, auth, analytics, db, doc, getDoc, collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, onAuthStateChanged };
