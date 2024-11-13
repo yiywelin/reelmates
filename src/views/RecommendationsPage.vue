@@ -512,8 +512,6 @@ return (...args) => {
 }
 }
 
-const debouncedUpdateVisibleMovies = debounce(updateVisibleMovies, 150)
-
 onMounted(() => {
 window.addEventListener('keydown', handleKeydown)
 updateVisibleMovies()
