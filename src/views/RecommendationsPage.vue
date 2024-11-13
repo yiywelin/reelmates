@@ -208,7 +208,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter,useRoute } from 'vue-router'
 import { getAuth } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, updateDoc, collection, getDoc, addDoc } from 'firebase/firestore'
 import { db } from '../firebaseConfig'
 import TheatricalBackground from '../components/Backgrounds/TheatricalBackground.vue'
 import NavBar from '../components/ui/NavBar.vue'
@@ -378,6 +378,7 @@ const shuffleArray = (array) => {
   return array
 }
 
+
 const loadMovies = async () => {
   try {
     loading.value = true;
@@ -403,11 +404,27 @@ const loadMovies = async () => {
     const groupdb = await getDoc(doc(db, 'groups', groupId));
     const groupMembersId = groupdb.data().members || [];
     
-    // Fetch all members' data in parallel
+    // Create a new "chats" document for the watch party
+    const newChatRef = await addDoc(collection(db, 'chats'), {
+      createdAt: new Date(),
+      groupId: groupId,
+      watchparty: true,
+    });
+    const newChatId = newChatRef.id;
+
+    // Update each member's "watchparty" field with the new chat ID
+    const updatePromises = groupMembersId.map(memberId => {
+      return updateDoc(doc(db, 'users', memberId), {
+        watchparty: newChatId
+      });
+    });
+    await Promise.all(updatePromises);
+
+    // Fetch all members' data in parallel for movie recommendations
     const membersData = await Promise.all(
       groupMembersId.map(memberId => fetchDocumentByKey("users", memberId))
     );
-    
+
     // Process each member's liked movies
     membersData.forEach(memberObj => {
       if (memberObj.likedMovies.length > 0) {
