@@ -1,14 +1,16 @@
 <template>
   <div class="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white relative overflow-hidden">
-    <NavBar />
-    <div class="absolute inset-0 bg-gray-900 opacity-20"></div>
-    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-900/30 to-pink-900/30 animate-gradient-shift"></div>
+    <NavBar /> <!-- Navbar Component -->
+    <div class="absolute inset-0 bg-gray-900 opacity-20"></div> <!-- Dark overlay for background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-blue-900/30 via-purple-900/30 to-pink-900/30 animate-gradient-shift"></div> <!-- Gradient overlay -->
     <div class="absolute inset-0 overflow-hidden">
+      <!-- Shooting stars for background animation -->
       <div v-for="i in 20" :key="i" class="shooting-star" :style="getShootingStarStyle()"></div>
     </div>
     <div class="container mx-auto px-4 pt-20 pb-8 relative z-10">
       <div class="mb-6">
         <div class="flex justify-between items-center mb-4">
+          <!-- Tabs for switching between Friends and Groups -->
           <div class="flex space-x-2">
             <button
               @click="setActiveTab('friends')"
@@ -24,7 +26,7 @@
             </button>
           </div>
           <div class="flex items-center space-x-2 w-full sm:w-auto">
-            <!-- add friend button -->
+            <!-- Add Friend button, visible when Friends tab is active -->
             <div class="relative group" v-if="activeTab === 'friends'">
               <button
               @click="showAddFriendModal = true"
@@ -38,7 +40,7 @@
               </span>
             </div>
 
-            <!-- New Create Group button -->
+            <!-- Create Group button, visible when Groups tab is active -->
             <div class="relative group" v-if="activeTab === 'groups'">
               <button
                 @click="showCreateGroupModal = true"
@@ -65,6 +67,7 @@
               </span>
             </div>
           
+            <!-- Search Bar for Friends/Groups -->
             <div class="relative flex-grow sm:flex-grow-0 sm:w-64">
               <input
                 v-model="searchQuery"
@@ -75,16 +78,17 @@
               <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">🔍</span>
             </div>
             
+            <!-- Genre Filter Button -->
             <button
               @click="toggleGenreFilter"
               class="px-4 py-2 bg-gray-700 text-gray-300 rounded-md hover:bg-gray-600 transition-colors duration-300"
             >
               Filter
             </button>
-       
           </div>
         </div>
         
+        <!-- Genre Filter Panel -->
         <div v-if="showGenreFilter" class="mb-4">
           <div class="flex flex-wrap gap-2 pb-4 max-h-32 overflow-y-auto">
             <button
@@ -104,13 +108,16 @@
         </div>
       </div>
 
+      <!-- Display Friends/Groups List -->
       <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-8">
+        <!-- Placeholder when no friends are found -->
         <div v-if="activeTab === 'friends' && friends.length === 0" class="text-center col-span-full">
           <p class="text-xl mb-4">You have no friends, here's a cute cat for you.</p>
           <div class="w-80 h-64 mx-auto overflow-hidden rounded-lg shadow-lg">
             <img :src="randomCatGif" alt="Cute cat" class="w-full h-full object-cover" />
           </div>        
-      </div>
+        </div>
+        <!-- Friend/Group Card -->
         <div
           v-for="item in paginatedItems"
           :key="item.id"
@@ -128,42 +135,54 @@
             ]"
           >
             <div class="absolute inset-0 bg-gradient-to-br from-transparent via-blue-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <!-- Add edit button here with absolute positioning -->
-            <button 
-              v-if="activeTab === 'groups'"
-              @click.stop="editingGroup = item"
-              class="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-700/50 transition-colors duration-200 z-20"
-              title="Edit group name"
-            >
-              <PencilIcon class="h-4 w-4 text-gray-400 hover:text-white" />
-            </button>
-            <!-- group photo -->
-            <div class="relative" @click.stop>
-              <img
-                :src="item.photoURL || defaultAvatar"
-                :alt="item.name"
-                class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10 cursor-pointer group"
-                @click.stop="handleImageClick(item)"
-              />
-              <!-- Add a hover effect to indicate clickable -->
-              <div v-if="activeTab === 'groups'" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">Change Photo</span>
+
+            <!-- Friend Avatar -->
+            <template v-if="activeTab === 'friends'">
+              <div class="w-20 h-20 rounded-full mb-2 flex items-center justify-center shadow-lg relative z-10 bg-gradient-to-r from-purple-500 to-pink-500">
+                <span class="text-2xl font-bold text-white">
+                  {{ getInitials(item.name) }}
+                </span>
               </div>
-            </div>
-            <span class="font-semibold text-sm text-center relative z-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{{ item.name }}</span>
-                <!-- <button 
-                @click="editingGroup = group"
-                class="p-1 rounded-full hover:bg-gray-700/50 transition-colors duration-200"
+            </template>
+            <!-- Group Avatar with Edit Button -->
+            <template v-else>
+              <button 
+                @click.stop="editingGroup = item"
+                class="absolute top-2 right-2 p-1 rounded-full hover:bg-gray-700/50 transition-colors duration-200 z-20"
                 title="Edit group name"
               >
                 <PencilIcon class="h-4 w-4 text-gray-400 hover:text-white" />
-              </button> -->
+              </button>
+              <div class="relative">
+                <!-- Group Photo -->
+                <div class="relative" @click.stop>
+                  <img
+                    :src="item.photoURL || defaultAvatar"
+                    :alt="item.name"
+                    class="w-20 h-20 rounded-full mb-2 border-2 border-white shadow-lg relative z-10 cursor-pointer group"
+                    @click.stop="handleImageClick(item)"
+                  />
+                  <!-- Hover effect for changing photo -->
+                  <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <span class="text-xs text-white bg-black/50 px-2 py-1 rounded">Change Photo</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+
+            <!-- Friend/Group Name -->
+            <span class="font-semibold text-sm text-center relative z-10 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)]">{{ item.name }}</span>
+
+            <!-- Friend's Snack Preference -->
             <div v-if="activeTab === 'friends'" class="absolute bottom-2 left-2 z-10">
               {{ getSnackEmoji(item.snackPreference) }}
             </div>
-            
+
+            <!-- Group Member Count -->
             <div v-if="activeTab === 'groups'" class="text-xs relative z-10 text-gray-300">{{ item.members.length }} members</div>
           </button>
+
+          <!-- Hover Details for Friend/Group -->
           <transition
             enter-active-class="transition ease-out duration-200"
             enter-from-class="opacity-0 translate-y-1"
@@ -172,10 +191,10 @@
             leave-from-class="opacity-100 translate-y-0"
             leave-to-class="opacity-0 translate-y-1"
           >
-            
-          <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
+            <div v-if="hoveredItem === item" class="absolute top-full left-0 mt-2 w-72 bg-gray-800/95 backdrop-blur-md rounded-lg shadow-lg p-4 z-20 border border-gray-700 overflow-hidden">
               <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-50"></div>
               <div class="relative z-10">
+                <!-- Friend/Group Details -->
                 <h3 class="text-lg font-semibold mb-2 text-white">{{ item.name }}</h3>
                 <template v-if="activeTab === 'friends'">
                   <p class="text-sm text-gray-300">{{ item.email }}</p>
@@ -218,8 +237,8 @@
           </transition>
         </div>
       </div>
-      
 
+      <!-- Pagination Controls -->
       <div class="flex justify-center items-center space-x-2 mt-4">
         <button
           @click="prevPage"
@@ -238,8 +257,7 @@
         </button>
       </div>
 
-
-
+      <!-- Watchparty Button -->
       <div v-if="selectedItems.length > 0" class="fixed bottom-8 left-1/2 transform -translate-x-1/2">
         <button 
           @click="handleWatchpartyClick"
@@ -249,15 +267,17 @@
           Create Watchparty ({{ selectedItems.length }} selected {{ activeTab === 'friends' ? 'friend' : 'group' }}{{ selectedItems.length > 1 ? 's' : '' }})
         </button>
       </div>
+
+      <!-- Modals -->
       <MovieNightPlanningModal v-if="showPlanningModal" :selectedItems="selectedItems" @close="showPlanningModal = false" />
       <AddFriendModal :is-open="showAddFriendModal" @close="showAddFriendModal = false" @friendAdded="handleFriendAdded" />
       <CreateGroupModal :is-open="showCreateGroupModal" @close="showCreateGroupModal = false" @groupCreated="handleGroupCreated" />
       <EditGroupNameModal v-if="editingGroup" :group="editingGroup" @close="editingGroup = null" @updated="handleGroupNameUpdated"
   />
-
     </div>
   </div>
 </template>
+
 
 
 <script setup>
@@ -338,6 +358,16 @@ const catGifs = [
 const randomCatGif = computed(() => {
   return catGifs[Math.floor(Math.random() * catGifs.length)];
 });
+
+const getInitials = (name) => {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+};
 
 const loadFriends = async () => {
   try {
@@ -593,6 +623,26 @@ const handleGroupNameUpdated = (newName) => {
   }
   editingGroup.value = null
 }
+
+const generateRandomColor = () => {
+  const hue = Math.floor(Math.random() * 360)
+  return `hsl(${hue}, 70%, 60%)`
+}
+
+onMounted(() => {
+  // Initialize random colors for all items
+  friends.value.forEach(friend => {
+    if (!friend.randomColor) {
+      friend.randomColor = generateRandomColor()
+    }
+  })
+  groups.value.forEach(group => {
+    if (!group.randomColor) {
+      group.randomColor = generateRandomColor()
+    }
+  })
+})
+
 
 onMounted(async () => {
   await loadFriends()

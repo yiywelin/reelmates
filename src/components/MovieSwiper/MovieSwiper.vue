@@ -120,7 +120,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { getAuth } from 'firebase/auth'
 import { doc, updateDoc, arrayUnion, getDoc, setDoc, increment } from 'firebase/firestore'
 import { db } from '../../firebaseConfig'
-import { useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import MovieCard from './MovieCard.vue'
 import SwipeInstructions from './SwipeInstructions.vue'
 import FeatureReminderOverlay from './FeatureReminderOverlay.vue'
@@ -160,7 +160,7 @@ const error = ref(null)
 const loading = ref(true)
 const currentPage = ref(1)
 const isLoadingMore = ref(false)
-const route = useRoute()
+const route = useRouter()
 const swipedMovieIds = ref(new Set())
 const showMatchOverlay = ref(false)
 const matchedUsers = ref([])
