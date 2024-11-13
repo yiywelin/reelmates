@@ -135,9 +135,9 @@ const closeAllMenus = () => {
   max-width: 1200px;
   height: 70px;
   margin: 0 auto;
-  padding: 0 2rem;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Creates 3 equal columns */
+  padding: 0 1.5rem;
+  display: flex;  /* Changed from grid to flex */
+  justify-content: space-between;
   align-items: center;
 }
 
@@ -147,6 +147,8 @@ const closeAllMenus = () => {
   align-items: center;
   text-decoration: none;
   z-index: 101;
+  flex: 0 0 auto;  /* Don't allow logo to grow or shrink */
+  margin-right: 1.5rem; 
 }
 
 .logo-image {
@@ -197,7 +199,10 @@ const closeAllMenus = () => {
 /* Navigation Links */
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
+  flex: 1;  /* Allow nav links to take up remaining space */
+  justify-content: center;  /* Center the navigation links */
+  margin: 0 1.5rem;  /* Add spacing on both sides */
 }
 
 .nav-link {
@@ -207,6 +212,7 @@ const closeAllMenus = () => {
   font-weight: 500;
   padding: 0.5rem 0;
   transition: all 0.3s ease;
+  white-space: nowrap;  /* Prevent link text from wrapping */
 }
 
 .link-indicator {
@@ -230,7 +236,9 @@ const closeAllMenus = () => {
 
 /* User Section */
 .user-section {
-  position: relative;
+  flex: 0 0 auto;  /* Don't allow user section to grow or shrink */
+  margin-left: 1.5rem;
+  padding-right: 0.5rem;
 }
 
 .user-menu {
@@ -245,6 +253,7 @@ const closeAllMenus = () => {
   padding: 0.5rem;
   border-radius: 8px;
   transition: all 0.3s ease;
+  min-width: max-content;
 }
 
 .user-info:hover {
@@ -318,8 +327,10 @@ const closeAllMenus = () => {
 }
 
 /* Responsive Styles */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .nav-content {
+    display: grid;  /* Switch back to grid for mobile */
+    grid-template-columns: repeat(3, 1fr);
     padding: 0 1rem;
   }
 
