@@ -1,5 +1,8 @@
 <template>
     <div class="h-screen bg-[#0A0A1F] text-[#D0CCE3] overflow-hidden relative">
+        <!-- Loading Overlay -->
+        <LoadingPage v-if="showLoading" @complete="showLoading = false" />
+
         <div class="h-[0px] flex-shrink-0">
             <NavBar />
         </div>
@@ -31,7 +34,6 @@
             </div>
         </div>
         <div class="fixed top-4 right-4 z-40 space-y-2" ref="notifications"></div>
-        <!-- <div class="relative z-10 flex flex-col h-[calc(100vh-70px)] pt-[70px]"> -->
         <div class="relative z-10 flex flex-col h-[calc(100vh-70px)] pt-[70px] pb-24">
             <!-- Header with Movie Info and Progress Bar -->
             <div class="absolute top-[70px] left-0 right-0 h-20 bg-[#13132b]/90 backdrop-blur-sm border-b border-[#DB3DCF] 
@@ -39,19 +41,12 @@
                 <div class="flex items-center gap-4">
                     <span class="text-[#DB3DCF] text-2xl">🎥</span>
                     <div>
-                        <div class="text-lg font-bold mb-1"></div>
-                        <!-- <div class="flex items-center gap-3">
-                            <span class="text-sm">{{ currentTime }}</span>
-                            <div class="relative w-48 h-1 bg-[#1a1a35] rounded overflow-hidden">
-                                <div class="absolute top-0 left-0 h-full bg-[#675FF2] rounded animate-pulse"
-                                    :style="{ width: progressBarWidth + '%' }"></div>
-                            </div>
-                            <span class="text-sm">{{ movieDuration }}</span>
-                        </div> -->
+                        <div class="text-lg font-bold mb-1">
+                            Now Showing: {{ movieTitle || '(standby)' }}
+                        </div>
                     </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-[#D0CCE3] cursor-pointer">🔊</span>
                     <button @click="toggleUserList"
                         class="flex items-center gap-2 px-3 py-1 rounded bg-[#1a1a35] hover:bg-[#675FF2] transition-colors">
                         <span>👥</span>
@@ -67,19 +62,40 @@
             <!-- Main Central Area -->
             <div class="flex flex-1 mt-20">
                 <!-- Center Area -->
-                <div class="flex-1 relative">
-                    <div class="absolute bottom-24 w-full flex justify-center" ref="avatars">
-                        <div class="flex flex-wrap justify-center gap-6">
-                            <div v-for="avatar in avatars" :key="avatar.id" class="group relative">
-                                <div class="w-12 h-12 bg-[#675FF2] rounded-full flex items-center justify-center text-2xl"
-                                    :class="{ 'opacity-60': avatar.status === 'idle' }">
-                                    {{ avatar.emoji }}
-                                </div>
-                                <div class="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 left-1/2 -translate-x-1/2 
-                                    bg-[#13132b] px-2 py-1 rounded text-sm whitespace-nowrap">
-                                    {{ avatar.username }}
+                <div class="flex-1 relative flex flex-col items-center">
+                    <!-- Movie Trailer/Placeholder Section -->
+                    <div class="w-full max-w-4xl mx-auto mb-8 mt-4">
+                        <div class="relative bg-[#13132b]/90 backdrop-blur-sm border border-[#1a1a35] rounded-lg overflow-hidden">
+                            <!-- If there's a movie trailer -->
+                            <div v-if="movieTrailerUrl" class="aspect-video">
+                                <iframe 
+                                    :src="movieTrailerUrl" 
+                                    class="w-full h-full"
+                                    frameborder="0" 
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                    allowfullscreen
+                                ></iframe>
+                            </div>
+                            <!-- If no movie selected -->
+                            <div v-else class="aspect-video flex items-center justify-center bg-[#1a1a35]">
+                                <div class="text-center">
+                                    <div class="text-2xl font-bold text-[#DB3DCF] mb-2">Looking for movies...</div>
+                                    <div class="text-[#D0CCE3] opacity-60">Waiting for host to select a movie</div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Avatar and Reaction Section -->
+                    <div class="w-full flex flex-col items-center gap-8">
+                        <!-- Avatar Group -->
+                        <div ref="avatars">
+                            <AvatarGroup :avatars="avatars" />
+                        </div>
+                        
+                        <!-- Reaction Bar -->
+                        <div class="w-full max-w-xl">
+                            <ReactionBar @reaction="handleReaction" />
                         </div>
                     </div>
                 </div>
@@ -94,7 +110,6 @@
 
                 <!-- Chat Area -->
                 <div class="w-80 h-full bg-[#13132b]/90 backdrop-blur-sm border-l border-[#1a1a35] flex flex-col">
-                    <!-- Can adjust the width of the Chat window-->
                     <div class="p-4 border-b border-[#1a1a35] flex items-center gap-2">
                         <span class="text-2xl">💬</span>
                         <span class="font-bold">Chat</span>
@@ -125,25 +140,18 @@
                 </div>
             </div>
 
-            <!-- Emoji Reaction Buttons -->
-            <div
-                class="h-16 bg-[#13132b]/90 backdrop-blur-sm border-t border-[#1a1a35] flex items-center justify-center gap-4 fixed-bottom-bar">
-                <button v-for="reaction in reactions" :key="reaction.emoji" @click="handleReaction(reaction.emoji)"
-                    class="group relative px-4 py-2 bg-[#1a1a35] rounded hover:bg-[#675FF2] transition-all hover:scale-110">
-                    <span class="text-xl">{{ reaction.emoji }}</span>
-                    <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#13132b] px-2 py-1 rounded text-sm 
-                        opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">{{ reaction.label }}
-                    </span>
-                </button>
-            </div>
-
             <!-- Floating Emojis Overlay -->
             <div class="fixed inset-0 pointer-events-none">
-                <transition-group name="float" tag="div">
-                    <span v-for="(reaction, index) in activeReactions" :key="index" class="floating-emoji">
-                        {{ reaction }}
-                    </span>
-                </transition-group>
+                <div class="absolute w-full bottom-[180px]">
+                    <transition-group name="float" tag="div" class="relative">
+                        <span v-for="(reaction, index) in activeReactions" 
+                              :key="index" 
+                              class="floating-emoji absolute left-1/2"
+                        >
+                            {{ reaction }}
+                        </span>
+                    </transition-group>
+                </div>
             </div>
         </div>
     </div>
@@ -154,13 +162,25 @@ import NavBar from '@/components/ui/NavBar.vue';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, collection, addDoc, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
+import AvatarGroup from './AvatarGroup.vue';
+import ReactionBar from './ReactionBar.vue';
+import LoadingPage from '../ui/LoadingPage.vue';
+import { useRoute } from 'vue-router';
 
 export default {
     components: {
-        NavBar
+        NavBar,
+        AvatarGroup,
+        ReactionBar,
+        LoadingPage
+    },
+    setup() {
+        const route = useRoute();
+        return { route };
     },
     data() {
         return {
+            showLoading: true, // Start with loading screen visible
             showEndScreen: false,
             notifications: [],
             messages: [],
@@ -172,25 +192,35 @@ export default {
             })),
             messageInput: '',
             showUserList: false,
-            reactions: [
-                { emoji: '👏', label: 'Clap' },
-                { emoji: '❤️', label: 'Love' },
-                { emoji: '😮', label: 'Wow' },
-                { emoji: '😂', label: 'Laugh' },
-                { emoji: '🔥', label: 'Fire' }
-            ],
             activeReactions: [],
             currentTime: "1:05:30",
             movieDuration: "2:16:00",
             progressBarWidth: 50,
             currentUserId: null,
             currentUsername: '',
-            watchparty: null
+            watchparty: null,
+            movieTitle: '',
+            movieTrailerId: null,
+            movieTrailerUrl: null
         };
     },
     computed: {
         userCount() {
             return this.avatars.length;
+        }
+    },
+    watch: {
+        // Watch for route params changes
+        '$route.params': {
+            immediate: true,
+            handler(params) {
+                if (params.movieTitle) {
+                    this.movieTitle = params.movieTitle;
+                }
+                if (params.movieTrailerId) {
+                    this.movieTrailerUrl = `https://www.youtube.com/embed/${params.movieTrailerId}?autoplay=1`;
+                }
+            }
         }
     },
     async mounted() {
@@ -274,7 +304,6 @@ export default {
 };
 </script>
 
-
 <style scoped>
 .curtain {
     margin: 0 auto;
@@ -337,19 +366,18 @@ export default {
     text-shadow: 0 0 5px #ff80ff;
 }
 
-.fixed-bottom-bar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+.floating-emoji {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 24px;
+    animation: floatUp 1s ease-out forwards;
 }
-
 
 @keyframes slideInLeft {
     from {
         transform: translateX(-100%);
     }
-
     to {
         transform: translateX(0);
     }
@@ -359,7 +387,6 @@ export default {
     from {
         transform: translateX(100%);
     }
-
     to {
         transform: translateX(0);
     }
@@ -370,7 +397,6 @@ export default {
         opacity: 0;
         transform: translateX(100%);
     }
-
     to {
         opacity: 1;
         transform: translateX(0);
@@ -385,7 +411,6 @@ export default {
     0% {
         background-position: 0% 50%;
     }
-
     100% {
         background-position: 100% 50%;
     }
@@ -399,22 +424,12 @@ export default {
 @keyframes floatUp {
     0% {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate(-50%, 0);
     }
-
     100% {
         opacity: 0;
-        transform: translateY(-200px);
+        transform: translate(-50%, -200px);
     }
-}
-
-.floating-emoji {
-    position: absolute;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 24px;
-    animation: floatUp 1s ease-out forwards;
 }
 
 .fade-enter-active,
