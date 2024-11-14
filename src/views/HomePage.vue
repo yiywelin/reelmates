@@ -78,7 +78,7 @@
 
 
           <!-- Right Panel - full width on mobile -->
-          <div class="right-panel flex-grow px-4 md:px-5 md:ml-60 w-full md:w-auto">
+          <div class="right-panel flex-grow px-4 md:px-5 md:ml-60 w-full md:w-auto -mt-1/2">
             <div>
 
               <div class="text-center mb-16 animate-fadeIn">
