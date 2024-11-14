@@ -381,7 +381,31 @@ const navigateToWatchParty = async (movie) => {
     // Get the trailer before navigation
     const trailer = await tmdbService.getMovieTrailer(movie.id);
     
-    // Navigate to watch party with loading state
+    // Create a new chat doc for the watch party and update users
+    const newChatRef = await addDoc(collection(db, 'chats'), {
+      createdAt: new Date(),
+      groupId: groupId,
+      watchparty: true,
+      movieData: {
+        title: movie.title,
+        trailerId: trailer ? trailer.key : null,
+        movieId: movie.id
+      }
+    });
+
+    // Update all group members' watchparty field
+    const groupDoc = await getDoc(doc(db, 'groups', groupId));
+    const members = groupDoc.data().members || [];
+    
+    await Promise.all(
+      members.map(memberId => 
+        updateDoc(doc(db, 'users', memberId), {
+          watchparty: newChatRef.id
+        })
+      )
+    );
+
+    // Navigate to watch party
     router.push({
       name: 'WatchParty',
       params: {
@@ -511,8 +535,6 @@ return (...args) => {
   timeoutId = setTimeout(() => fn(...args), delay)
 }
 }
-
-const debouncedUpdateVisibleMovies = debounce(updateVisibleMovies, 150)
 
 onMounted(() => {
 window.addEventListener('keydown', handleKeydown)
