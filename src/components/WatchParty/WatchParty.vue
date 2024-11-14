@@ -1,14 +1,16 @@
 <template>
-    <div class="h-screen bg-[#0A0A1F] text-[#D0CCE3] overflow-hidden relative">
+    <div class="h-screen bg-[#0A0A1F] text-[#D0CCE3] overflow-hidden relative flex flex-col">
         <!-- Loading Overlay -->
         <LoadingPage v-if="showLoading" @complete="showLoading = false" />
 
-        <div class="h-[0px] flex-shrink-0">
+        <!-- NavBar -->
+        <div class="h-[70px] flex-shrink-0">
             <NavBar />
         </div>
-        <div
-            class="absolute inset-0 pt-[70px] bg-gradient-to-b from-[#0A0A1F] via-[#13132b] to-[#0A0A1F] animate-gradient">
+
+        <div class="absolute inset-0 pt-[70px] bg-gradient-to-b from-[#0A0A1F] via-[#13132b] to-[#0A0A1F] animate-gradient">
         </div>
+
         <!-- End Screen / Curtains -->
         <div class="curtain fixed inset-0 z-50" v-if="showEndScreen">
             <div class="curtain__wrapper">
@@ -33,10 +35,13 @@
                 </button>
             </div>
         </div>
+
         <div class="fixed top-4 right-4 z-40 space-y-2" ref="notifications"></div>
-        <div class="relative z-10 flex flex-col h-[calc(100vh-70px)] pt-[70px] pb-24">
-            <!-- Header with Movie Info and Progress Bar -->
-            <div class="absolute top-[70px] left-0 right-0 h-20 bg-[#13132b]/90 backdrop-blur-sm border-b border-[#DB3DCF] 
+
+        <!-- Main Content Area -->
+        <div class="flex-1 flex flex-col h-[calc(100vh-70px)]">
+            <!-- Header -->
+            <div class="h-20 bg-[#13132b]/90 backdrop-blur-sm border-b border-[#DB3DCF] 
                 flex items-center justify-between px-6">
                 <div class="flex items-center gap-4">
                     <span class="text-[#DB3DCF] text-2xl">🎥</span>
@@ -59,99 +64,114 @@
                 </div>
             </div>
 
-            <!-- Main Central Area -->
-            <div class="flex flex-1 mt-20">
-                <!-- Center Area -->
-                <div class="flex-1 relative flex flex-col items-center">
-                    <!-- Movie Trailer/Placeholder Section -->
-                    <div class="w-full max-w-4xl mx-auto mb-8 mt-4">
+            <!-- Content Area -->
+            <div class="flex flex-1 relative">
+                <!-- Main Center Content -->
+                <div class="flex-1 relative flex flex-col">
+                    <!-- Movie Section -->
+                    <div class="w-full max-w-4xl mx-auto pt-4 px-4">
                         <div class="relative bg-[#13132b]/90 backdrop-blur-sm border border-[#1a1a35] rounded-lg overflow-hidden">
-                            <!-- If there's a movie trailer -->
-                            <div v-if="movieTrailerUrl" class="aspect-video">
-                                <iframe 
-                                    :src="movieTrailerUrl" 
-                                    class="w-full h-full"
-                                    frameborder="0" 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                                    allowfullscreen
-                                ></iframe>
-                            </div>
-                            <!-- If no movie selected -->
-                            <div v-else class="aspect-video flex items-center justify-center bg-[#1a1a35]">
-                                <div class="text-center">
-                                    <div class="text-2xl font-bold text-[#DB3DCF] mb-2">Looking for movies...</div>
-                                    <div class="text-[#D0CCE3] opacity-60">Waiting for host to select a movie</div>
-                                </div>
+                            <div class="aspect-video">
+                                <template v-if="movieTrailerUrl">
+                                    <iframe 
+                                        :src="movieTrailerUrl" 
+                                        class="w-full h-full"
+                                        frameborder="0" 
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                        allowfullscreen
+                                    ></iframe>
+                                </template>
+                                <template v-else>
+                                    <div class="w-full h-full flex items-center justify-center bg-[#1a1a35]">
+                                        <div class="text-center p-4">
+                                            <div class="text-2xl font-bold text-[#DB3DCF] mb-2">Looking for movies...</div>
+                                            <div class="text-[#D0CCE3] opacity-60">Waiting for host to select a movie</div>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
 
                     <!-- Avatar and Reaction Section -->
-                    <div class="w-full flex flex-col items-center gap-8">
-                        <!-- Avatar Group -->
+                    <div class="flex-1 flex flex-col justify-center items-center gap-8 pb-4">
                         <div ref="avatars">
                             <AvatarGroup :avatars="avatars" />
                         </div>
-                        
-                        <!-- Reaction Bar -->
                         <div class="w-full max-w-xl">
                             <ReactionBar @reaction="handleReaction" />
                         </div>
                     </div>
                 </div>
-
-                <!-- User List -->
-                <div v-if="showUserList" class="w-64 bg-[#13132b]/90 backdrop-blur-sm border-l border-[#1a1a35]">
-                    <div class="p-4 border-b border-[#1a1a35]">
-                        <h3 class="font-bold">Viewers</h3>
-                    </div>
-                    <div class="h-full" ref="userListContainer"></div>
-                </div>
-
-                <!-- Chat Area -->
-                <div class="w-80 h-full bg-[#13132b]/90 backdrop-blur-sm border-l border-[#1a1a35] flex flex-col">
-                    <div class="p-4 border-b border-[#1a1a35] flex items-center gap-2">
-                        <span class="text-2xl">💬</span>
-                        <span class="font-bold">Chat</span>
-                    </div>
-                    <div class="flex-1 overflow-y-auto p-4 space-y-2 max-h-[calc(100vh-370px)]" ref="messageContainer">
-                        <div v-for="msg in messages" :key="msg.timestamp"
-                            :class="['group relative text-sm p-2 rounded transition-colors', msg.userid === currentUserId ? 'sent' : 'received']">
-                            <span class="font-bold text-[#DB3DCF]">{{ msg.username }}: </span>
-                            <span class="break-words">{{ msg.text }}</span>
-                            <span class="text-xs text-gray-500 absolute right-2 top-2">
-                                {{ msg.timestamp.toLocaleTimeString() }}
-                            </span>
+                                <!-- Sidebar (Chat & Users) -->
+                                <div class="w-80 flex flex-col bg-[#13132b]/90 backdrop-blur-sm border-l border-[#1a1a35]">
+                    <!-- User List (Collapsible on mobile) -->
+                    <div v-if="showUserList" 
+                        class="w-64 bg-[#13132b]/90 backdrop-blur-sm border-l border-[#1a1a35] 
+                        absolute right-80 top-0 h-full z-20">
+                        <div class="p-3 border-b border-[#1a1a35] flex justify-between items-center">
+                            <h3 class="font-bold">Viewers</h3>
+                            <button @click="toggleUserList" class="lg:hidden">✕</button>
+                        </div>
+                        <div class="h-[calc(100%-48px)] overflow-y-auto" ref="userListContainer">
+                            <!-- User list content -->
                         </div>
                     </div>
-                    <div class="p-4 border-t border-[#1a1a35]">
-                        <div class="flex gap-2">
-                            <textarea v-model="messageInput" @keydown.enter="sendMessage"
-                                placeholder="Type a message..."
-                                class="flex-1 px-3 py-2 bg-[#1a1a35] rounded border-none text-[#D0CCE3] placeholder-gray-400 resize-none h-10 min-h-[40px] max-h-32">
-                            </textarea>
-                            <button @click="sendMessage" class="px-4 py-2 bg-[#675FF2] rounded hover:bg-[#DB3DCF] transition-colors 
-                                flex items-center justify-center">
-                                <span>➡️</span>
-                            </button>
+
+                    <!-- Chat Area -->
+                    <div class="flex-1 flex flex-col min-h-0">
+                        <div class="p-4 border-b border-[#1a1a35] flex items-center gap-2">
+                            <span class="text-2xl">💬</span>
+                            <span class="font-bold">Chat</span>
                         </div>
-                        <div class="text-xs text-gray-400 mt-2">Press Enter to send, Shift + Enter for new line</div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-2" ref="messageContainer">
+                            <div v-for="msg in messages" 
+                                :key="msg.timestamp"
+                                class="relative text-sm p-2 rounded transition-colors group"
+                                :class="[msg.userid === currentUserId ? 'sent' : 'received']">
+                                <span class="font-bold text-[#DB3DCF]">{{ msg.username }}: </span>
+                                <span class="break-words">{{ msg.text }}</span>
+                                <span class="text-xs text-gray-500 absolute right-2 top-2">
+                                    {{ msg.timestamp.toLocaleTimeString() }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-[#1a1a35]">
+                            <div class="flex gap-2">
+                                <textarea 
+                                    v-model="messageInput" 
+                                    @keydown.enter="sendMessage"
+                                    placeholder="Type a message..."
+                                    class="flex-1 px-3 py-2 bg-[#1a1a35] rounded border-none 
+                                    text-[#D0CCE3] placeholder-gray-400 resize-none 
+                                    h-10 min-h-[40px] max-h-32">
+                                </textarea>
+                                <button @click="sendMessage" 
+                                    class="px-4 py-2 bg-[#675FF2] rounded hover:bg-[#DB3DCF] 
+                                    transition-colors flex items-center justify-center">
+                                    <span>➡️</span>
+                                </button>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                Press Enter to send, Shift + Enter for new line
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Floating Emojis Overlay -->
-            <div class="fixed inset-0 pointer-events-none">
-                <div class="absolute w-full bottom-[180px]">
-                    <transition-group name="float" tag="div" class="relative">
-                        <span v-for="(reaction, index) in activeReactions" 
-                              :key="index" 
-                              class="floating-emoji absolute left-1/2"
-                        >
-                            {{ reaction }}
-                        </span>
-                    </transition-group>
-                </div>
+        <!-- Floating Emojis Overlay -->
+        <div class="fixed inset-0 pointer-events-none">
+            <div class="absolute w-full" style="bottom: 120px;">
+                <transition-group name="float" tag="div" class="relative">
+                    <span v-for="(reaction, index) in activeReactions" 
+                          :key="index" 
+                          class="floating-emoji absolute left-1/2"
+                    >
+                        {{ reaction }}
+                    </span>
+                </transition-group>
             </div>
         </div>
     </div>
@@ -180,7 +200,7 @@ export default {
     },
     data() {
         return {
-            showLoading: true, // Start with loading screen visible
+            showLoading: true,
             showEndScreen: false,
             notifications: [],
             messages: [],
@@ -199,9 +219,10 @@ export default {
             currentUserId: null,
             currentUsername: '',
             watchparty: null,
-            movieTitle: '',
-            movieTrailerId: null,
-            movieTrailerUrl: null
+            movieTitle: this.route?.params?.movieTitle || '',
+            movieTrailerUrl: this.route?.params?.movieTrailerId ? 
+                `https://www.youtube.com/embed/${this.route.params.movieTrailerId}?autoplay=1` : 
+                null
         };
     },
     computed: {
@@ -210,7 +231,6 @@ export default {
         }
     },
     watch: {
-        // Watch for route params changes
         '$route.params': {
             immediate: true,
             handler(params) {
@@ -244,6 +264,29 @@ export default {
                     const userData = userDocSnap.data();
                     this.currentUsername = userData.username;
                     this.watchparty = userData.watchparty;
+
+                    // Fetch watch party data if available
+                    if (this.watchparty) {
+                        const watchpartyDoc = await getDoc(doc(db, 'chats', this.watchparty));
+                        if (watchpartyDoc.exists()) {
+                            const watchpartyData = watchpartyDoc.data();
+                            if (watchpartyData.movieData) {
+                                this.movieTitle = watchpartyData.movieData.title;
+                                this.movieTrailerUrl = watchpartyData.movieData.trailerId ? 
+                                    `https://www.youtube.com/embed/${watchpartyData.movieData.trailerId}?autoplay=1` : 
+                                    null;
+                            }
+                        }
+                    }
+
+                    // Also check route params for direct navigation
+                    if (this.route.params.movieTitle) {
+                        this.movieTitle = this.route.params.movieTitle;
+                    }
+                    if (this.route.params.movieTrailerId) {
+                        this.movieTrailerUrl = `https://www.youtube.com/embed/${this.route.params.movieTrailerId}?autoplay=1`;
+                    }
+
                 } else {
                     console.log('No user data found for this user');
                 }
@@ -372,24 +415,29 @@ export default {
     transform: translateX(-50%);
     font-size: 24px;
     animation: floatUp 1s ease-out forwards;
+    z-index: 50;
+}
+
+.sent {
+    background-color: rgba(103, 95, 242, 0.1);
+    margin-left: 20px;
+    border-radius: 12px 2px 12px 12px;
+}
+
+.received {
+    background-color: rgba(219, 61, 207, 0.1);
+    margin-right: 20px;
+    border-radius: 2px 12px 12px 12px;
 }
 
 @keyframes slideInLeft {
-    from {
-        transform: translateX(-100%);
-    }
-    to {
-        transform: translateX(0);
-    }
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(100%);
-    }
-    to {
-        transform: translateX(0);
-    }
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
 }
 
 @keyframes slideIn {
@@ -403,22 +451,9 @@ export default {
     }
 }
 
-.animate-slideIn {
-    animation: slideIn 0.3s forwards;
-}
-
 @keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    100% {
-        background-position: 100% 50%;
-    }
-}
-
-.animate-gradient {
-    background-size: 400% 400%;
-    animation: gradient 15s ease infinite;
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
 }
 
 @keyframes floatUp {
@@ -432,6 +467,15 @@ export default {
     }
 }
 
+.animate-slideIn {
+    animation: slideIn 0.3s forwards;
+}
+
+.animate-gradient {
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+}
+
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.5s;
@@ -440,5 +484,33 @@ export default {
 .fade-enter,
 .fade-leave-to {
     opacity: 0;
+}
+
+@media (max-width: 1024px) {
+    .w-80 {
+        width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .w-80 {
+        width: 240px;
+    }
+}
+
+@media (max-width: 640px) {
+    .curtain__panel {
+        padding: 1rem;
+    }
+    .w-80 {
+        width: 100%;
+    }
+    .chat-container {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 300px;
+    }
 }
 </style>
