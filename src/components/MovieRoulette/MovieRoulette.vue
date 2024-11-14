@@ -726,7 +726,7 @@ export default {
 
   .overlay-description {
     font-size: 0.85rem;
-  }
+  } 
 }
 
 @media (max-width: 380px) {
