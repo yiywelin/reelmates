@@ -75,7 +75,8 @@ const navLinks = [
   { name: 'Home', path: '/home' },
   { name: 'Swipe Movies', path: '/select-genre' },
   { name: 'Watch with Friends', path: '/friends' },
-  { name: 'About Us', path: '/meet-the-team' },
+  { name: 'Active Watch Party', path: '/watch-party' },
+  { name: 'About Us', path: '/meet-the-team' }
 ];
 
 onMounted(() => {
@@ -132,12 +133,12 @@ const closeAllMenus = () => {
 
 .nav-content {
   max-width: 1200px;
-  height: 100%;
+  height: 70px;
   margin: 0 auto;
-  padding: 0 2rem;
-  display: flex;
-  align-items: center;
+  padding: 0 1.5rem;
+  display: flex;  /* Changed from grid to flex */
   justify-content: space-between;
+  align-items: center;
 }
 
 /* Logo Styles */
@@ -146,6 +147,8 @@ const closeAllMenus = () => {
   align-items: center;
   text-decoration: none;
   z-index: 101;
+  flex: 0 0 auto;  /* Don't allow logo to grow or shrink */
+  margin-right: 1.5rem; 
 }
 
 .logo-image {
@@ -196,7 +199,10 @@ const closeAllMenus = () => {
 /* Navigation Links */
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem;
+  flex: 1;  /* Allow nav links to take up remaining space */
+  justify-content: center;  /* Center the navigation links */
+  margin: 0 1.5rem;  /* Add spacing on both sides */
 }
 
 .nav-link {
@@ -206,6 +212,7 @@ const closeAllMenus = () => {
   font-weight: 500;
   padding: 0.5rem 0;
   transition: all 0.3s ease;
+  white-space: nowrap;  /* Prevent link text from wrapping */
 }
 
 .link-indicator {
@@ -229,7 +236,9 @@ const closeAllMenus = () => {
 
 /* User Section */
 .user-section {
-  position: relative;
+  flex: 0 0 auto;  /* Don't allow user section to grow or shrink */
+  margin-left: 1.5rem;
+  padding-right: 0.5rem;
 }
 
 .user-menu {
@@ -244,6 +253,7 @@ const closeAllMenus = () => {
   padding: 0.5rem;
   border-radius: 8px;
   transition: all 0.3s ease;
+  min-width: max-content;
 }
 
 .user-info:hover {
@@ -317,9 +327,16 @@ const closeAllMenus = () => {
 }
 
 /* Responsive Styles */
-@media (max-width: 768px) {
-.nav-content {
+@media (max-width: 900px) {
+  .nav-content {
+    display: grid;  /* Switch back to grid for mobile */
+    grid-template-columns: repeat(3, 1fr);
     padding: 0 1rem;
+  }
+
+  .logo-section {
+    grid-column: 1;
+    justify-self: start;
   }
 
   .mobile-menu-button {
@@ -386,9 +403,16 @@ const closeAllMenus = () => {
     height: 32px;
   }
 
-  /* Close button style */
   .mobile-menu-button {
-    z-index: 100;
+    grid-column: 2;
+    justify-self: center; /* Center the hamburger menu */
+    display: flex;
+    align-items: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    height: 70px;
+    padding: 0;
   }
 
   .mobile-menu-button .hamburger-icon span {
@@ -397,11 +421,9 @@ const closeAllMenus = () => {
     border-radius: 2px;
   }
 
-  /* Logo and user section adjustment */
-  .logo-section,
   .user-section {
-    position: relative;
-    z-index: 100;
+    grid-column: 3;
+    justify-self: end;
   }
 }
 

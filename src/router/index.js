@@ -83,6 +83,22 @@ const routes = [
     component: UserProfile,
     meta: { requiresAuth: true }
   },
+  {
+    path: '/loading',
+    name: 'LoadingScreen',
+    component: () => import('@/components/ui/LoadingPage.vue'),
+    props: true
+  },
+  {
+    path: '/watch-party',
+    name: 'WatchParty',
+    component: () => import('@/components/WatchParty/WatchParty.vue'),
+    props: route => ({
+      movieTitle: route.params.movieTitle,
+      movieTrailerId: route.params.movieTrailerId,
+      movieId: route.params.movieId
+    })
+  }
 ];
 
 const router = createRouter({
