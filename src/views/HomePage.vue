@@ -59,7 +59,7 @@
             </div>
 
             <div class="space-y-2">
-              <div v-for="group in groups.slice(0,2)" :key="group.id"
+              <div v-for="group in groups.slice(0, 2)" :key="group.id"
                   class="flex items-center space-x-3 p-2 bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
                 <img 
                   :src="defaultAvatar" 
@@ -78,17 +78,16 @@
 
 
           <!-- Right Panel - full width on mobile -->
-          <div class="right-panel flex-grow px-4 md:px-5 md:ml-60 w-full md:w-auto -mt-1/2">
+          <div class="right-panel flex-grow px-4 md:px-5 md:ml-60 w-full md:w-auto mt-10">
             <div>
 
-              <div class="text-center mb-16 animate-fadeIn">
+              <div class="text-center mb-10 animate-fadeIn">
                 <span class="text-[1.5rem] md:text-[2rem] lg:text-[2.5rem] text-[#DB3DCF] 
             [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
             animate-neonFlicker">
                   {{ 'Trending Movies' }}
                 </span>
               </div>
-              <div class="-mb-12"></div>
               <div class="flex">
 
               </div>
@@ -102,7 +101,7 @@
                       :alt="movie.title"
                       class="absolute inset-0 w-full h-full object-cover rounded-lg transition-all duration-300 group-hover:scale-135 group-hover:shadow-2xl" />
                     <div
-                      class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent rounded-b-lg translate-y-full transition-transform duration-300 group-hover:translate-y-[-30%]">
+                      class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent rounded-b-lg translate-y-full transition-transform duration-300 group-hover:translate-y-[-0%]">
                       <h3 class="text-md font-semibold text-white m-0 [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]"
                         style="width: 100%; word-wrap: break-word; white-space: normal;">
                         {{ movie.title }}
@@ -135,24 +134,24 @@
               </div>
 
               <!-- For You Section -->
-              <div class="text-center mb-16 animate-fadeIn">
+              <div class="text-center mb-16 animate-fadeIn mt-20">
                 <span class="text-[1.5rem] md:text-[2rem] lg:text-[2.5rem] mb-2 text-[#DB3DCF] 
             [text-shadow:0_0_5px_#DB3DCF,0_0_10px_#DB3DCF,0_0_20px_#DB3DCF] 
             animate-neonFlicker">
                   {{ 'For You' }}
                 </span>
               </div>
-              <div class="-mb-12"></div>
+              <div class="-mb-2"></div>
               <div ref="forYouContainer" class="for-you-container scroll-container flex whitespace-nowrap">
                 <div v-for="movie in moviesCards" :key="movie.id"
-                  class="for-you-card inline-block rounded-lg cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-3 group">
-                  <div class="relative pb-[56.25%]">
+                class="movie-card inline-block rounded-lg cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:-translate-y-3 group">
+                <div class="relative pb-[150%]">
                     <img
                       :src="movie.posterPath ? `https://image.tmdb.org/t/p/w500${movie.posterPath}` : '/placeholder-movie.jpg'"
                       :alt="movie.title"
                       class="absolute inset-0 w-full h-full object-cover rounded-lg transition-all duration-300 group-hover:scale-135 group-hover:shadow-2xl" />
                     <div
-                      class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent rounded-b-lg translate-y-full transition-transform duration-300 group-hover:translate-y-[3%] movie-details">
+                      class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent rounded-b-lg translate-y-full transition-transform duration-300 group-hover:translate-y-[0%] movie-details">
                       <h3 class="text-md font-semibold text-white m-0 [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]"
                         style="width: 100%; word-wrap: break-word; white-space: normal;">
                         {{ movie.title }}
@@ -168,6 +167,7 @@
                   </div>
                 </div>
               </div>
+              <div class="mb-20"></div>
 
 
             </div>
@@ -214,7 +214,7 @@ onMounted(async () => {
 
   try {
     const popularMovies = await tmdbService.getPopularMovies(1);
-    movies.value = popularMovies.slice(8, 18);
+    movies.value = popularMovies.slice(5, 30);
 
     loadGroups();
     // loadUserMovieHistory()
@@ -227,15 +227,23 @@ onMounted(async () => {
       return array;
     };
 
+
+    var sliceLength = 15;
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
     if (userDoc.exists()) {
       const userData = userDoc.data()
       const userDataLength = userData.likedMovies.length
-      moviesCardsInt = userData.likedMovies.slice(userDataLength - 5, userDataLength).reverse() || [];
+      if (userDataLength<15){
+        sliceLength = 15 - userDataLength;
+        moviesCardsInt = userData.likedMovies.slice(0, userDataLength).reverse() || [];
+      }
+      else{
+        moviesCardsInt = userData.likedMovies.slice(0, 5).reverse() || [];
+        sliceLength = 8;
+      }
     }
 
-
-    const moviesCardsPopularMoviesValue = popularMovies.slice(3, 8);
+    const moviesCardsPopularMoviesValue = popularMovies.slice(3, 3+sliceLength);
     console.log(moviesCardsInt);
     moviesCards.value = removeDuplicatesByTitle(shuffle(moviesCardsInt.concat(moviesCardsPopularMoviesValue)));
 
@@ -543,23 +551,9 @@ onBeforeUnmount(() => {
   user-select: none;
 }
 
-.for-you-card {
-  flex: 0 0 200px;
-  /* Adjust this value for desired width */
-  height: 100%;
-  /* Adjust this value for desired height */
-  transition: transform 0.3s ease-in-out;
-  margin-right: 3px;
-}
-
-.for-you-card:hover {
-  transform: translateY(-5px);
-  /* Slight lift effect on hover */
-}
-
 .movie-card {
   min-width: 200px;
-  height: 250px;
+  height: calc(1.25 * min-width);
   margin-right: 3px;
   display: inline-block;
 }
@@ -732,6 +726,7 @@ onBeforeUnmount(() => {
 }
 
 /* Responsiveness */
+
 @media (max-width: 768px) {
   .left-panel {
     display: none;
@@ -770,18 +765,6 @@ onBeforeUnmount(() => {
     gap: 1.5rem;
     align-items: center;
     margin-bottom: 8px;
-  }
-
-  .for-you-card {
-    flex: 1 1 80%;
-    min-width: 200px;
-    max-width: 300px;
-    max-height: 250px;
-    transition: transform 0.3s ease-in-out;
-  }
-
-  .for-you-card:hover {
-    transform: translateY(-5px);
   }
 
   .header {

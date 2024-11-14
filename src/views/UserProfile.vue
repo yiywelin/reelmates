@@ -61,7 +61,7 @@
             </div>
 
             <div class="space-y-2">
-              <div v-for="group in groups.slice(0,2)" :key="group.id"
+              <div v-for="group in groups.slice(0, 2)" :key="group.id"
                 class="flex items-center space-x-3 p-2 bg-[#3B365F] rounded-lg transition-colors cursor-pointer">
                 <img :src="defaultAvatar" :alt="group.name" class="w-8 h-8 rounded-full object-cover" />
                 <span class="text-sm">{{ group.name }}</span>
@@ -104,7 +104,7 @@
                       :alt="movie.title"
                       class="absolute inset-0 w-full h-full object-cover rounded-lg transition-all duration-300 group-hover:scale-135 group-hover:shadow-2xl" />
                     <div
-                      class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent rounded-b-lg translate-y-full transition-transform duration-300 group-hover:translate-y-[-45%]">
+                      class="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-[rgba(10,10,31,0.95)] via-[rgba(10,10,31,0.7)] to-transparent rounded-b-lg translate-y-full transition-transform duration-300 group-hover:translate-y-[-49%]">
                       <h3 class="text-md font-semibold text-white m-0 [text-shadow:0_2px_4px_rgba(0,0,0,0.3)]"
                         style="width: 100%; word-wrap: break-word; white-space: normal;">
                         {{ movie.title }}
@@ -278,8 +278,17 @@ const loadUserMovieHistory = async () => {
     const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid))
     if (userDoc.exists()) {
       const userData = userDoc.data()
-      const userDataLength = userData.likedMovies.length
-      moviesCards.value = userData.likedMovies.slice(userDataLength - 10, userDataLength).reverse() || []
+      const userDataCleaned = removeDuplicatesByTitle(userData.likedMovies);
+      const userDataCleanedLength = userDataCleaned.length;
+      // console.log(userDataCleanedLength)
+      // console.log(userDataCleaned)
+      if (userDataCleanedLength < 15){
+        moviesCards.value = userDataCleaned.reverse() || []
+      }
+      else{
+        moviesCards.value = userDataCleaned.slice(userDataCleanedLength - 15, userDataCleanedLength).reverse() || []
+      }
+      // console.log(moviesCards.value.length)
       // console.log(moviesCards);
     }
   } catch (err) {
@@ -287,6 +296,16 @@ const loadUserMovieHistory = async () => {
   }
 }
 
+const removeDuplicatesByTitle = (arr) => {
+  const seenTitles = new Set();
+  return arr.filter(item => {
+    if (seenTitles.has(item.title)) {
+      return false;
+    }
+    seenTitles.add(item.title);
+    return true;
+  })
+};
 
 const loadGroups = async () => {
   try {
