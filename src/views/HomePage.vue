@@ -537,6 +537,10 @@ onBeforeUnmount(() => {
   display: none;
 }
 
+* {
+  scrollbar-width: none; /* For Firefox */
+}
+
 .movies-container {
   display: flex;
   gap: 2px;
